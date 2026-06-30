@@ -1,0 +1,58 @@
+{
+  "_readme": "Collage templates. Each template lays photos into boxes on a 1080x1080 canvas, then (optionally) draws a branded overlay image on top and burns in location/day text. These starter templates draw a simple placeholder frame so the whole flow works today. To use your real branding, add an `overlay` PNG (transparent where the photos show through) — see docs/TEMPLATE_FORMAT.md.",
+  "canvas": { "width": 1080, "height": 1080 },
+  "templates": [
+    {
+      "id": "two_up",
+      "name": "Two side by side",
+      "overlay": null,
+      "background": "#161616",
+      "accent": "#ff7a18",
+      "boxes": [
+        { "x": 30, "y": 30, "width": 502, "height": 1020 },
+        { "x": 548, "y": 30, "width": 502, "height": 1020 }
+      ],
+      "textBox": { "x": 60, "y": 470, "width": 960, "height": 140, "color": "#ffffff", "align": "center" }
+    },
+    {
+      "id": "one_big_two_small",
+      "name": "One big, two small",
+      "overlay": null,
+      "background": "#161616",
+      "accent": "#ff7a18",
+      "boxes": [
+        { "x": 30, "y": 30, "width": 690, "height": 1020 },
+        { "x": 736, "y": 30, "width": 314, "height": 502 },
+        { "x": 736, "y": 548, "width": 314, "height": 502 }
+      ],
+      "textBox": null
+    },
+    {
+      "id": "four_square",
+      "name": "Four square grid",
+      "overlay": null,
+      "background": "#161616",
+      "accent": "#ff7a18",
+      "boxes": [
+        { "x": 30, "y": 30, "width": 502, "height": 502 },
+        { "x": 548, "y": 30, "width": 502, "height": 502 },
+        { "x": 30, "y": 548, "width": 502, "height": 502 },
+        { "x": 548, "y": 548, "width": 502, "height": 502 }
+      ],
+      "textBox": { "x": 60, "y": 470, "width": 960, "height": 140, "color": "#ffffff", "align": "center" }
+    },
+    {
+      "id": "three_strip",
+      "name": "Three across",
+      "overlay": null,
+      "background": "#161616",
+      "accent": "#ff7a18",
+      "boxes": [
+        { "x": 24, "y": 30, "width": 336, "height": 1020 },
+        { "x": 372, "y": 30, "width": 336, "height": 1020 },
+        { "x": 720, "y": 30, "width": 336, "height": 1020 }
+      ],
+      "textBox": { "x": 60, "y": 900, "width": 960, "height": 130, "color": "#ffffff", "align": "center" }
+    }
+  ]
+}

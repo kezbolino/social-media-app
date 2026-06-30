@@ -1,2 +1,130 @@
-# social-media-app
-Tommys Chicken App
+# Street Food Post — V1
+
+A dead-simple app that turns a photo into a finished social post in seconds. Pick
+**a single photo** or **a branded collage**, the app hands you a **cheeky
+pre-written caption** with the location and day filled in, you tweak it if you
+like, then **share it yourself** to Instagram or Facebook via the phone's normal
+share sheet.
+
+It's a **templating app, not an AI app**: every caption was written by a human, it
+works **offline**, there's no server, no accounts, no logins, and nothing to pay
+for. (See `streetfoodpostappV1spec.md` for the full brief this was built from.)
+
+---
+
+## How to run it right now (to try it on your Mac)
+
+The app is plain HTML/CSS/JavaScript. It needs to be served by a tiny local web
+server — **double-clicking `index.html` won't work** (browsers block the app from
+loading its data files that way). One command does it:
+
+```bash
+npm start
+```
+
+Then open **http://localhost:5173** in your browser. That's it — no install, no
+build step. (Resize the window narrow, or use your browser's phone/device view,
+to see it as it'll look on a phone.)
+
+To try the **share** feature properly you need a real phone — desktop browsers
+can't open the share sheet, so on a Mac it falls back to copying the caption and
+downloading the image instead.
+
+---
+
+## The flow (what your brother does)
+
+1. **New Post**
+2. **Single photo** or **Collage**
+3. Add the photo(s). For a collage, tap a layout, drop photos into the slots,
+   or hit **Try another layout** to cycle.
+4. **One quick question** — is the post about *where you are*, *brand hype*, or
+   *something else* (weather/last day/weekend)?
+5. **Fill the blanks** it needs — usually just **location**, sometimes **day**.
+6. **Caption appears**, already filled in. **Shuffle** for a different line, or
+   **tap to edit** it.
+7. **Review** the finished image + caption together.
+8. **Share** → the phone's share sheet opens → pick Instagram or Facebook.
+
+**Menu & Settings** lets you add best sellers / sauces once; food captions pick
+from that list at random. Leave it empty and food captions are simply skipped.
+
+---
+
+## What's in the box
+
+```
+index.html              The app shell (all the screens)
+css/styles.css          Styling (dark, big buttons, phone-first)
+js/config.js            The few settings you might tweak (export size, cooldown)
+js/store.js             Saves menu items / recent hooks / posts on the device
+js/hooks.js             The caption engine (filter, recency, fill-in-the-blanks)
+js/imaging.js           Photo fitting, collage building, burnt-in text, PNG export
+js/share.js             Hands image + caption to the share sheet
+js/app.js               Ties the screens together
+data/streetfood_hooks.json   The caption library (73 hand-written hooks)
+templates/templates.json     The collage layouts
+docs/TEMPLATE_FORMAT.md      How to add your own collage layout (no coding)
+```
+
+### Things you can change without coding
+
+- **`js/config.js`** — export image size (currently **1080 × 1080 square**) and the
+  **60-day cooldown** that stops captions repeating too soon.
+- **`data/streetfood_hooks.json`** — add or edit captions. Each needs a unique
+  `id`. Use `{location}`, `{day}`, `{item}` where you want the blanks filled.
+- **`templates/templates.json`** — add collage layouts. See
+  **`docs/TEMPLATE_FORMAT.md`** for the copy-paste guide.
+
+The four collage templates included are **placeholders** (a simple orange frame)
+so the whole flow works today. When you've designed your real branded templates,
+drop in the PNGs and point each template at them — `docs/TEMPLATE_FORMAT.md`
+explains exactly how.
+
+---
+
+## How the captions stay fresh (recency)
+
+Every time you share, the app notes which caption it used. For the next **60
+days** it won't offer that one again, so lines don't come round too soon. With
+70+ captions and ~one or two posts a week, you cycle the whole library about once
+a year — repeats are effectively invisible, and the pool never runs dry. If you
+ever did run it dry, the app quietly relaxes the rule rather than leaving you with
+no caption. Change the window in `js/config.js` (`COOLDOWN_DAYS`).
+
+---
+
+## Turning this into an installable Android app (later, on your Mac)
+
+V1 runs in the browser. To get a proper home-screen icon, reliable photo access,
+and the native share sheet, wrap it with **Capacitor**. The app was built so this
+is a clean, additive step — none of the app code changes. Outline:
+
+```bash
+npm install @capacitor/core @capacitor/cli @capacitor/share
+npx cap init "Street Food Post" com.kesbo.streetfood --web-dir .
+npx cap add android
+npx cap sync
+npx cap open android      # opens Android Studio to build the APK
+```
+
+Two small wiring tweaks at that point (both isolated on purpose):
+
+- In **`js/share.js`**, swap the `navigator.share(...)` call for the
+  `@capacitor/share` plugin. Everything else stays the same.
+- Confirm the app loads its data files inside the Capacitor webview (it serves
+  from a local origin, so the normal `fetch` used here works).
+
+You'll need Android Studio installed for the final build — that part happens on
+your Mac, not here.
+
+---
+
+## What's deliberately NOT in V1
+
+Auto-posting, AI captions, scheduling, analytics, a full drag-and-drop editor,
+and multi-trader mode are all **parked on purpose** (see the spec, sections 2 &
+10). The biggest one is **auto-posting**: V1 shares manually, which avoids Meta's
+multi-week app-review process and keeps everything on-device. The post's
+`draft → approved → shared` status is the seam where auto-posting could slot in
+later without a rebuild.
