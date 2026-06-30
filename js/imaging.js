@@ -6,6 +6,28 @@
  * No server, no upload — it all happens on the phone.
  */
 const Imaging = (() => {
+  const FONT_FAMILY = "Montserrat, Arial, sans-serif";
+
+  // The canvas can only draw a web font once the browser has actually loaded
+  // it — otherwise it silently falls back to a default. Call (and await) this
+  // before any canvas text so burnt-in captions use Montserrat.
+  let fontsReady = null;
+  function ensureFonts() {
+    if (fontsReady) return fontsReady;
+    if (!document.fonts || !document.fonts.load) {
+      fontsReady = Promise.resolve();
+      return fontsReady;
+    }
+    fontsReady = Promise.all([
+      document.fonts.load("800 80px Montserrat"),
+      document.fonts.load("700 40px Montserrat"),
+      document.fonts.load("600 32px Montserrat"),
+    ])
+      .then(() => document.fonts.ready)
+      .catch(() => {});
+    return fontsReady;
+  }
+
   // Turn a file the user picked into an <img> we can both draw and preview.
   // We read it as a data URL so the image's src stays valid for the whole
   // session (a blob URL would have to be revoked, which kills the preview).
@@ -56,7 +78,7 @@ const Imaging = (() => {
     const align = opts.align || "center";
     const maxFont = opts.maxFont || Math.floor(box.height * 0.55);
     const minFont = opts.minFont || 24;
-    const family = "800 {size}px Arial, sans-serif";
+    const family = "800 {size}px Montserrat, Arial, sans-serif";
 
     const fits = (lines, size) => {
       ctx.font = family.replace("{size}", size);
@@ -114,46 +136,85 @@ const Imaging = (() => {
     return c;
   }
 
-  // SINGLE PHOTO: one image fitted to the export square. If `overlayText` is
-  // given, draw a branded lower band with the location/day printed on it.
-  function renderSingle(img, overlayText) {
+  // SINGLE PHOTO: one image fitted to the export square. If `captionText` is
+  // given, draw it onto the photo in a branded bottom panel (full caption,
+  // wrapped to fit — never cut off).
+  function renderSingle(img, captionText) {
     const { width, height } = window.APP_CONFIG.EXPORT;
     const canvas = newCanvas(width, height);
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, width, height);
     drawCover(ctx, img, { x: 0, y: 0, width, height });
-    if (overlayText) drawLowerBand(ctx, overlayText, width, height);
+    if (captionText) drawCaptionPanel(ctx, captionText, width, height);
     return canvas;
   }
 
-  // A semi-transparent brand band across the bottom with text on it.
-  function drawLowerBand(ctx, text, width, height) {
-    const bandH = Math.round(height * 0.17);
-    const y = height - bandH;
-    const grad = ctx.createLinearGradient(0, y, 0, height);
+  // Draw the whole caption in a semi-transparent brand panel across the bottom.
+  // The text is word-wrapped and the font shrinks until every line fits inside
+  // a panel no taller than ~half the image, so the full caption always shows.
+  function drawCaptionPanel(ctx, text, W, H, opts = {}) {
+    if (!text) return;
+    const weight = opts.weight || 800;
+    const padX = Math.round(W * 0.06);
+    const padY = Math.round(H * 0.04);
+    const maxTextW = W - padX * 2;
+    const maxPanelH = Math.round(H * (opts.maxHeightFrac || 0.5));
+    const maxTextH = maxPanelH - padY * 2;
+    const maxFont = opts.maxFont || Math.round(W * 0.072);
+    const minFont = opts.minFont || Math.round(W * 0.028);
+    const lineRatio = 1.18;
+
+    const wrap = (fontSize) => {
+      ctx.font = `${weight} ${fontSize}px ${FONT_FAMILY}`;
+      const lines = [];
+      let line = "";
+      for (const word of text.split(/\s+/)) {
+        const trial = line ? line + " " + word : word;
+        if (ctx.measureText(trial).width <= maxTextW || !line) line = trial;
+        else { lines.push(line); line = word; }
+      }
+      if (line) lines.push(line);
+      return lines;
+    };
+
+    let fontSize = maxFont;
+    let lines = wrap(fontSize);
+    for (; fontSize > minFont; fontSize -= 2) {
+      lines = wrap(fontSize);
+      if (lines.length * fontSize * lineRatio <= maxTextH) break;
+    }
+    const lineH = fontSize * lineRatio;
+    const textH = lines.length * lineH;
+    const panelH = Math.min(maxPanelH, Math.round(textH + padY * 2));
+    const y = H - panelH;
+
+    const grad = ctx.createLinearGradient(0, y, 0, H);
     grad.addColorStop(0, "rgba(10,77,161,0)");
-    grad.addColorStop(0.35, "rgba(10,77,161,0.78)");
-    grad.addColorStop(1, "rgba(10,77,161,0.92)");
+    grad.addColorStop(0.22, "rgba(10,77,161,0.82)");
+    grad.addColorStop(1, "rgba(10,77,161,0.94)");
     ctx.save();
     ctx.fillStyle = grad;
-    ctx.fillRect(0, y, width, bandH);
-    // Orange accent rule.
+    ctx.fillRect(0, y, W, panelH);
     ctx.fillStyle = "#f58b1f";
-    ctx.fillRect(0, y, width, 8);
+    ctx.fillRect(0, y, W, Math.max(6, Math.round(H * 0.008)));
+
+    ctx.font = `${weight} ${fontSize}px ${FONT_FAMILY}`;
+    ctx.fillStyle = opts.color || "#ffffff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(0,0,0,0.45)";
+    ctx.shadowBlur = Math.max(3, fontSize * 0.08);
+    const startY = y + panelH / 2 - ((lines.length - 1) * lineH) / 2;
+    lines.forEach((l, i) => ctx.fillText(l, W / 2, startY + i * lineH));
     ctx.restore();
-    drawTextInBox(
-      ctx,
-      text,
-      { x: 48, y: y + 18, width: width - 96, height: bandH - 30 },
-      { color: "#ffffff", align: "center", maxFont: Math.round(bandH * 0.5) }
-    );
   }
 
   // COLLAGE: photos into the template's boxes, branding on top, optional text.
   // `images` is an array aligned to template.boxes (some entries may be null).
   // `overlayImg` is the pre-loaded branded PNG (or null for placeholder chrome).
-  function renderCollage(template, images, overlayImg, burnText) {
+  // `captionText`, if given, is drawn full in a bottom panel like single photos.
+  function renderCollage(template, images, overlayImg, captionText) {
     const { width, height } = template.canvas;
     const canvas = newCanvas(width, height);
     const ctx = canvas.getContext("2d");
@@ -181,11 +242,8 @@ const Imaging = (() => {
       drawPlaceholderChrome(ctx, template, width, height);
     }
 
-    if (template.textBox && burnText) {
-      drawTextInBox(ctx, burnText, template.textBox, {
-        color: template.textBox.color,
-        align: template.textBox.align,
-      });
+    if (captionText) {
+      drawCaptionPanel(ctx, captionText, width, height);
     }
     return canvas;
   }
@@ -217,12 +275,12 @@ const Imaging = (() => {
   }
 
   return {
+    ensureFonts,
     loadImageFromFile,
     loadImageFromUrl,
     renderSingle,
     renderCollage,
-    drawTextInBox,
-    drawLowerBand,
+    drawCaptionPanel,
     toBlob,
     toDataURL,
   };

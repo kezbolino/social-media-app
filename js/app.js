@@ -90,7 +90,10 @@
     $("#singleInput").addEventListener("change", onSinglePhoto);
     $("#collageInput").addEventListener("change", onCollagePhoto);
     $("#folderInput").addEventListener("change", onFolderPicked);
-    $("#captionText").addEventListener("input", (e) => (post.captionText = e.target.value));
+    $("#captionText").addEventListener("input", (e) => {
+      post.captionText = e.target.value;
+      schedulePreviewRefresh();
+    });
     $("#menuInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") addMenuItem();
     });
@@ -296,8 +299,8 @@
 
   function drawCollagePreview() {
     const tpl = currentTemplate();
-    const burn = burnText();
-    const canvas = Imaging.renderCollage(tpl, post.collageImages, null, burn);
+    // No caption yet at the layout stage — just show the photos in the boxes.
+    const canvas = Imaging.renderCollage(tpl, post.collageImages, null, null);
     const dest = $("#collagePreview");
     dest.width = canvas.width;
     dest.height = canvas.height;
@@ -400,22 +403,37 @@
   async function renderCaptionPreview() {
     const img = $("#captionPreview");
     try {
-      let canvas;
-      if (post.type === "single") {
-        if (!post.singleImage) { img.removeAttribute("src"); return; }
-        canvas = Imaging.renderSingle(post.singleImage, burnText());
-      } else {
-        const tpl = currentTemplate();
-        let overlay = null;
-        if (tpl.overlay) {
-          try { overlay = await Imaging.loadImageFromUrl(tpl.overlay); } catch (e) { overlay = null; }
-        }
-        canvas = Imaging.renderCollage(tpl, post.collageImages, overlay, burnText());
-      }
-      img.src = Imaging.toDataURL(canvas);
+      await Imaging.ensureFonts();
+      const canvas = await composePostImage();
+      if (canvas) img.src = Imaging.toDataURL(canvas);
+      else img.removeAttribute("src");
     } catch (e) {
       /* preview is best-effort */
     }
+  }
+
+  // Build the finished image (photo[s] + the full caption overlaid). Shared by
+  // the live caption preview and the final export so they always match.
+  async function composePostImage() {
+    const caption = post.captionText;
+    if (post.type === "single") {
+      if (!post.singleImage) return null;
+      return Imaging.renderSingle(post.singleImage, caption);
+    }
+    const tpl = currentTemplate();
+    let overlay = null;
+    if (tpl.overlay) {
+      try { overlay = await Imaging.loadImageFromUrl(tpl.overlay); } catch (e) { overlay = null; }
+    }
+    return Imaging.renderCollage(tpl, post.collageImages, overlay, caption);
+  }
+
+  // Re-render the preview a beat after the user stops editing the caption.
+  let previewTimer = null;
+  function schedulePreviewRefresh() {
+    if ($("#captionText").closest(".screen").dataset.screen !== "caption") return;
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(renderCaptionPreview, 250);
   }
 
   /* ---------- CAPTION ---------- */
@@ -434,28 +452,17 @@
     };
     const excludeId = post.caption ? post.caption.hook.id : null;
     const result = Hooks.choose(post.tag, ctx, excludeId);
-    if (result) setCaption(result);
+    if (result) {
+      setCaption(result);
+      renderCaptionPreview();
+    }
   }
 
   /* ---------- REVIEW + SHARE ---------- */
-  function burnText() {
-    if (post.location && post.day) return `${post.location} · til ${post.day}`;
-    return post.location || post.day || "";
-  }
-
   async function buildReview() {
     post.captionText = $("#captionText").value;
-    let canvas;
-    if (post.type === "single") {
-      canvas = Imaging.renderSingle(post.singleImage, burnText());
-    } else {
-      const tpl = currentTemplate();
-      let overlay = null;
-      if (tpl.overlay) {
-        try { overlay = await Imaging.loadImageFromUrl(tpl.overlay); } catch (e) { overlay = null; }
-      }
-      canvas = Imaging.renderCollage(tpl, post.collageImages, overlay, burnText());
-    }
+    await Imaging.ensureFonts();
+    const canvas = await composePostImage();
     post.finalBlob = await Imaging.toBlob(canvas);
     post.status = "approved";
 
