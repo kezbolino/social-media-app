@@ -79,8 +79,8 @@ docs/TEMPLATE_FORMAT.md      How to add your own collage layout (no coding)
   `id`. Use `{location}`, `{day}`, `{item}` where you want the blanks filled.
 - **`templates/templates.json`** — add collage layouts. See
   **`docs/TEMPLATE_FORMAT.md`** for the copy-paste guide.
-- **The font** is **Montserrat** (a popular modern social-media sans), bundled in
-  `assets/fonts/` so it works offline. To switch to another (e.g. Poppins or
+- **The font** is **Poppins** (a popular modern social-media sans), bundled in
+  `assets/fonts/` so it works offline. To switch to another (e.g. Montserrat or
   Bebas Neue), drop the `.woff2` files in that folder, update the `@font-face`
   blocks at the top of `css/styles.css`, and change the `FONT_FAMILY` constant
   at the top of `js/imaging.js`.

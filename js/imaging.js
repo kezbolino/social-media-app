@@ -6,7 +6,7 @@
  * No server, no upload — it all happens on the phone.
  */
 const Imaging = (() => {
-  const FONT_FAMILY = "Montserrat, Arial, sans-serif";
+  const FONT_FAMILY = "Poppins, Arial, sans-serif";
 
   // The canvas can only draw a web font once the browser has actually loaded
   // it — otherwise it silently falls back to a default. Call (and await) this
@@ -19,9 +19,9 @@ const Imaging = (() => {
       return fontsReady;
     }
     fontsReady = Promise.all([
-      document.fonts.load("800 80px Montserrat"),
-      document.fonts.load("700 40px Montserrat"),
-      document.fonts.load("600 32px Montserrat"),
+      document.fonts.load("800 80px Poppins"),
+      document.fonts.load("700 40px Poppins"),
+      document.fonts.load("600 32px Poppins"),
     ])
       .then(() => document.fonts.ready)
       .catch(() => {});
@@ -78,7 +78,7 @@ const Imaging = (() => {
     const align = opts.align || "center";
     const maxFont = opts.maxFont || Math.floor(box.height * 0.55);
     const minFont = opts.minFont || 24;
-    const family = "800 {size}px Montserrat, Arial, sans-serif";
+    const family = "800 {size}px Poppins, Arial, sans-serif";
 
     const fits = (lines, size) => {
       ctx.font = family.replace("{size}", size);
