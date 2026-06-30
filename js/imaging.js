@@ -114,15 +114,40 @@ const Imaging = (() => {
     return c;
   }
 
-  // SINGLE PHOTO: one image fitted to the export square.
-  function renderSingle(img) {
+  // SINGLE PHOTO: one image fitted to the export square. If `overlayText` is
+  // given, draw a branded lower band with the location/day printed on it.
+  function renderSingle(img, overlayText) {
     const { width, height } = window.APP_CONFIG.EXPORT;
     const canvas = newCanvas(width, height);
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, width, height);
     drawCover(ctx, img, { x: 0, y: 0, width, height });
+    if (overlayText) drawLowerBand(ctx, overlayText, width, height);
     return canvas;
+  }
+
+  // A semi-transparent brand band across the bottom with text on it.
+  function drawLowerBand(ctx, text, width, height) {
+    const bandH = Math.round(height * 0.17);
+    const y = height - bandH;
+    const grad = ctx.createLinearGradient(0, y, 0, height);
+    grad.addColorStop(0, "rgba(10,77,161,0)");
+    grad.addColorStop(0.35, "rgba(10,77,161,0.78)");
+    grad.addColorStop(1, "rgba(10,77,161,0.92)");
+    ctx.save();
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, y, width, bandH);
+    // Orange accent rule.
+    ctx.fillStyle = "#f58b1f";
+    ctx.fillRect(0, y, width, 8);
+    ctx.restore();
+    drawTextInBox(
+      ctx,
+      text,
+      { x: 48, y: y + 18, width: width - 96, height: bandH - 30 },
+      { color: "#ffffff", align: "center", maxFont: Math.round(bandH * 0.5) }
+    );
   }
 
   // COLLAGE: photos into the template's boxes, branding on top, optional text.
@@ -197,6 +222,7 @@ const Imaging = (() => {
     renderSingle,
     renderCollage,
     drawTextInBox,
+    drawLowerBand,
     toBlob,
     toDataURL,
   };

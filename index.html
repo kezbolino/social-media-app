@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#161616" />
+    <meta name="theme-color" content="#0a4da1" />
     <link rel="icon" href="data:," />
-    <title>Street Food Post</title>
+    <title>Chuckling Wings · Wingman</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
@@ -13,9 +13,9 @@
       <!-- ===== HOME ===== -->
       <section class="screen is-active" data-screen="home">
         <div class="home">
-          <div class="brand-mark">🛻</div>
-          <h1>Street Food Post</h1>
-          <p class="subtitle">Kill the blank page. Photo in, caption out, share it.</p>
+          <div class="brand-mark">🐔</div>
+          <h1>Chuckling Wings</h1>
+          <p class="subtitle">Your social-media <strong>wingman</strong>. Photo in, caption out, shared.</p>
           <button class="btn btn-primary btn-xl" data-action="new-post">+ New Post</button>
           <button class="btn btn-ghost" data-action="open-settings">⚙ Menu &amp; Settings</button>
         </div>
@@ -52,7 +52,13 @@
             <div id="singleEmpty" class="preview-empty">No photo yet</div>
           </div>
           <input id="singleInput" type="file" accept="image/*" hidden />
+          <input id="folderInput" type="file" accept="image/*" multiple webkitdirectory hidden />
           <button class="btn btn-secondary" data-action="pick-single">📷 Choose photo</button>
+          <div class="photo-tools">
+            <button class="btn btn-secondary" data-action="pick-folder-single">📁 Use a folder</button>
+            <button class="btn btn-accent" id="singleShuffle" data-action="shuffle-single" disabled>🔀 Shuffle photo</button>
+          </div>
+          <p id="singlePoolNote" class="pool-note" hidden></p>
           <button class="btn btn-primary" id="singleNext" data-action="single-next" disabled>Next ›</button>
         </div>
       </section>
@@ -74,6 +80,11 @@
           <p class="hint">Tap a slot to add a photo. Empty slots are fine.</p>
           <div id="collageSlots" class="slots"></div>
           <input id="collageInput" type="file" accept="image/*" hidden />
+          <div class="photo-tools">
+            <button class="btn btn-secondary" data-action="pick-folder-collage">📁 Use a folder</button>
+            <button class="btn btn-accent" id="collageShuffle" data-action="shuffle-collage" disabled>🔀 Shuffle images</button>
+          </div>
+          <p id="collagePoolNote" class="pool-note" hidden></p>
           <button class="btn btn-primary" id="collageNext" data-action="collage-next" disabled>Next ›</button>
         </div>
       </section>
@@ -121,12 +132,15 @@
           <h2>Your caption</h2>
         </header>
         <div class="pad">
+          <div class="preview-wrap preview-sm">
+            <img id="captionPreview" class="preview-img" alt="Post preview with text overlay" />
+          </div>
           <textarea id="captionText" class="caption-box" rows="5"></textarea>
           <div class="row">
-            <button class="btn btn-secondary" data-action="shuffle">🔀 Shuffle</button>
+            <button class="btn btn-accent" data-action="shuffle">🔀 Shuffle</button>
             <button class="btn btn-primary" data-action="caption-next">Review ›</button>
           </div>
-          <p class="hint">Tap the text to tweak it. Shuffle for a different line.</p>
+          <p class="hint">The picture above shows your location/day overlaid on the image. Tap the text to tweak the caption, or shuffle for a different line.</p>
         </div>
       </section>
 
@@ -154,7 +168,15 @@
           <h2>Menu &amp; Settings</h2>
         </header>
         <div class="pad">
-          <p class="lead">Best sellers &amp; sauces</p>
+          <p class="lead">📍 Saved locations</p>
+          <p class="hint">Your regular pitches. These show as quick-tap buttons when you make a post.</p>
+          <div id="locationList" class="menu-list"></div>
+          <div class="row">
+            <input id="locationInput" class="text-input" type="text" placeholder="e.g. Greenwich Market" />
+            <button class="btn btn-secondary" data-action="add-location">Add</button>
+          </div>
+
+          <p class="lead" style="margin-top: 28px;">🍗 Best sellers &amp; sauces</p>
           <p class="hint">Used to fill food captions (picked at random). Leave empty to skip food captions.</p>
           <div id="menuList" class="menu-list"></div>
           <div class="row">

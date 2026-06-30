@@ -22,5 +22,10 @@ window.APP_CONFIG = {
     MENU: "sfp.menuItems",
     RECENCY: "sfp.recencyLog",
     POSTS: "sfp.posts",
+    LOCATIONS: "sfp.locations",
   },
+
+  // Locations pre-loaded the first time the app runs. The user can add/remove
+  // these in Settings.
+  DEFAULT_LOCATIONS: ["Greenwich", "Brick Lane", "Camden Market"],
 };

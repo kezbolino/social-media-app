@@ -35,6 +35,32 @@ const Store = (() => {
     write(K.MENU, items);
   }
 
+  /* ---- Saved locations (regular pitches) ---- */
+  function getLocations() {
+    // First run: seed with the defaults from config.
+    const stored = read(K.LOCATIONS, null);
+    if (stored == null) {
+      const seed = (window.APP_CONFIG.DEFAULT_LOCATIONS || []).slice();
+      write(K.LOCATIONS, seed);
+      return seed;
+    }
+    return stored;
+  }
+  function setLocations(items) {
+    write(K.LOCATIONS, items);
+  }
+  // Add a location if it's new (case-insensitive); returns the updated list.
+  function addLocation(name) {
+    const trimmed = name.trim();
+    if (!trimmed) return getLocations();
+    const items = getLocations();
+    if (!items.some((l) => l.toLowerCase() === trimmed.toLowerCase())) {
+      items.push(trimmed);
+      setLocations(items);
+    }
+    return items;
+  }
+
   /* ---- Recency log: [{ hookId, dateUsed (ISO date string) }] ---- */
   function getRecencyLog() {
     return read(K.RECENCY, []);
@@ -77,6 +103,9 @@ const Store = (() => {
   return {
     getMenuItems,
     setMenuItems,
+    getLocations,
+    setLocations,
+    addLocation,
     getRecencyLog,
     recordHookUse,
     recentHookIds,

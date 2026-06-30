@@ -9,8 +9,8 @@ window.COLLAGE_TEMPLATES = {
       "id": "two_up",
       "name": "Two side by side",
       "overlay": null,
-      "background": "#161616",
-      "accent": "#ff7a18",
+      "background": "#0a4da1",
+      "accent": "#f58b1f",
       "boxes": [
         { "x": 30, "y": 30, "width": 502, "height": 1020 },
         { "x": 548, "y": 30, "width": 502, "height": 1020 }
@@ -21,8 +21,8 @@ window.COLLAGE_TEMPLATES = {
       "id": "one_big_two_small",
       "name": "One big, two small",
       "overlay": null,
-      "background": "#161616",
-      "accent": "#ff7a18",
+      "background": "#0a4da1",
+      "accent": "#f58b1f",
       "boxes": [
         { "x": 30, "y": 30, "width": 690, "height": 1020 },
         { "x": 736, "y": 30, "width": 314, "height": 502 },
@@ -34,8 +34,8 @@ window.COLLAGE_TEMPLATES = {
       "id": "four_square",
       "name": "Four square grid",
       "overlay": null,
-      "background": "#161616",
-      "accent": "#ff7a18",
+      "background": "#0a4da1",
+      "accent": "#f58b1f",
       "boxes": [
         { "x": 30, "y": 30, "width": 502, "height": 502 },
         { "x": 548, "y": 30, "width": 502, "height": 502 },
@@ -48,8 +48,8 @@ window.COLLAGE_TEMPLATES = {
       "id": "three_strip",
       "name": "Three across",
       "overlay": null,
-      "background": "#161616",
-      "accent": "#ff7a18",
+      "background": "#0a4da1",
+      "accent": "#f58b1f",
       "boxes": [
         { "x": 24, "y": 30, "width": 336, "height": 1020 },
         { "x": 372, "y": 30, "width": 336, "height": 1020 },
