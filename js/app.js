@@ -46,13 +46,18 @@
   async function boot() {
     try {
       await Hooks.init();
-      const res = await fetch(window.APP_CONFIG.TEMPLATES_URL);
-      templatesDoc = await res.json();
+      // Prefer the embedded templates (runs from a plain file); fall back to
+      // fetching the JSON when served over http.
+      if (window.COLLAGE_TEMPLATES) {
+        templatesDoc = window.COLLAGE_TEMPLATES;
+      } else {
+        const res = await fetch(window.APP_CONFIG.TEMPLATES_URL);
+        templatesDoc = await res.json();
+      }
       // Give templates their shared canvas size.
       templatesDoc.templates.forEach((t) => (t.canvas = templatesDoc.canvas));
     } catch (e) {
-      alert("Couldn't load the app data.\n\n" + e.message +
-        "\n\nTip: open the app through a local server (npm start), not by double-clicking the file.");
+      alert("Couldn't load the app data.\n\n" + e.message);
       return;
     }
     wireEvents();

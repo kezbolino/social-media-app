@@ -10,6 +10,12 @@ const Hooks = (() => {
   let library = null; // { variables, categories, hooks: [...] }
 
   async function init() {
+    // Prefer the embedded copy (lets the app run by just opening the file,
+    // no server). Fall back to fetching the JSON when served over http.
+    if (window.HOOK_LIBRARY) {
+      library = window.HOOK_LIBRARY;
+      return library;
+    }
     const res = await fetch(window.APP_CONFIG.HOOKS_URL);
     if (!res.ok) throw new Error("Could not load the hook library");
     library = await res.json();

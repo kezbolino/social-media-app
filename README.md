@@ -12,23 +12,27 @@ for. (See `streetfoodpostappV1spec.md` for the full brief this was built from.)
 
 ---
 
-## How to run it right now (to try it on your Mac)
+## How to run it right now (the easy way — no Terminal)
 
-The app is plain HTML/CSS/JavaScript. It needs to be served by a tiny local web
-server — **double-clicking `index.html` won't work** (browsers block the app from
-loading its data files that way). One command does it:
+1. Download the project as a ZIP (on GitHub: green **Code** button → **Download
+   ZIP**), or use this direct link to the current branch:
+   `https://github.com/kezbolino/social-media-app/archive/refs/heads/claude/new-session-wq4q6o.zip`
+2. **Double-click the ZIP** to unzip it (you'll get a `social-media-app` folder).
+3. Open that folder and **double-click `index.html`**.
 
-```bash
-npm start
-```
+That's it — it opens in your browser and works. No install, no Terminal, no
+developer tools. It runs entirely offline. (Drag the browser window narrow to see
+it phone-shaped.)
 
-Then open **http://localhost:5173** in your browser. That's it — no install, no
-build step. (Resize the window narrow, or use your browser's phone/device view,
-to see it as it'll look on a phone.)
-
-To try the **share** feature properly you need a real phone — desktop browsers
+To try the **share** button properly you need a real phone — desktop browsers
 can't open the share sheet, so on a Mac it falls back to copying the caption and
 downloading the image instead.
+
+### Optional: running it through a local server
+
+You don't need this, but if you ever prefer to serve it (e.g. while editing the
+`.json` data files and wanting changes to load live), run `npm start` and open
+**http://localhost:5173**.
 
 ---
 
@@ -75,6 +79,14 @@ docs/TEMPLATE_FORMAT.md      How to add your own collage layout (no coding)
   `id`. Use `{location}`, `{day}`, `{item}` where you want the blanks filled.
 - **`templates/templates.json`** — add collage layouts. See
   **`docs/TEMPLATE_FORMAT.md`** for the copy-paste guide.
+
+> **Note on editing the captions/templates:** the double-click (no-server) version
+> reads embedded copies — `data/streetfood_hooks.js` and `templates/templates.js`.
+> Those files are just `window.HOOK_LIBRARY = { ... }` / `window.COLLAGE_TEMPLATES
+> = { ... }` wrapped around the exact same content as the `.json` files, so if
+> you're editing by hand, change the matching `.js` file (everything after the
+> `=` is identical to the JSON). The `.json` files remain the tidy source of
+> truth and are what the server version loads.
 
 The four collage templates included are **placeholders** (a simple orange frame)
 so the whole flow works today. When you've designed your real branded templates,

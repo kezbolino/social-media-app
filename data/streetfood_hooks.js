@@ -1,0 +1,97 @@
+/* AUTO-GENERATED from data/streetfood_hooks.json — edit that file, not this one.
+ * This embedded copy lets the app run by simply opening index.html
+ * (no server needed). It is loaded before the app scripts. */
+window.HOOK_LIBRARY = {
+  "_readme": "Hook library for the street food social-post app. The app picks a hook by tag (from the quiz answer), fills in any {variables}, and tracks 'used' IDs to avoid recent repeats. Add more hooks any time - just give each a unique id.",
+  "variables": {
+    "location": "Where the van is pitched, e.g. 'Brick Lane' or 'Camden Market'",
+    "day": "The day they're there until, e.g. 'Sunday'",
+    "item": "A signature dish, e.g. 'loaded fries' (optional - only used by 'food' hooks)"
+  },
+  "categories": {
+    "location": "Posting about where you are / dates",
+    "brand": "Brand awareness / general hype",
+    "other": "Weather, last-chance, weekend, FOMO etc."
+  },
+  "hooks": [
+    { "id": "loc_001", "tags": ["location"], "text": "Right then, we've parked up at {location}. Come and get fed.", "uses": ["location"] },
+    { "id": "loc_002", "tags": ["location"], "text": "We're at {location} today. Your lunch problem? Sorted.", "uses": ["location"] },
+    { "id": "loc_003", "tags": ["location"], "text": "Spotted: us, at {location}. Bring your appetite.", "uses": ["location"] },
+    { "id": "loc_004", "tags": ["location"], "text": "{location}, we have landed. The smell will find you before the sign does.", "uses": ["location"] },
+    { "id": "loc_005", "tags": ["location"], "text": "Set up and serving at {location}. No excuses now.", "uses": ["location"] },
+    { "id": "loc_006", "tags": ["location"], "text": "We're at {location} today - follow your nose, it knows the way.", "uses": ["location"] },
+    { "id": "loc_007", "tags": ["location"], "text": "Good news: we're at {location}. Bad news: you're going to want seconds.", "uses": ["location"] },
+    { "id": "loc_008", "tags": ["location"], "text": "Find us at {location} today. We'll be the ones with the queue.", "uses": ["location"] },
+    { "id": "loc_009", "tags": ["location"], "text": "Pitched up at {location}. Come say hello (and order).", "uses": ["location"] },
+    { "id": "loc_010", "tags": ["location"], "text": "Lunch sorted: {location}, us, you, no regrets.", "uses": ["location"] },
+    { "id": "loc_011", "tags": ["location"], "text": "We're at {location} til {day}. Plenty of time to make this a habit.", "uses": ["location", "day"] },
+    { "id": "loc_012", "tags": ["location"], "text": "Here at {location} til {day}. After that, you'll have to chase us.", "uses": ["location", "day"] },
+    { "id": "loc_013", "tags": ["location"], "text": "{location} til {day} only. Tick tock.", "uses": ["location", "day"] },
+    { "id": "loc_014", "tags": ["location"], "text": "We're parked at {location} right through til {day}. You've got no excuse.", "uses": ["location", "day"] },
+    { "id": "loc_015", "tags": ["location"], "text": "Catch us at {location} til {day} - then we vanish like your willpower near the chips.", "uses": ["location", "day"] },
+    { "id": "loc_016", "tags": ["location"], "text": "Same great food, new postcode. We're at {location} today.", "uses": ["location"] },
+    { "id": "loc_017", "tags": ["location"], "text": "Roll up, roll up - we're trading at {location} today.", "uses": ["location"] },
+    { "id": "loc_018", "tags": ["location"], "text": "Your nose isn't lying. That's us, at {location}.", "uses": ["location"] },
+
+    { "id": "lst_001", "tags": ["other"], "text": "Last day at {location}! Get in before we pack up.", "uses": ["location"] },
+    { "id": "lst_002", "tags": ["other"], "text": "It's now or never - final day at {location} today.", "uses": ["location"] },
+    { "id": "lst_003", "tags": ["other"], "text": "We're gone after today. {location}, come and say a proper goodbye.", "uses": ["location"] },
+    { "id": "lst_004", "tags": ["other"], "text": "{day} is your last shot at {location}. Don't make it weird, just come.", "uses": ["location", "day"] },
+    { "id": "lst_005", "tags": ["other"], "text": "Blink and you'll miss us - last day at {location}.", "uses": ["location"] },
+
+    { "id": "wth_001", "tags": ["other"], "text": "It's chucking it down and we're still here at {location}. Hot food, come hide.", "uses": ["location"] },
+    { "id": "wth_002", "tags": ["other"], "text": "Grey skies, hot food. We're at {location} sorting your mood out.", "uses": ["location"] },
+    { "id": "wth_003", "tags": ["other"], "text": "Rain? Perfect weather for something hot from {location}. We're here.", "uses": ["location"] },
+    { "id": "wth_004", "tags": ["other"], "text": "Sun's out at {location}! Come grab something before we melt.", "uses": ["location"] },
+    { "id": "wth_005", "tags": ["other"], "text": "Bit nippy out? We've got the cure at {location}.", "uses": ["location"] },
+    { "id": "wth_006", "tags": ["other"], "text": "Don't let a bit of British weather stop you. We're at {location}, dry and ready.", "uses": ["location"] },
+    { "id": "wth_007", "tags": ["other"], "text": "Soggy commute? Treat yourself. We're at {location}.", "uses": ["location"] },
+
+    { "id": "tim_001", "tags": ["other"], "text": "It's {day}. You've earned this. Come find us at {location}.", "uses": ["location", "day"] },
+    { "id": "tim_002", "tags": ["other"], "text": "Friday feeling? We bottle it and serve it hot at {location}.", "uses": ["location"] },
+    { "id": "tim_003", "tags": ["other"], "text": "Weekend plans sorted: us, {location}, your face full of food.", "uses": ["location"] },
+    { "id": "tim_004", "tags": ["other"], "text": "Midweek slump? {location}, today, we fix that.", "uses": ["location"] },
+    { "id": "tim_005", "tags": ["other"], "text": "Monday's rough. Lunch doesn't have to be. We're at {location}.", "uses": ["location"] },
+
+    { "id": "fmo_001", "tags": ["other"], "text": "The queue's building at {location}. You coming or what?", "uses": ["location"] },
+    { "id": "fmo_002", "tags": ["other"], "text": "Everyone else figured out we're at {location}. Catch up.", "uses": ["location"] },
+    { "id": "fmo_003", "tags": ["other"], "text": "While you're reading this, someone's eating what you wanted. {location}. Go.", "uses": ["location"] },
+    { "id": "fmo_004", "tags": ["other"], "text": "Selling fast at {location} today. Don't say we didn't warn you.", "uses": ["location"] },
+
+    { "id": "brd_001", "tags": ["brand"], "text": "Still thinking about us? That's normal. We'd think about us too.", "uses": [] },
+    { "id": "brd_002", "tags": ["brand"], "text": "Your sad desk sandwich called. It's giving up. Come find us instead.", "uses": [] },
+    { "id": "brd_003", "tags": ["brand"], "text": "Life's too short for bad lunches. You know where we are.", "uses": [] },
+    { "id": "brd_004", "tags": ["brand"], "text": "Meal-deal energy is no way to live. Upgrade your lunch.", "uses": [] },
+    { "id": "brd_005", "tags": ["brand"], "text": "We don't do boring. Neither should your lunch break.", "uses": [] },
+    { "id": "brd_006", "tags": ["brand"], "text": "That little voice telling you to treat yourself? Listen to it.", "uses": [] },
+    { "id": "brd_007", "tags": ["brand"], "text": "If you can read this, you're hungry. We can help with that.", "uses": [] },
+    { "id": "brd_008", "tags": ["brand"], "text": "Made fresh, served hot, gone fast. That's the whole pitch.", "uses": [] },
+    { "id": "brd_009", "tags": ["brand"], "text": "No microwave. No shortcuts. No regrets.", "uses": [] },
+    { "id": "brd_010", "tags": ["brand"], "text": "Some people meal-prep. Some people find us. Be the second kind.", "uses": [] },
+
+    { "id": "fud_001", "tags": ["brand"], "text": "Fresh batch of {item} coming out the pan. You snooze, you lose.", "uses": ["item"] },
+    { "id": "fud_002", "tags": ["location"], "text": "{item}. Hot. Now. At {location}. Move.", "uses": ["item", "location"] },
+    { "id": "fud_003", "tags": ["brand"], "text": "We made too much {item}. Help us out, yeah?", "uses": ["item"] },
+    { "id": "fud_004", "tags": ["location"], "text": "The {item} is going fast at {location}. Just saying.", "uses": ["item", "location"] },
+    { "id": "fud_005", "tags": ["brand"], "text": "Reminder: you deserve {item} today. We're just saying.", "uses": ["item"] },
+
+    { "id": "lon_001", "tags": ["location", "london"], "text": "Get your plates of meat down to {location} - lunch is sorted.", "uses": ["location"] },
+    { "id": "lon_002", "tags": ["location", "london"], "text": "Proper Hank Marvin? We're at {location}. Do something about it.", "uses": ["location"] },
+    { "id": "lon_003", "tags": ["location", "london"], "text": "Come have a butcher's at what we're serving at {location} today.", "uses": ["location"] },
+    { "id": "lon_004", "tags": ["location", "london"], "text": "Put the dog and bone down and get yourself to {location}.", "uses": ["location"] },
+    { "id": "lon_005", "tags": ["location", "london"], "text": "Use your loaf - skip the meal deal, we're at {location}.", "uses": ["location"] },
+    { "id": "lon_006", "tags": ["other", "london"], "text": "Currant bun's out! We're at {location}, come make the most of it.", "uses": ["location"] },
+    { "id": "lon_007", "tags": ["location", "london"], "text": "Would you Adam and Eve it - we're back at {location}. Lucky you.", "uses": ["location"] },
+    { "id": "lon_008", "tags": ["other", "london"], "text": "Forget the Northern line misery. {location}, hot food, sorted.", "uses": ["location"] },
+    { "id": "lon_009", "tags": ["brand", "london"], "text": "The meal deal's telling porkies. Real food's at {location}.", "uses": ["location"] },
+    { "id": "lon_010", "tags": ["brand", "london"], "text": "Sack off Pret. We're at {location} and we actually mean it.", "uses": ["location"] },
+    { "id": "lon_011", "tags": ["location", "london"], "text": "Oyster card topped up? Good. Now get to {location}.", "uses": ["location"] },
+    { "id": "lon_012", "tags": ["location", "london"], "text": "Mind the gap... in your stomach. We're at {location} today.", "uses": ["location"] },
+    { "id": "lon_013", "tags": ["brand", "london"], "text": "We're London's worst-kept secret. {location}, today.", "uses": ["location"] },
+    { "id": "lon_014", "tags": ["other", "london"], "text": "Raining again? Welcome to London. Hot food's at {location}, come dry off.", "uses": ["location"] },
+    { "id": "lon_015", "tags": ["location", "london"], "text": "Lovely jubbly - we're back at {location} today.", "uses": ["location"] },
+    { "id": "lon_016", "tags": ["location", "london"], "text": "We're at {location} til {day}, so come and 'ave it.", "uses": ["location", "day"] },
+    { "id": "lon_017", "tags": ["brand", "london"], "text": "Skip the Tesco meal deal, you absolute diamond. Come find us.", "uses": [] },
+    { "id": "lon_018", "tags": ["brand", "london"], "text": "Even the pigeons know where the good food is. Do you? {location}.", "uses": ["location"] }
+  ]
+};
