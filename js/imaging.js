@@ -29,19 +29,43 @@ const Imaging = (() => {
   }
 
   // Turn a file the user picked into an <img> we can both draw and preview.
-  // We read it as a data URL so the image's src stays valid for the whole
-  // session (a blob URL would have to be revoked, which kills the preview).
+  // We resolve to an <img> whose src is a data URL, so it stays valid for the
+  // whole session (a blob URL would have to be revoked, which kills the
+  // preview). Phone photos carry EXIF rotation metadata; we honour it via
+  // createImageBitmap so they don't load sideways onto the canvas.
   function loadImageFromFile(file) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("That image couldn't be read"));
-      reader.onload = () => {
+      const finishWithDataUrl = (dataUrl) => {
         const img = new Image();
         img.onload = () => resolve(img);
         img.onerror = () => reject(new Error("That image couldn't be loaded"));
-        img.src = reader.result;
+        img.src = dataUrl;
       };
-      reader.readAsDataURL(file);
+
+      // Fallback: read the file straight as a data URL (no orientation fix).
+      const readAsDataUrl = () => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("That image couldn't be read"));
+        reader.onload = () => finishWithDataUrl(reader.result);
+        reader.readAsDataURL(file);
+      };
+
+      // Preferred: decode with EXIF orientation applied, then bake the
+      // corrected pixels back out so both preview and export are upright.
+      if (window.createImageBitmap) {
+        createImageBitmap(file, { imageOrientation: "from-image" })
+          .then((bmp) => {
+            const c = document.createElement("canvas");
+            c.width = bmp.width;
+            c.height = bmp.height;
+            c.getContext("2d").drawImage(bmp, 0, 0);
+            if (bmp.close) bmp.close();
+            finishWithDataUrl(c.toDataURL("image/png"));
+          })
+          .catch(readAsDataUrl);
+      } else {
+        readAsDataUrl();
+      }
     });
   }
 

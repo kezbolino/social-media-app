@@ -151,6 +151,21 @@ html, body {
 .row { display: flex; gap: 10px; align-items: center; }
 .row .btn { margin: 10px 0; flex: 1; }
 
+/* Sticky forward-action bar so the primary CTA stays in thumb reach while the
+   content above scrolls behind a soft fade. */
+.actionbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  /* bleed to the screen edges (.pad has 16px sides) and sit flush to the
+     bottom (cancels .pad's 40px bottom padding). */
+  margin: 14px -16px -40px;
+  padding: 12px 16px max(14px, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 62%, rgba(238, 242, 247, 0));
+}
+.actionbar .btn,
+.actionbar .row { margin: 0; }
+
 /* ---- Tiles (type & quiz) ---- */
 .tile {
   width: 100%;

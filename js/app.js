@@ -310,8 +310,31 @@
   /* ---------- QUIZ + DETAILS ---------- */
   function chooseTag(tag) {
     post.tag = tag;
+    // If this kind of post needs no typed details, skip the (empty) details
+    // screen and go straight to the caption.
+    if (Hooks.inputVarsForTag(tag).length === 0 && resolveCaption("quiz")) return;
     renderDetailFields();
     show("details");
+  }
+
+  // Pick a caption from the current post context and move to the caption
+  // screen. backTarget sets where that screen's Back button returns to —
+  // "quiz" when we skipped the details screen, "details" otherwise. Returns
+  // false if nothing fits so the caller can show the right fallback.
+  function resolveCaption(backTarget) {
+    const ctx = {
+      location: post.location,
+      day: post.day,
+      menuItems: Store.getMenuItems(),
+    };
+    const result = Hooks.choose(post.tag, ctx);
+    if (!result) return false;
+    setCaption(result);
+    renderCaptionPreview();
+    const back = document.querySelector('[data-screen="caption"] .back');
+    if (back) back.dataset.back = backTarget;
+    show("caption");
+    return true;
   }
 
   const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -379,23 +402,13 @@
     // Remember a freshly-typed location for next time.
     if (post.location) Store.addLocation(post.location);
 
-    const ctx = {
-      location: post.location,
-      day: post.day,
-      menuItems: Store.getMenuItems(),
-    };
-    const result = Hooks.choose(post.tag, ctx);
-    if (!result) {
-      const err = $("#detailsError");
-      err.hidden = false;
-      err.textContent = vars.includes("location") && !post.location
-        ? "Add a location to get a caption for this kind of post."
-        : "No caption fits those details — try a different answer or add a location.";
-      return;
-    }
-    setCaption(result);
-    renderCaptionPreview();
-    show("caption");
+    if (resolveCaption("details")) return;
+
+    const err = $("#detailsError");
+    err.hidden = false;
+    err.textContent = vars.includes("location") && !post.location
+      ? "Add a location to get a caption for this kind of post."
+      : "No caption fits those details — try a different answer or add a location.";
   }
 
   // Compose the post image (with the location/day text overlaid) for the
@@ -583,7 +596,12 @@
 
   /* ---------- utils ---------- */
   function escapeAttr(s) {
-    return String(s).replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   document.addEventListener("DOMContentLoaded", boot);

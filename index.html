@@ -59,7 +59,9 @@
             <button class="btn btn-accent" id="singleShuffle" data-action="shuffle-single" disabled>🔀 Shuffle photo</button>
           </div>
           <p id="singlePoolNote" class="pool-note" hidden></p>
-          <button class="btn btn-primary" id="singleNext" data-action="single-next" disabled>Next ›</button>
+          <div class="actionbar">
+            <button class="btn btn-primary" id="singleNext" data-action="single-next" disabled>Next ›</button>
+          </div>
         </div>
       </section>
 
@@ -85,7 +87,9 @@
             <button class="btn btn-accent" id="collageShuffle" data-action="shuffle-collage" disabled>🔀 Shuffle images</button>
           </div>
           <p id="collagePoolNote" class="pool-note" hidden></p>
-          <button class="btn btn-primary" id="collageNext" data-action="collage-next" disabled>Next ›</button>
+          <div class="actionbar">
+            <button class="btn btn-primary" id="collageNext" data-action="collage-next" disabled>Next ›</button>
+          </div>
         </div>
       </section>
 
@@ -121,7 +125,9 @@
           <div id="detailFields"></div>
           <p id="menuNote" class="hint" hidden></p>
           <p id="detailsError" class="error" hidden></p>
-          <button class="btn btn-primary" data-action="details-next">Get my caption ›</button>
+          <div class="actionbar">
+            <button class="btn btn-primary" data-action="details-next">Get my caption ›</button>
+          </div>
         </div>
       </section>
 
@@ -136,11 +142,13 @@
             <img id="captionPreview" class="preview-img" alt="Post preview with text overlay" />
           </div>
           <textarea id="captionText" class="caption-box" rows="5"></textarea>
-          <div class="row">
-            <button class="btn btn-accent" data-action="shuffle">🔀 Shuffle</button>
-            <button class="btn btn-primary" data-action="caption-next">Review ›</button>
+          <p class="hint">Your caption is shown on the image above. Edit it right in the box, or shuffle for a different line.</p>
+          <div class="actionbar">
+            <div class="row">
+              <button class="btn btn-accent" data-action="shuffle">🔀 Shuffle</button>
+              <button class="btn btn-primary" data-action="caption-next">Review ›</button>
+            </div>
           </div>
-          <p class="hint">The picture above shows your location/day overlaid on the image. Tap the text to tweak the caption, or shuffle for a different line.</p>
         </div>
       </section>
 
