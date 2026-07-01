@@ -30,9 +30,27 @@ const Editor = (() => {
     { key: "mono", name: "Mono", css: "grayscale(1) contrast(1.12)" },
   ];
 
+  // Text-tool styles, mimicking Instagram Stories' named text styles.
+  const TEXT_STYLES = {
+    classic: { name: "Classic", family: "Poppins", weight: 600, upper: false },
+    modern: { name: "Modern", family: "Oswald", weight: 600, upper: true, spacing: 0.06 },
+    neon: { name: "Neon", family: "Pacifico", weight: 400, upper: false, glow: true },
+    typewriter: { name: "Type", family: "'Space Mono'", weight: 700, upper: false },
+    strong: { name: "Strong", family: "Poppins", weight: 800, upper: false, highlightDefault: "solid" },
+  };
+  const STYLE_ORDER = ["classic", "modern", "neon", "typewriter", "strong"];
+  const SWATCHES = ["#ffffff", "#111111", "#0a4da1", "#f58b1f", "#e23b2e", "#2b8a3e", "#ffd21e", "#ff5fa2"];
+  const HIGHLIGHTS = ["none", "solid", "semi"];
+  const ALIGNS = ["center", "left", "right"];
+
   let els = null; // cached DOM
   let src = null; // source HTMLImageElement
   let aspectKey = "1:1";
+  let overlays = []; // text overlays: {id,text,style,color,align,highlight,cx,cy,size,rot}
+  let selId = null; // selected overlay id
+  let draggingOverlay = null;
+  let textFontsReady = null;
+  let uidCounter = 0;
   let zoom = 1; // 1..3
   let offX = 0, offY = 0; // image top-left within the frame, in CSS px
   let frameW = 0, frameH = 0; // preview frame size in CSS px
@@ -51,8 +69,20 @@ const Editor = (() => {
       tabs: document.getElementById("editorTabs"),
       filters: document.getElementById("editorFilters"),
       adjust: document.getElementById("editorAdjust"),
+      textPanel: document.getElementById("editorText"),
+      txtControls: document.getElementById("txtControls"),
+      txtInput: document.getElementById("txtInput"),
+      txtStyles: document.getElementById("txtStyles"),
+      txtSwatches: document.getElementById("txtSwatches"),
+      txtSize: document.getElementById("txtSize"),
+      txtRotate: document.getElementById("txtRotate"),
+      txtAlign: document.getElementById("txtAlign"),
+      txtHighlight: document.getElementById("txtHighlight"),
+      txtDelete: document.getElementById("txtDelete"),
+      txtHint: document.getElementById("txtHint"),
     };
     if (!els.canvas) return;
+    buildTextControls();
 
     els.aspectRow.addEventListener("click", (e) => {
       const b = e.target.closest("[data-aspect]");
@@ -71,6 +101,26 @@ const Editor = (() => {
       const s = e.target.closest("input[data-adj]");
       if (s) { adj[s.dataset.adj] = parseInt(s.value, 10); render(); }
     });
+
+    // Text tool controls.
+    els.textPanel.addEventListener("click", (e) => {
+      const a = e.target.closest("[data-txt]");
+      if (a) onTextAction(a.dataset.txt);
+    });
+    els.txtInput.addEventListener("input", (e) => {
+      const ov = selectedOverlay();
+      if (ov) { ov.text = e.target.value; render(); }
+    });
+    els.txtStyles.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-style]");
+      if (b) setOverlayProp("style", b.dataset.style);
+    });
+    els.txtSwatches.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-swatch]");
+      if (b) setOverlayProp("color", b.dataset.swatch);
+    });
+    els.txtSize.addEventListener("input", (e) => setOverlayProp("size", parseFloat(e.target.value)));
+    els.txtRotate.addEventListener("input", (e) => setOverlayProp("rot", parseInt(e.target.value, 10)));
 
     // Drag to reposition + two-finger pinch to zoom.
     const c = els.canvas;
@@ -91,10 +141,14 @@ const Editor = (() => {
       zoom = state.zoom || 1;
       filterKey = state.filterKey || "original";
       adj = Object.assign({ brightness: 0, contrast: 0, warmth: 0, saturation: 0 }, state.adj || {});
+      overlays = (state.overlays || []).map((o) => Object.assign({}, o));
     } else {
       aspectKey = "1:1"; zoom = 1; filterKey = "original";
       adj = { brightness: 0, contrast: 0, warmth: 0, saturation: 0 };
+      overlays = [];
     }
+    selId = null;
+    ensureTextFonts().then(() => { if (src) render(); });
     els.zoom.value = zoom;
     syncAspectButtons();
     syncAdjustInputs();
@@ -105,6 +159,7 @@ const Editor = (() => {
     clampOffsets();
     buildFilterThumbs();
     selectFilter(filterKey, true);
+    syncTextPanel();
     render();
   }
 
@@ -170,6 +225,7 @@ const Editor = (() => {
     ctx.drawImage(src, offX, offY, dw, dh);
     ctx.restore();
     drawThirds(ctx);
+    overlays.forEach((ov) => drawTextOverlay(ctx, ov, frameW, frameH, ov.id === selId && textMode()));
   }
 
   // Faint rule-of-thirds grid, like IG's crop overlay.
@@ -222,6 +278,11 @@ const Editor = (() => {
     );
     els.filters.hidden = name !== "filters";
     els.adjust.hidden = name !== "adjust";
+    els.textPanel.hidden = name !== "text";
+    render(); // toggles the selection outline on/off
+  }
+  function textMode() {
+    return !els.textPanel.hidden;
   }
 
   function selectFilter(key, skipRender) {
@@ -273,10 +334,16 @@ const Editor = (() => {
   }
   function onPointerDown(e) {
     els.canvas.setPointerCapture(e.pointerId);
-    pointers.set(e.pointerId, localXY(e));
+    const pt = localXY(e);
+    pointers.set(e.pointerId, pt);
     if (pointers.size === 2) {
+      draggingOverlay = null; // two fingers = zoom the image, not the text
       const [a, b] = [...pointers.values()];
       pinchStart = { dist: dist(a, b), zoom };
+    } else if (textMode()) {
+      const hit = overlayAt(pt.x, pt.y);
+      if (hit) { selId = hit.id; draggingOverlay = hit; syncTextPanel(); render(); }
+      else draggingOverlay = null;
     }
   }
   function onPointerMove(e) {
@@ -289,6 +356,10 @@ const Editor = (() => {
       const d = dist(a, b);
       const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
       setZoom(pinchStart.zoom * (d / pinchStart.dist), cx, cy);
+    } else if (pointers.size === 1 && draggingOverlay) {
+      draggingOverlay.cx = clamp01(draggingOverlay.cx + (now.x - prev.x) / frameW);
+      draggingOverlay.cy = clamp01(draggingOverlay.cy + (now.y - prev.y) / frameH);
+      render();
     } else if (pointers.size === 1) {
       offX += now.x - prev.x;
       offY += now.y - prev.y;
@@ -299,7 +370,9 @@ const Editor = (() => {
   function onPointerUp(e) {
     pointers.delete(e.pointerId);
     if (pointers.size < 2) pinchStart = null;
+    if (pointers.size === 0) draggingOverlay = null;
   }
+  function clamp01(v) { return Math.min(1, Math.max(0, v)); }
   function dist(a, b) {
     return Math.hypot(a.x - b.x, a.y - b.y);
   }
@@ -318,12 +391,222 @@ const Editor = (() => {
     const sh = frameH / scale;
     ctx.filter = combinedFilter() || "none";
     ctx.drawImage(src, sx, sy, sw, sh, 0, 0, TW, TH);
+    ctx.filter = "none"; // text is not affected by the photo filter
+    overlays.forEach((ov) => drawTextOverlay(ctx, ov, TW, TH, false));
     return {
       dataUrl: canvas.toDataURL("image/png"),
       exportSize: { width: TW, height: TH },
-      state: { aspectKey, zoom, filterKey, adj: Object.assign({}, adj), offset: { x: offX, y: offY } },
+      state: {
+        aspectKey, zoom, filterKey,
+        adj: Object.assign({}, adj),
+        offset: { x: offX, y: offY },
+        overlays: overlays.map((o) => Object.assign({}, o)),
+      },
     };
   }
 
-  return { init, open, getResult };
+  /* ---- Text tool ---- */
+  function ensureTextFonts() {
+    if (textFontsReady) return textFontsReady;
+    if (!document.fonts || !document.fonts.load) {
+      textFontsReady = Promise.resolve();
+      return textFontsReady;
+    }
+    textFontsReady = Promise.all([
+      document.fonts.load("600 40px Poppins"),
+      document.fonts.load("800 40px Poppins"),
+      document.fonts.load("600 40px Oswald"),
+      document.fonts.load("400 40px Pacifico"),
+      document.fonts.load('700 40px "Space Mono"'),
+    ]).then(() => document.fonts.ready).catch(() => {});
+    return textFontsReady;
+  }
+
+  function buildTextControls() {
+    els.txtStyles.innerHTML = STYLE_ORDER.map((k) =>
+      `<button class="style-chip" data-style="${k}" style="font-family:${TEXT_STYLES[k].family},sans-serif">${TEXT_STYLES[k].name}</button>`
+    ).join("");
+    els.txtSwatches.innerHTML = SWATCHES.map((c) =>
+      `<button class="swatch" data-swatch="${c}" style="background:${c}" aria-label="colour ${c}"></button>`
+    ).join("");
+  }
+
+  function selectedOverlay() {
+    return overlays.find((o) => o.id === selId) || null;
+  }
+
+  function onTextAction(action) {
+    if (action === "add") return addOverlay("");
+    if (action === "hook") return insertHook();
+    const ov = selectedOverlay();
+    if (!ov) return;
+    if (action === "delete") {
+      overlays = overlays.filter((o) => o.id !== ov.id);
+      selId = null;
+      syncTextPanel();
+      render();
+    } else if (action === "align") {
+      ov.align = ALIGNS[(ALIGNS.indexOf(ov.align) + 1) % ALIGNS.length];
+      syncTextPanel(); render();
+    } else if (action === "highlight") {
+      ov.highlight = HIGHLIGHTS[(HIGHLIGHTS.indexOf(ov.highlight) + 1) % HIGHLIGHTS.length];
+      syncTextPanel(); render();
+    }
+  }
+
+  function addOverlay(text) {
+    const ov = {
+      id: "ov" + ++uidCounter, text: text || "", style: "classic",
+      color: "#ffffff", align: "center", highlight: "none",
+      cx: 0.5, cy: 0.5, size: 9, rot: 0,
+    };
+    overlays.push(ov);
+    selId = ov.id;
+    showTab("text");
+    syncTextPanel();
+    render();
+    if (els.txtInput) els.txtInput.focus();
+  }
+
+  // Drop a ready-made cheeky hook onto the photo (variable-free ones so it
+  // needs no location/day).
+  function insertHook() {
+    let text = "Come and get fed.";
+    try {
+      const lib = typeof Hooks !== "undefined" && Hooks.getLibrary ? Hooks.getLibrary() : null;
+      if (lib && lib.hooks) {
+        const noVar = lib.hooks.filter((h) => !h.uses || h.uses.length === 0);
+        const pool = noVar.length ? noVar : lib.hooks;
+        const h = pool[Math.floor(Math.random() * pool.length)];
+        text = h.text.replace(/\{[^}]+\}/g, "").replace(/\s+/g, " ").trim();
+      }
+    } catch (e) { /* fall back to default line */ }
+    addOverlay(text);
+  }
+
+  function setOverlayProp(prop, value) {
+    const ov = selectedOverlay();
+    if (!ov) return;
+    if (prop === "style") {
+      ov.style = value;
+      const st = TEXT_STYLES[value];
+      if (st.highlightDefault && ov.highlight === "none") ov.highlight = st.highlightDefault;
+    } else {
+      ov[prop] = value;
+    }
+    syncTextPanel();
+    render();
+  }
+
+  function syncTextPanel() {
+    const ov = selectedOverlay();
+    els.txtControls.hidden = !ov;
+    els.txtDelete.hidden = !ov;
+    els.txtHint.hidden = !!ov;
+    if (!ov) return;
+    els.txtInput.value = ov.text;
+    els.txtSize.value = ov.size;
+    els.txtRotate.value = ov.rot;
+    els.txtStyles.querySelectorAll("[data-style]").forEach((b) =>
+      b.classList.toggle("selected", b.dataset.style === ov.style));
+    els.txtSwatches.querySelectorAll("[data-swatch]").forEach((b) =>
+      b.classList.toggle("selected", b.dataset.swatch.toLowerCase() === ov.color.toLowerCase()));
+    els.txtAlign.textContent = ov.align === "center" ? "↔ Centre" : ov.align === "left" ? "⇤ Left" : "⇥ Right";
+    els.txtHighlight.textContent = ov.highlight === "none" ? "▢ No fill" : ov.highlight === "solid" ? "▣ Colour fill" : "▨ Shade";
+  }
+
+  function wrapOverlayText(ctx, text, maxW) {
+    const out = [];
+    (text || "").split("\n").forEach((para) => {
+      const words = para.split(" ");
+      let line = "";
+      words.forEach((word) => {
+        const trial = line ? line + " " + word : word;
+        if (ctx.measureText(trial).width <= maxW || !line) line = trial;
+        else { out.push(line); line = word; }
+      });
+      out.push(line);
+    });
+    return out.length ? out : [""];
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function contrastColor(hex) {
+    const c = hex.replace("#", "");
+    const r = parseInt(c.substr(0, 2), 16), g = parseInt(c.substr(2, 2), 16), b = parseInt(c.substr(4, 2), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? "#111111" : "#ffffff";
+  }
+
+  function drawTextOverlay(ctx, ov, W, H, selected) {
+    const st = TEXT_STYLES[ov.style] || TEXT_STYLES.classic;
+    const fontPx = (ov.size / 100) * W;
+    const raw = ov.text || "";
+    if (!raw.trim() && !selected) { ov._box = null; return; }
+    const display = st.upper ? raw.toUpperCase() : raw;
+
+    ctx.save();
+    ctx.translate(ov.cx * W, ov.cy * H);
+    if (ov.rot) ctx.rotate((ov.rot * Math.PI) / 180);
+    ctx.font = `${st.weight} ${fontPx}px ${st.family}, sans-serif`;
+    if ("letterSpacing" in ctx) ctx.letterSpacing = st.spacing ? (st.spacing * fontPx).toFixed(1) + "px" : "0px";
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+
+    const lines = wrapOverlayText(ctx, display || " ", 0.92 * W);
+    const widths = lines.map((l) => ctx.measureText(l || " ").width);
+    const blockW = Math.max(1, ...widths);
+    const lineH = fontPx * 1.3;
+    const totalH = lines.length * lineH;
+    const startY = -totalH / 2 + lineH / 2;
+    const padX = fontPx * 0.3, padY = fontPx * 0.16;
+
+    lines.forEach((line, i) => {
+      const w = widths[i];
+      const y = startY + i * lineH;
+      const lineCX = ov.align === "left" ? -blockW / 2 + w / 2 : ov.align === "right" ? blockW / 2 - w / 2 : 0;
+      if (ov.highlight !== "none") {
+        ctx.fillStyle = ov.highlight === "solid" ? ov.color : "rgba(0,0,0,0.42)";
+        roundRect(ctx, lineCX - w / 2 - padX, y - lineH / 2, w + 2 * padX, lineH, fontPx * 0.14);
+        ctx.fill();
+      }
+      ctx.save();
+      if (st.glow && ov.highlight === "none") { ctx.shadowColor = ov.color; ctx.shadowBlur = fontPx * 0.55; }
+      else if (ov.highlight === "none") { ctx.shadowColor = "rgba(0,0,0,0.45)"; ctx.shadowBlur = fontPx * 0.12; }
+      ctx.fillStyle = ov.highlight === "solid" ? contrastColor(ov.color) : ov.color;
+      ctx.fillText(line || " ", lineCX, y);
+      ctx.restore();
+    });
+
+    if (selected) {
+      ctx.setLineDash([6, 5]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      ctx.strokeRect(-blockW / 2 - padX, -totalH / 2 - padY, blockW + 2 * padX, totalH + 2 * padY);
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+
+    // Axis-aligned hit box in frame space (used for tap-to-select / drag).
+    ov._box = { cx: ov.cx * W, cy: ov.cy * H, w: blockW + 2 * padX, h: totalH + 2 * padY };
+  }
+
+  function overlayAt(x, y) {
+    for (let i = overlays.length - 1; i >= 0; i--) {
+      const b = overlays[i]._box;
+      if (b && Math.abs(x - b.cx) <= b.w / 2 && Math.abs(y - b.cy) <= b.h / 2) return overlays[i];
+    }
+    return null;
+  }
+
+  return { init, open, getResult, fontsReady: ensureTextFonts };
 })();

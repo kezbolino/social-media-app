@@ -79,11 +79,17 @@ docs/TEMPLATE_FORMAT.md      How to add your own collage layout (no coding)
   `id`. Use `{location}`, `{day}`, `{item}` where you want the blanks filled.
 - **`templates/templates.json`** — add collage layouts. See
   **`docs/TEMPLATE_FORMAT.md`** for the copy-paste guide.
-- **The font** is **Poppins** (a popular modern social-media sans), bundled in
+- **The app font** is **Poppins** (a popular modern social-media sans), bundled in
   `assets/fonts/` so it works offline. To switch to another (e.g. Montserrat or
   Bebas Neue), drop the `.woff2` files in that folder, update the `@font-face`
   blocks at the top of `css/styles.css`, and change the `FONT_FAMILY` constant
   at the top of `js/imaging.js`.
+- **The photo editor** (single photos) mimics Instagram's create flow: crop /
+  reposition / zoom, aspect ratio (square / portrait / landscape), filter
+  presets, adjust sliders, and a **Text tool** (draggable text boxes with the
+  Classic / Modern / Neon / Typewriter / Strong styles — bundled Poppins,
+  Oswald, Pacifico and Space Mono fonts). On-image text is baked into the
+  exported photo; the pre-written hook stays as the separate post caption.
 
 > **Note on editing the captions/templates:** the double-click (no-server) version
 > reads embedded copies — `data/streetfood_hooks.js` and `templates/templates.js`.

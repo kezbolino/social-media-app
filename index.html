@@ -87,8 +87,30 @@
           <div id="editorTabs" class="editor-tabs">
             <button class="etab is-active" data-etab="filters">Filters</button>
             <button class="etab" data-etab="adjust">Adjust</button>
+            <button class="etab" data-etab="text">Text</button>
           </div>
           <div id="editorFilters" class="filter-row"></div>
+          <div id="editorText" class="text-panel" hidden>
+            <div class="text-actions">
+              <button class="btn btn-secondary btn-sm" data-txt="add">＋ Add text</button>
+              <button class="btn btn-ghost btn-sm" data-txt="hook">🎣 Insert a hook</button>
+              <button class="btn btn-ghost btn-sm" data-txt="delete" id="txtDelete" hidden>🗑 Delete</button>
+            </div>
+            <div id="txtControls" hidden>
+              <textarea id="txtInput" class="text-entry" rows="2" placeholder="Type your text…"></textarea>
+              <div id="txtStyles" class="text-styles"></div>
+              <div id="txtSwatches" class="text-swatches"></div>
+              <div class="text-row">
+                <button class="chip" id="txtAlign" data-txt="align">↔ Centre</button>
+                <button class="chip" id="txtHighlight" data-txt="highlight">▢ No fill</button>
+              </div>
+              <label class="adj-row"><span>Size</span>
+                <input type="range" id="txtSize" min="4" max="20" step="0.5" value="9" /></label>
+              <label class="adj-row"><span>Rotate</span>
+                <input type="range" id="txtRotate" min="-45" max="45" step="1" value="0" /></label>
+            </div>
+            <p class="hint" id="txtHint">Tap ＋ Add text or 🎣 Insert a hook, then drag it on the photo.</p>
+          </div>
           <div id="editorAdjust" class="adjust-panel" hidden>
             <label class="adj-row"><span>Brightness</span>
               <input type="range" data-adj="brightness" min="-100" max="100" value="0" /></label>
@@ -182,7 +204,7 @@
             <img id="captionPreview" class="preview-img" alt="Post preview with text overlay" />
           </div>
           <textarea id="captionText" class="caption-box" rows="5"></textarea>
-          <p class="hint">Your caption is shown on the image above. Edit it right in the box, or shuffle for a different line.</p>
+          <p class="hint">This is your <strong>post caption</strong> (shared as text with the photo). Edit it, or shuffle for a different line. To put words <em>on</em> the photo, use the editor's <strong>Text</strong> tab.</p>
           <div class="actionbar">
             <div class="row">
               <button class="btn btn-accent" data-action="shuffle">🔀 Shuffle</button>

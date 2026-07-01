@@ -177,6 +177,7 @@
   }
 
   async function editorNext() {
+    await Editor.fontsReady();
     const r = Editor.getResult();
     post.exportSize = r.exportSize;
     post.editState = r.state;
@@ -456,10 +457,11 @@
   async function composePostImage() {
     const caption = post.captionText;
     if (post.type === "single") {
-      // Prefer the editor's cropped + filtered result; fall back to the raw pick.
-      if (post.baseImage) return Imaging.renderPrepared(post.baseImage, caption);
+      // The editor already baked any on-image text into the base, so the
+      // caption here is just the post text (pasted when sharing) — not burned.
+      if (post.baseImage) return Imaging.renderPrepared(post.baseImage, null);
       if (!post.singleImage) return null;
-      return Imaging.renderSingle(post.singleImage, caption);
+      return Imaging.renderSingle(post.singleImage, null);
     }
     const tpl = currentTemplate();
     let overlay = null;
