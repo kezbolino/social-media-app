@@ -234,6 +234,18 @@ const Imaging = (() => {
     ctx.restore();
   }
 
+  // PREPARED IMAGE: an already-cropped/filtered image (from the editor) drawn
+  // at its own size, with the caption overlaid.
+  function renderPrepared(baseImg, captionText) {
+    const w = baseImg.naturalWidth || baseImg.width;
+    const h = baseImg.naturalHeight || baseImg.height;
+    const canvas = newCanvas(w, h);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(baseImg, 0, 0, w, h);
+    if (captionText) drawCaptionPanel(ctx, captionText, w, h);
+    return canvas;
+  }
+
   // COLLAGE: photos into the template's boxes, branding on top, optional text.
   // `images` is an array aligned to template.boxes (some entries may be null).
   // `overlayImg` is the pre-loaded branded PNG (or null for placeholder chrome).
@@ -303,6 +315,7 @@ const Imaging = (() => {
     loadImageFromFile,
     loadImageFromUrl,
     renderSingle,
+    renderPrepared,
     renderCollage,
     drawCaptionPanel,
     toBlob,

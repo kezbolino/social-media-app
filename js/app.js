@@ -21,7 +21,10 @@
       type: null, // 'single' | 'collage'
       templateId: null,
       templateIndex: 0,
-      singleImage: null, // HTMLImageElement
+      singleImage: null, // HTMLImageElement (raw pick)
+      baseImage: null, // HTMLImageElement (cropped + filtered by the editor)
+      exportSize: null, // { width, height } chosen in the editor
+      editState: null, // saved editor settings, so Back re-opens where you left
       collageImages: [], // aligned to template.boxes
       tag: null, // 'location' | 'brand' | 'other'
       location: "",
@@ -66,6 +69,7 @@
       return;
     }
     wireEvents();
+    Editor.init();
   }
 
   /* ---------- event wiring (delegated) ---------- */
@@ -116,7 +120,8 @@
       case "pick-single": $("#singleInput").click(); break;
       case "pick-folder-single": folderTarget = "single"; $("#folderInput").click(); break;
       case "shuffle-single": shuffleSinglePhoto(); break;
-      case "single-next": lastQuizBack = "single"; show("quiz"); break;
+      case "single-next": openEditor(); break;
+      case "editor-next": editorNext(); break;
       case "cycle-template": cycleTemplate(); break;
       case "pick-folder-collage": folderTarget = "collage"; $("#folderInput").click(); break;
       case "shuffle-collage": shuffleCollagePhotos(); break;
@@ -152,6 +157,8 @@
   async function setSingleImageFromFile(file) {
     try {
       post.singleImage = await Imaging.loadImageFromFile(file);
+      post.baseImage = null; // a new photo resets any previous crop/filter
+      post.editState = null;
       const img = $("#singlePreview");
       img.src = post.singleImage.src;
       img.hidden = false;
@@ -160,6 +167,25 @@
     } catch (err) {
       alert(err.message);
     }
+  }
+
+  /* ---------- PHOTO EDITOR (single) ---------- */
+  function openEditor() {
+    Editor.open(post.singleImage, post.editState);
+    lastQuizBack = "editor"; // the quiz's Back returns to the editor
+    show("editor");
+  }
+
+  async function editorNext() {
+    const r = Editor.getResult();
+    post.exportSize = r.exportSize;
+    post.editState = r.state;
+    try {
+      post.baseImage = await Imaging.loadImageFromUrl(r.dataUrl);
+    } catch (e) {
+      post.baseImage = null; // fall back to the raw photo if anything fails
+    }
+    show("quiz");
   }
 
   /* ---------- PHOTO FOLDER + SHUFFLE ---------- */
@@ -430,6 +456,8 @@
   async function composePostImage() {
     const caption = post.captionText;
     if (post.type === "single") {
+      // Prefer the editor's cropped + filtered result; fall back to the raw pick.
+      if (post.baseImage) return Imaging.renderPrepared(post.baseImage, caption);
       if (!post.singleImage) return null;
       return Imaging.renderSingle(post.singleImage, caption);
     }

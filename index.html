@@ -65,6 +65,46 @@
         </div>
       </section>
 
+      <!-- ===== PHOTO EDITOR (single) ===== -->
+      <section class="screen" data-screen="editor">
+        <header class="bar">
+          <button class="back" data-back="single">‹ Back</button>
+          <h2>Edit photo</h2>
+        </header>
+        <div class="pad">
+          <div id="editorStage" class="editor-stage">
+            <canvas id="editorCanvas"></canvas>
+          </div>
+          <div id="editorAspect" class="chips chips-centre">
+            <button class="chip selected" data-aspect="1:1">⬛ Square</button>
+            <button class="chip" data-aspect="4:5">▮ Portrait</button>
+            <button class="chip" data-aspect="1.91:1">▬ Landscape</button>
+          </div>
+          <div class="zoom-row">
+            <span class="zoom-ico">🔍</span>
+            <input id="editorZoom" type="range" min="1" max="3" step="0.01" value="1" aria-label="Zoom" />
+          </div>
+          <div id="editorTabs" class="editor-tabs">
+            <button class="etab is-active" data-etab="filters">Filters</button>
+            <button class="etab" data-etab="adjust">Adjust</button>
+          </div>
+          <div id="editorFilters" class="filter-row"></div>
+          <div id="editorAdjust" class="adjust-panel" hidden>
+            <label class="adj-row"><span>Brightness</span>
+              <input type="range" data-adj="brightness" min="-100" max="100" value="0" /></label>
+            <label class="adj-row"><span>Contrast</span>
+              <input type="range" data-adj="contrast" min="-100" max="100" value="0" /></label>
+            <label class="adj-row"><span>Warmth</span>
+              <input type="range" data-adj="warmth" min="-100" max="100" value="0" /></label>
+            <label class="adj-row"><span>Saturation</span>
+              <input type="range" data-adj="saturation" min="-100" max="100" value="0" /></label>
+          </div>
+          <div class="actionbar">
+            <button class="btn btn-primary" data-action="editor-next">Next ›</button>
+          </div>
+        </div>
+      </section>
+
       <!-- ===== COLLAGE ===== -->
       <section class="screen" data-screen="collage">
         <header class="bar">
@@ -202,6 +242,7 @@
     <script src="js/store.js"></script>
     <script src="js/hooks.js"></script>
     <script src="js/imaging.js"></script>
+    <script src="js/editor.js"></script>
     <script src="js/share.js"></script>
     <script src="js/app.js"></script>
   </body>

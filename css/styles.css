@@ -249,6 +249,81 @@ html, body {
 .chip.selected { background: var(--orange); border-color: var(--orange); color: #1a1208; }
 .chip-add { color: var(--muted); border-style: dashed; }
 
+/* ---- Photo editor (Instagram-style) ---- */
+.editor-stage {
+  width: 100%;
+  min-height: 240px;
+  background: #0c1622;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 12px;
+  padding: 8px;
+}
+#editorCanvas { border-radius: 8px; display: block; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); cursor: grab; }
+#editorCanvas:active { cursor: grabbing; }
+.chips-centre { justify-content: center; }
+.zoom-row { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; }
+.zoom-ico { font-size: 1rem; }
+.zoom-row input[type="range"] { flex: 1; accent-color: var(--orange); }
+
+.editor-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--panel-2);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 12px;
+}
+.etab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 9px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.etab.is-active { background: var(--blue); color: #fff; }
+
+.filter-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-cell {
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.filter-cell canvas {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  border: 3px solid transparent;
+  display: block;
+}
+.filter-cell span { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.filter-cell.selected canvas { border-color: var(--orange); }
+.filter-cell.selected span { color: var(--orange-press); }
+
+.adjust-panel { padding: 4px 2px; }
+.adj-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.adj-row span { flex: 0 0 92px; font-weight: 600; font-size: 0.9rem; }
+.adj-row input[type="range"] { flex: 1; accent-color: var(--orange); }
+
 /* ---- Inputs ---- */
 .text-input {
   width: 100%;
