@@ -84,12 +84,16 @@ docs/TEMPLATE_FORMAT.md      How to add your own collage layout (no coding)
   Bebas Neue), drop the `.woff2` files in that folder, update the `@font-face`
   blocks at the top of `css/styles.css`, and change the `FONT_FAMILY` constant
   at the top of `js/imaging.js`.
-- **The photo editor** (single photos) mimics Instagram's create flow: crop /
-  reposition / zoom, aspect ratio (square / portrait / landscape), filter
-  presets, adjust sliders, and a **Text tool** (draggable text boxes with the
-  Classic / Modern / Neon / Typewriter / Strong styles — bundled Poppins,
-  Oswald, Pacifico and Space Mono fonts). On-image text is baked into the
-  exported photo; the pre-written hook stays as the separate post caption.
+- **The photo editor** mimics Instagram's create flow: crop / reposition / zoom,
+  aspect ratio (square / portrait / landscape), filter presets, adjust sliders,
+  and a **Stories-style Text tool** — draggable text boxes with the Classic /
+  Modern / Neon / Typewriter / Strong styles (bundled Poppins, Oswald, Pacifico,
+  Space Mono fonts), colour swatches, a full colour picker and an **eyedropper**
+  (sample a colour from the photo), alignment, highlight modes, and **two-finger
+  pinch to scale + rotate** the text. Single photos get the full editor;
+  collages get a **text-only editor** to caption the finished layout. On-image
+  text is baked into the exported photo; the pre-written hook stays as the
+  separate post caption.
 
 > **Note on editing the captions/templates:** the double-click (no-server) version
 > reads embedded copies — `data/streetfood_hooks.js` and `templates/templates.js`.

@@ -125,7 +125,7 @@
       case "cycle-template": cycleTemplate(); break;
       case "pick-folder-collage": folderTarget = "collage"; $("#folderInput").click(); break;
       case "shuffle-collage": shuffleCollagePhotos(); break;
-      case "collage-next": lastQuizBack = "collage"; show("quiz"); break;
+      case "collage-next": openCollageTextEditor(); break;
       case "add-location": addLocationItem(); break;
       case "details-next": detailsNext(); break;
       case "shuffle": shuffleCaption(); break;
@@ -169,10 +169,38 @@
     }
   }
 
-  /* ---------- PHOTO EDITOR (single) ---------- */
+  /* ---------- PHOTO EDITOR ---------- */
+  function setEditorChrome(backTo, title) {
+    const back = document.querySelector('[data-screen="editor"] .back');
+    if (back) back.dataset.back = backTo;
+    const h2 = document.querySelector('[data-screen="editor"] h2');
+    if (h2) h2.textContent = title;
+  }
+
+  // Single photos: full editor (crop / filter / adjust / text).
   function openEditor() {
+    setEditorChrome("single", "Edit photo");
     Editor.open(post.singleImage, post.editState);
     lastQuizBack = "editor"; // the quiz's Back returns to the editor
+    show("editor");
+  }
+
+  // Collages: compose the layout, then a text-only editor to add captions on it.
+  async function openCollageTextEditor() {
+    await Imaging.ensureFonts();
+    const tpl = currentTemplate();
+    let overlay = null;
+    if (tpl.overlay) {
+      try { overlay = await Imaging.loadImageFromUrl(tpl.overlay); } catch (e) { overlay = null; }
+    }
+    const canvas = Imaging.renderCollage(tpl, post.collageImages, overlay, null);
+    let bg;
+    try { bg = await Imaging.loadImageFromUrl(canvas.toDataURL("image/png")); }
+    catch (e) { bg = null; }
+    if (!bg) { lastQuizBack = "collage"; return show("quiz"); }
+    setEditorChrome("collage", "Add text");
+    Editor.open(bg, post.editState, { mode: "text" });
+    lastQuizBack = "editor";
     show("editor");
   }
 
@@ -184,7 +212,7 @@
     try {
       post.baseImage = await Imaging.loadImageFromUrl(r.dataUrl);
     } catch (e) {
-      post.baseImage = null; // fall back to the raw photo if anything fails
+      post.baseImage = null; // fall back if anything fails
     }
     show("quiz");
   }
@@ -258,6 +286,8 @@
   function startCollage() {
     post.type = "collage";
     post.templateIndex = 0;
+    post.baseImage = null;
+    post.editState = null;
     applyTemplate();
     refreshPoolUi();
     show("collage");
@@ -455,11 +485,10 @@
   // Build the finished image (photo[s] + the full caption overlaid). Shared by
   // the live caption preview and the final export so they always match.
   async function composePostImage() {
-    const caption = post.captionText;
+    // The editor bakes crop/filter/text into the base image; the caption is
+    // just the post text now (pasted when sharing), never burned on.
+    if (post.baseImage) return Imaging.renderPrepared(post.baseImage, null);
     if (post.type === "single") {
-      // The editor already baked any on-image text into the base, so the
-      // caption here is just the post text (pasted when sharing) — not burned.
-      if (post.baseImage) return Imaging.renderPrepared(post.baseImage, null);
       if (!post.singleImage) return null;
       return Imaging.renderSingle(post.singleImage, null);
     }
@@ -468,7 +497,7 @@
     if (tpl.overlay) {
       try { overlay = await Imaging.loadImageFromUrl(tpl.overlay); } catch (e) { overlay = null; }
     }
-    return Imaging.renderCollage(tpl, post.collageImages, overlay, caption);
+    return Imaging.renderCollage(tpl, post.collageImages, overlay, null);
   }
 
   // Re-render the preview a beat after the user stops editing the caption.

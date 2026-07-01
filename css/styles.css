@@ -389,6 +389,18 @@ html, body {
 .swatch.selected { border-color: var(--orange); transform: scale(1.12); }
 .text-row { display: flex; gap: 8px; margin-bottom: 10px; }
 .text-row .chip { flex: 1; text-align: center; }
+.swatch-tool { box-shadow: none; background: var(--panel-2) !important; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.text-tip { margin: 2px 0 8px; font-size: 0.8rem; }
+#editorCanvas.sampling { cursor: crosshair; }
+
+/* Text-only editor mode (collage captions): hide crop + filter/adjust UI. */
+.mode-text #editorAspect,
+.mode-text .zoom-row,
+.mode-text #editorTabs [data-etab="filters"],
+.mode-text #editorTabs [data-etab="adjust"],
+.mode-text #editorFilters,
+.mode-text #editorAdjust { display: none !important; }
+.mode-text #editorTabs { display: none; }
 
 /* ---- Inputs ---- */
 .text-input {

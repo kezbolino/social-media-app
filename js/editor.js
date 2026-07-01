@@ -49,8 +49,12 @@ const Editor = (() => {
   let overlays = []; // text overlays: {id,text,style,color,align,highlight,cx,cy,size,rot}
   let selId = null; // selected overlay id
   let draggingOverlay = null;
+  let overlayPinch = null; // two-finger scale/rotate of a text overlay
   let textFontsReady = null;
   let uidCounter = 0;
+  let modeText = false; // text-only mode (used for collages: no crop/filter)
+  let bgRatio = 1; // background image aspect in text-only mode
+  let sampleMode = false; // eyedropper: next tap samples a colour from the photo
   let zoom = 1; // 1..3
   let offX = 0, offY = 0; // image top-left within the frame, in CSS px
   let frameW = 0, frameH = 0; // preview frame size in CSS px
@@ -80,6 +84,7 @@ const Editor = (() => {
       txtHighlight: document.getElementById("txtHighlight"),
       txtDelete: document.getElementById("txtDelete"),
       txtHint: document.getElementById("txtHint"),
+      colorInput: document.getElementById("txtColorInput"),
     };
     if (!els.canvas) return;
     buildTextControls();
@@ -116,9 +121,22 @@ const Editor = (() => {
       if (b) setOverlayProp("style", b.dataset.style);
     });
     els.txtSwatches.addEventListener("click", (e) => {
+      if (e.target.closest("[data-eyedrop]")) {
+        sampleMode = !sampleMode;
+        els.canvas.classList.toggle("sampling", sampleMode);
+        return;
+      }
+      if (e.target.closest("[data-more]")) {
+        const ov = selectedOverlay();
+        if (ov && els.colorInput) { els.colorInput.value = toHex6(ov.color); els.colorInput.click(); }
+        return;
+      }
       const b = e.target.closest("[data-swatch]");
       if (b) setOverlayProp("color", b.dataset.swatch);
     });
+    if (els.colorInput) {
+      els.colorInput.addEventListener("input", (e) => setOverlayProp("color", e.target.value));
+    }
     els.txtSize.addEventListener("input", (e) => setOverlayProp("size", parseFloat(e.target.value)));
     els.txtRotate.addEventListener("input", (e) => setOverlayProp("rot", parseInt(e.target.value, 10)));
 
@@ -134,8 +152,15 @@ const Editor = (() => {
   }
 
   // Open the editor on an image, optionally restoring a previous edit state.
-  function open(image, state) {
+  // opts.mode === "text" gives a text-only editor (no crop/filter) used for
+  // adding captions onto an already-composed collage.
+  function open(image, state, opts) {
+    opts = opts || {};
+    modeText = opts.mode === "text";
     src = image;
+    bgRatio = src.width / src.height;
+    els.screen.classList.toggle("mode-text", modeText);
+    sampleMode = false;
     if (state) {
       aspectKey = state.aspectKey || "1:1";
       zoom = state.zoom || 1;
@@ -147,12 +172,13 @@ const Editor = (() => {
       adj = { brightness: 0, contrast: 0, warmth: 0, saturation: 0 };
       overlays = [];
     }
+    if (modeText) { zoom = 1; }
     selId = null;
     ensureTextFonts().then(() => { if (src) render(); });
     els.zoom.value = zoom;
     syncAspectButtons();
     syncAdjustInputs();
-    showTab("filters");
+    showTab(modeText ? "text" : "filters");
     layout();
     if (state && state.offset) { offX = state.offset.x; offY = state.offset.y; }
     else centreImage();
@@ -173,7 +199,7 @@ const Editor = (() => {
   function layout() {
     const stageW = Math.max(240, els.stage.clientWidth || 340);
     const maxH = Math.min(window.innerHeight * 0.5, 440);
-    const ratio = ASPECTS[aspectKey].ratio;
+    const ratio = modeText ? bgRatio : ASPECTS[aspectKey].ratio;
     let w = stageW, h = w / ratio;
     if (h > maxH) { h = maxH; w = h * ratio; }
     frameW = Math.round(w);
@@ -224,8 +250,8 @@ const Editor = (() => {
     const dh = src.height * drawScale();
     ctx.drawImage(src, offX, offY, dw, dh);
     ctx.restore();
-    drawThirds(ctx);
-    overlays.forEach((ov) => drawTextOverlay(ctx, ov, frameW, frameH, ov.id === selId && textMode()));
+    if (!modeText) drawThirds(ctx);
+    overlays.forEach((ov) => drawTextOverlay(ctx, ov, frameW, frameH, ov.id === selId && textMode(), true));
   }
 
   // Faint rule-of-thirds grid, like IG's crop overlay.
@@ -333,17 +359,35 @@ const Editor = (() => {
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
   function onPointerDown(e) {
-    els.canvas.setPointerCapture(e.pointerId);
+    try { els.canvas.setPointerCapture(e.pointerId); } catch (err) { /* synthetic/edge */ }
     const pt = localXY(e);
     pointers.set(e.pointerId, pt);
+
+    // Eyedropper: the next tap samples a colour from the photo.
+    if (sampleMode && pointers.size === 1) {
+      sampleColourAt(pt);
+      sampleMode = false;
+      els.canvas.classList.remove("sampling");
+      return;
+    }
+
     if (pointers.size === 2) {
-      draggingOverlay = null; // two fingers = zoom the image, not the text
+      const sel = selectedOverlay();
       const [a, b] = [...pointers.values()];
-      pinchStart = { dist: dist(a, b), zoom };
+      if (textMode() && sel) {
+        // Two fingers on a selected text = scale + rotate it (like IG).
+        overlayPinch = { id: sel.id, dist: dist(a, b), angle: angleOf(a, b), size: sel.size, rot: sel.rot };
+        draggingOverlay = null; pinchStart = null;
+      } else if (!modeText) {
+        overlayPinch = null; draggingOverlay = null;
+        pinchStart = { dist: dist(a, b), zoom };
+      }
     } else if (textMode()) {
       const hit = overlayAt(pt.x, pt.y);
-      if (hit) { selId = hit.id; draggingOverlay = hit; syncTextPanel(); render(); }
-      else draggingOverlay = null;
+      if (hit) { selId = hit.id; draggingOverlay = hit; }
+      else { selId = null; draggingOverlay = null; }
+      syncTextPanel();
+      render();
     }
   }
   function onPointerMove(e) {
@@ -351,16 +395,23 @@ const Editor = (() => {
     const prev = pointers.get(e.pointerId);
     const now = localXY(e);
     pointers.set(e.pointerId, now);
-    if (pointers.size === 2 && pinchStart) {
+    if (pointers.size === 2 && overlayPinch) {
+      const sel = overlays.find((o) => o.id === overlayPinch.id);
+      if (!sel) return;
       const [a, b] = [...pointers.values()];
-      const d = dist(a, b);
+      sel.size = Math.min(40, Math.max(3, overlayPinch.size * (dist(a, b) / overlayPinch.dist)));
+      sel.rot = Math.round(overlayPinch.rot + ((angleOf(a, b) - overlayPinch.angle) * 180) / Math.PI);
+      syncTextPanel();
+      render();
+    } else if (pointers.size === 2 && pinchStart) {
+      const [a, b] = [...pointers.values()];
       const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
-      setZoom(pinchStart.zoom * (d / pinchStart.dist), cx, cy);
+      setZoom(pinchStart.zoom * (dist(a, b) / pinchStart.dist), cx, cy);
     } else if (pointers.size === 1 && draggingOverlay) {
       draggingOverlay.cx = clamp01(draggingOverlay.cx + (now.x - prev.x) / frameW);
       draggingOverlay.cy = clamp01(draggingOverlay.cy + (now.y - prev.y) / frameH);
       render();
-    } else if (pointers.size === 1) {
+    } else if (pointers.size === 1 && !modeText && !draggingOverlay) {
       offX += now.x - prev.x;
       offY += now.y - prev.y;
       clampOffsets();
@@ -369,30 +420,47 @@ const Editor = (() => {
   }
   function onPointerUp(e) {
     pointers.delete(e.pointerId);
-    if (pointers.size < 2) pinchStart = null;
+    if (pointers.size < 2) { pinchStart = null; overlayPinch = null; }
     if (pointers.size === 0) draggingOverlay = null;
   }
   function clamp01(v) { return Math.min(1, Math.max(0, v)); }
+  function angleOf(a, b) { return Math.atan2(b.y - a.y, b.x - a.x); }
+
+  function sampleColourAt(pt) {
+    try {
+      const dpr = window.devicePixelRatio || 1;
+      const d = els.canvas.getContext("2d").getImageData(
+        Math.round(pt.x * dpr), Math.round(pt.y * dpr), 1, 1
+      ).data;
+      const hex = "#" + [d[0], d[1], d[2]].map((n) => n.toString(16).padStart(2, "0")).join("");
+      setOverlayProp("color", hex);
+    } catch (e) { /* getImageData can fail on tainted canvases; ignore */ }
+  }
   function dist(a, b) {
     return Math.hypot(a.x - b.x, a.y - b.y);
   }
 
   // Export the cropped + filtered image at full resolution.
   function getResult() {
-    const [TW, TH] = ASPECTS[aspectKey].export;
     const canvas = document.createElement("canvas");
-    canvas.width = TW; canvas.height = TH;
     const ctx = canvas.getContext("2d");
-    const scale = drawScale();
-    // Source rectangle currently visible in the frame.
-    const sx = -offX / scale;
-    const sy = -offY / scale;
-    const sw = frameW / scale;
-    const sh = frameH / scale;
-    ctx.filter = combinedFilter() || "none";
-    ctx.drawImage(src, sx, sy, sw, sh, 0, 0, TW, TH);
+    let TW, TH;
+    if (modeText) {
+      // Text-only: keep the background at its own size, just bake text on top.
+      TW = src.width; TH = src.height;
+      canvas.width = TW; canvas.height = TH;
+      ctx.drawImage(src, 0, 0, TW, TH);
+    } else {
+      [TW, TH] = ASPECTS[aspectKey].export;
+      canvas.width = TW; canvas.height = TH;
+      const scale = drawScale();
+      const sx = -offX / scale, sy = -offY / scale;
+      const sw = frameW / scale, sh = frameH / scale;
+      ctx.filter = combinedFilter() || "none";
+      ctx.drawImage(src, sx, sy, sw, sh, 0, 0, TW, TH);
+    }
     ctx.filter = "none"; // text is not affected by the photo filter
-    overlays.forEach((ov) => drawTextOverlay(ctx, ov, TW, TH, false));
+    overlays.forEach((ov) => drawTextOverlay(ctx, ov, TW, TH, false, false));
     return {
       dataUrl: canvas.toDataURL("image/png"),
       exportSize: { width: TW, height: TH },
@@ -426,9 +494,20 @@ const Editor = (() => {
     els.txtStyles.innerHTML = STYLE_ORDER.map((k) =>
       `<button class="style-chip" data-style="${k}" style="font-family:${TEXT_STYLES[k].family},sans-serif">${TEXT_STYLES[k].name}</button>`
     ).join("");
-    els.txtSwatches.innerHTML = SWATCHES.map((c) =>
-      `<button class="swatch" data-swatch="${c}" style="background:${c}" aria-label="colour ${c}"></button>`
-    ).join("");
+    els.txtSwatches.innerHTML =
+      SWATCHES.map((c) =>
+        `<button class="swatch" data-swatch="${c}" style="background:${c}" aria-label="colour ${c}"></button>`
+      ).join("") +
+      `<button class="swatch swatch-tool" data-eyedrop aria-label="Pick colour from photo">🎯</button>` +
+      `<button class="swatch swatch-tool" data-more aria-label="More colours">🎨</button>`;
+  }
+
+  // Normalise a colour to #rrggbb for the native colour input.
+  function toHex6(c) {
+    if (/^#[0-9a-f]{6}$/i.test(c)) return c;
+    const m = /^#([0-9a-f]{3})$/i.exec(c);
+    if (m) return "#" + m[1].split("").map((h) => h + h).join("");
+    return "#ffffff";
   }
 
   function selectedOverlay() {
@@ -547,11 +626,11 @@ const Editor = (() => {
     return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? "#111111" : "#ffffff";
   }
 
-  function drawTextOverlay(ctx, ov, W, H, selected) {
+  function drawTextOverlay(ctx, ov, W, H, selected, track) {
     const st = TEXT_STYLES[ov.style] || TEXT_STYLES.classic;
     const fontPx = (ov.size / 100) * W;
     const raw = ov.text || "";
-    if (!raw.trim() && !selected) { ov._box = null; return; }
+    if (!raw.trim() && !selected) { if (track) ov._box = null; return; }
     const display = st.upper ? raw.toUpperCase() : raw;
 
     ctx.save();
@@ -597,7 +676,8 @@ const Editor = (() => {
     ctx.restore();
 
     // Axis-aligned hit box in frame space (used for tap-to-select / drag).
-    ov._box = { cx: ov.cx * W, cy: ov.cy * H, w: blockW + 2 * padX, h: totalH + 2 * padY };
+    // Only stored during live rendering, not during export (different scale).
+    if (track) ov._box = { cx: ov.cx * W, cy: ov.cy * H, w: blockW + 2 * padX, h: totalH + 2 * padY };
   }
 
   function overlayAt(x, y) {
