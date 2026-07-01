@@ -463,3 +463,73 @@ html, body {
 }
 .menu-empty { color: var(--muted); font-style: italic; }
 .section-title { font-weight: 700; color: var(--blue); margin: 22px 0 4px; font-size: 1.05rem; }
+
+/* ---- Work calendar ---- */
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 10px; }
+.cal-title { font-weight: 700; color: var(--blue); font-size: 1.1rem; }
+.cal-head .btn-sm { font-size: 1.3rem; padding: 4px 14px; }
+.cal-weekdays, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-weekdays { margin-bottom: 6px; }
+.cal-weekdays span { text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--muted); }
+.cal-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0;
+}
+.cal-cell.blank { visibility: hidden; border: none; background: none; }
+.cal-cell.working { background: #fdebd6; border-color: var(--orange); color: var(--orange-press); }
+.cal-cell.today { box-shadow: inset 0 0 0 2px var(--blue); }
+.cal-cell.selected { box-shadow: inset 0 0 0 3px var(--orange); }
+.cal-num { font-size: 0.95rem; }
+.cal-dot { position: absolute; bottom: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+.cal-day {
+  margin-top: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.cal-day-title { font-weight: 700; color: var(--blue); margin: 0 0 8px; }
+
+/* ---- Generate posts ---- */
+.gen-cards { display: flex; flex-direction: column; gap: 12px; margin: 8px 0 14px; }
+.gen-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+  cursor: pointer;
+  width: 100%;
+}
+.gen-card:active { background: var(--panel-2); }
+.gen-card img { width: 96px; height: 96px; object-fit: cover; border-radius: 12px; flex: 0 0 auto; }
+.gen-caption { font-size: 0.98rem; line-height: 1.35; color: var(--text); }
+
+/* ---- Reminder toggle ---- */
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.switch-row input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--orange); }
+.time-input { width: auto; padding: 8px 10px; }

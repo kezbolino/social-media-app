@@ -17,6 +17,8 @@
           <h1>Chuckling Wings</h1>
           <p class="subtitle">Your social-media <strong>wingman</strong>. Photo in, caption out, shared.</p>
           <button class="btn btn-primary btn-xl" data-action="new-post">+ New Post</button>
+          <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
+          <button class="btn btn-secondary" data-action="open-calendar">📅 Work calendar</button>
           <button class="btn btn-ghost" data-action="open-settings">⚙ Menu &amp; Settings</button>
         </div>
       </section>
@@ -233,6 +235,52 @@
         </div>
       </section>
 
+      <!-- ===== WORK CALENDAR ===== -->
+      <section class="screen" data-screen="calendar">
+        <header class="bar">
+          <button class="back" data-back="home">‹ Back</button>
+          <h2>Work calendar</h2>
+        </header>
+        <div class="pad">
+          <p class="hint">Tap the days you're trading and set where. Turn on reminders in Settings.</p>
+          <div class="cal-head">
+            <button class="btn btn-ghost btn-sm" data-action="cal-prev" aria-label="Previous month">‹</button>
+            <span id="calTitle" class="cal-title"></span>
+            <button class="btn btn-ghost btn-sm" data-action="cal-next" aria-label="Next month">›</button>
+          </div>
+          <div class="cal-weekdays">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div id="calGrid" class="cal-grid"></div>
+          <div id="calDay" class="cal-day" hidden>
+            <p class="cal-day-title" id="calDayTitle"></p>
+            <p class="hint">Where are you trading?</p>
+            <div id="calDayLocs" class="chips"></div>
+            <button class="btn btn-ghost btn-sm" data-action="cal-clear">✕ Not working this day</button>
+            <button class="btn btn-primary" data-action="cal-generate">✨ Generate posts for this day</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== GENERATE POSTS ===== -->
+      <section class="screen" data-screen="generate">
+        <header class="bar">
+          <button class="back" data-back="home">‹ Back</button>
+          <h2>Generate posts</h2>
+        </header>
+        <div class="pad">
+          <p id="genInfo" class="hint"></p>
+          <input id="genFolderInput" type="file" accept="image/*" multiple webkitdirectory hidden />
+          <div id="genCards" class="gen-cards"></div>
+          <p id="genEmpty" class="hint" hidden></p>
+          <div class="row">
+            <button class="btn btn-secondary" data-action="gen-folder">📁 Photo folder</button>
+            <button class="btn btn-accent" data-action="gen-regenerate">🔀 Regenerate</button>
+          </div>
+          <p class="hint">Tap a post you like to tweak &amp; share it.</p>
+        </div>
+      </section>
+
       <!-- ===== SETTINGS ===== -->
       <section class="screen" data-screen="settings">
         <header class="bar">
@@ -255,6 +303,19 @@
             <input id="menuInput" class="text-input" type="text" placeholder="e.g. loaded fries" />
             <button class="btn btn-secondary" data-action="add-menu">Add</button>
           </div>
+
+          <p class="lead" style="margin-top: 28px;">🔔 Post reminders</p>
+          <p class="hint">Get a nudge to post on the days you're working (set those in the Work calendar).</p>
+          <label class="switch-row">
+            <span>Remind me to post</span>
+            <input type="checkbox" id="notifyEnabled" />
+          </label>
+          <label class="switch-row">
+            <span>Reminder time</span>
+            <input type="time" id="notifyTime" class="time-input" value="09:00" />
+          </label>
+          <button class="btn btn-ghost btn-sm" data-action="notify-test">Send a test reminder</button>
+          <p id="notifyStatus" class="hint"></p>
         </div>
       </section>
     </div>
@@ -268,6 +329,7 @@
     <script src="js/imaging.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/share.js"></script>
+    <script src="js/notify.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

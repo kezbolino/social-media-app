@@ -23,6 +23,8 @@ window.APP_CONFIG = {
     RECENCY: "sfp.recencyLog",
     POSTS: "sfp.posts",
     LOCATIONS: "sfp.locations",
+    SCHEDULE: "sfp.schedule",
+    NOTIFY: "sfp.notify",
   },
 
   // Locations pre-loaded the first time the app runs. The user can add/remove

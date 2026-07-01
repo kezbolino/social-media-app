@@ -87,6 +87,33 @@ const Store = (() => {
     return recent;
   }
 
+  /* ---- Work schedule: { "YYYY-MM-DD": { location } } (key present = working) ---- */
+  function getSchedule() {
+    return read(K.SCHEDULE, {});
+  }
+  function setSchedule(s) {
+    write(K.SCHEDULE, s);
+  }
+  function getWorkday(dateStr) {
+    return getSchedule()[dateStr] || null;
+  }
+  // location=null clears the day; otherwise marks it a working day at location.
+  function setWorkday(dateStr, location) {
+    const s = getSchedule();
+    if (location === null) delete s[dateStr];
+    else s[dateStr] = { location: location || "" };
+    setSchedule(s);
+    return s;
+  }
+
+  /* ---- Notification settings ---- */
+  function getNotify() {
+    return read(K.NOTIFY, { enabled: false, time: "09:00", lastNotified: null });
+  }
+  function setNotify(n) {
+    write(K.NOTIFY, n);
+  }
+
   /* ---- Saved posts: draft -> approved -> shared ---- */
   function getPosts() {
     return read(K.POSTS, []);
@@ -106,6 +133,12 @@ const Store = (() => {
     getLocations,
     setLocations,
     addLocation,
+    getSchedule,
+    setSchedule,
+    getWorkday,
+    setWorkday,
+    getNotify,
+    setNotify,
     getRecencyLog,
     recordHookUse,
     recentHookIds,

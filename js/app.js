@@ -70,6 +70,9 @@
     }
     wireEvents();
     Editor.init();
+    // Post reminders: check on open, then every few minutes while open.
+    Notify.maybeRemind();
+    setInterval(() => Notify.maybeRemind(), 5 * 60 * 1000);
   }
 
   /* ---------- event wiring (delegated) ---------- */
@@ -77,6 +80,9 @@
     document.addEventListener("click", (e) => {
       const back = e.target.closest("[data-back]");
       if (back) return handleBack(back.dataset.back);
+
+      const calLoc = e.target.closest("[data-cal-loc]");
+      if (calLoc) return pickCalLocation(calLoc.dataset.calLoc);
 
       const loc = e.target.closest("[data-loc]");
       if (loc) return pickChip("location", loc.dataset.loc);
@@ -104,6 +110,14 @@
     $("#locationInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") addLocationItem();
     });
+    $("#genFolderInput").addEventListener("change", onGenFolderPicked);
+    $("#notifyEnabled").addEventListener("change", onNotifyToggle);
+    $("#notifyTime").addEventListener("change", (e) => {
+      const n = Store.getNotify();
+      n.time = e.target.value || "09:00";
+      Store.setNotify(n);
+      renderNotifySettings();
+    });
   }
 
   function handleBack(target) {
@@ -114,7 +128,16 @@
   function handleAction(action, el) {
     switch (action) {
       case "new-post": post = freshPost(); show("type"); break;
-      case "open-settings": renderLocations(); renderMenu(); show("settings"); break;
+      case "open-settings": renderLocations(); renderMenu(); renderNotifySettings(); show("settings"); break;
+      case "open-calendar": openCalendar(); break;
+      case "open-generate": openGenerate(null); break;
+      case "cal-prev": shiftMonth(-1); break;
+      case "cal-next": shiftMonth(1); break;
+      case "cal-clear": clearCalDay(); break;
+      case "cal-generate": openGenerate(selectedDate); break;
+      case "gen-folder": $("#genFolderInput").click(); break;
+      case "gen-regenerate": runGenerate(); break;
+      case "notify-test": notifyTest(); break;
       case "choose-single": startSingle(); break;
       case "choose-collage": startCollage(); break;
       case "pick-single": $("#singleInput").click(); break;
@@ -651,6 +674,240 @@
     Store.addLocation(val);
     input.value = "";
     renderLocations();
+  }
+
+  /* ---------- WORK CALENDAR ---------- */
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
+    "August", "September", "October", "November", "December"];
+  const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  let calView = new Date(); // any date within the shown month
+  let selectedDate = null; // "YYYY-MM-DD"
+
+  function dateKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  function openCalendar() {
+    calView = new Date();
+    selectedDate = null;
+    $("#calDay").hidden = true;
+    renderCalendar();
+    show("calendar");
+  }
+  function shiftMonth(delta) {
+    calView = new Date(calView.getFullYear(), calView.getMonth() + delta, 1);
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    const year = calView.getFullYear(), month = calView.getMonth();
+    $("#calTitle").textContent = `${MONTHS[month]} ${year}`;
+    const first = new Date(year, month, 1);
+    // Monday-first offset (getDay: 0=Sun..6=Sat).
+    const lead = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const schedule = Store.getSchedule();
+    const todayKey = Notify.todayStr();
+    const grid = $("#calGrid");
+    grid.innerHTML = "";
+    for (let i = 0; i < lead; i++) {
+      const blank = document.createElement("div");
+      blank.className = "cal-cell blank";
+      grid.appendChild(blank);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const cell = document.createElement("button");
+      cell.className = "cal-cell";
+      if (schedule[key]) cell.classList.add("working");
+      if (key === todayKey) cell.classList.add("today");
+      if (key === selectedDate) cell.classList.add("selected");
+      cell.dataset.date = key;
+      cell.innerHTML = `<span class="cal-num">${d}</span>` +
+        (schedule[key] ? `<span class="cal-dot"></span>` : "");
+      cell.addEventListener("click", () => selectCalDay(key));
+      grid.appendChild(cell);
+    }
+  }
+
+  function selectCalDay(key) {
+    selectedDate = key;
+    renderCalendar();
+    const [y, m, d] = key.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    $("#calDayTitle").textContent = `${WEEKDAYS[dt.getDay()]} ${d} ${MONTHS[m - 1]}`;
+    const wd = Store.getWorkday(key);
+    const locs = Store.getLocations();
+    const wrap = $("#calDayLocs");
+    if (locs.length) {
+      wrap.innerHTML = locs.map((l) =>
+        `<button class="chip${wd && wd.location === l ? " selected" : ""}" data-cal-loc="${escapeAttr(l)}">${escapeAttr(l)}</button>`
+      ).join("");
+    } else {
+      wrap.innerHTML = `<button class="chip${wd ? " selected" : ""}" data-cal-loc="">Working</button>`;
+    }
+    $("#calDay").hidden = false;
+  }
+
+  function pickCalLocation(loc) {
+    if (!selectedDate) return;
+    Store.setWorkday(selectedDate, loc);
+    selectCalDay(selectedDate);
+  }
+  function clearCalDay() {
+    if (!selectedDate) return;
+    Store.setWorkday(selectedDate, null);
+    selectCalDay(selectedDate);
+  }
+
+  /* ---------- GENERATE POSTS ---------- */
+  let genList = []; // [{ img, dataUrl, filledText, hook }]
+  let genLocation = "";
+  let genDay = "";
+  let genDateLabel = "";
+
+  function openGenerate(dateStr) {
+    const key = dateStr || Notify.todayStr();
+    const [y, m, d] = key.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    genDay = WEEKDAYS[dt.getDay()];
+    const wd = Store.getWorkday(key);
+    genLocation = (wd && wd.location) || Store.getLocations()[0] || "";
+    genDateLabel = `${genDay}${genLocation ? " at " + genLocation : ""}`;
+    show("generate");
+    runGenerate();
+  }
+
+  async function runGenerate() {
+    $("#genInfo").textContent = `3 ready-made posts for ${genDateLabel}.`;
+    const empty = $("#genEmpty");
+    if (!photoPool.length) {
+      $("#genCards").innerHTML = "";
+      empty.hidden = false;
+      empty.textContent = "Load a photo folder to generate posts from your pictures.";
+      return;
+    }
+    empty.hidden = true;
+    $("#genCards").innerHTML = '<p class="hint">Cooking up posts…</p>';
+    genList = await buildGeneratedPosts();
+    renderGenCards();
+  }
+
+  async function buildGeneratedPosts() {
+    await Imaging.ensureFonts();
+    const ctx = { location: genLocation, day: genDay, menuItems: Store.getMenuItems() };
+    const files = randomFiles(Math.min(3, photoPool.length));
+    const tags = ["location", "other", "brand"];
+    const usedHookIds = [];
+    const out = [];
+    for (let i = 0; i < files.length; i++) {
+      let img;
+      try { img = await Imaging.loadImageFromFile(files[i]); }
+      catch (e) { continue; }
+      // Try a few tags to get a varied, filled, non-repeating hook.
+      let picked = null;
+      for (const tag of shuffleArr(tags)) {
+        const r = Hooks.choose(tag, ctx, usedHookIds[usedHookIds.length - 1]);
+        if (r && !usedHookIds.includes(r.hook.id)) { picked = r; break; }
+      }
+      if (!picked) picked = Hooks.choose("brand", ctx) || Hooks.choose("location", ctx);
+      if (!picked) continue;
+      usedHookIds.push(picked.hook.id);
+      const canvas = Imaging.renderSingle(img, null);
+      out.push({ img, dataUrl: Imaging.toDataURL(canvas), filledText: picked.filledText, hook: picked.hook });
+    }
+    return out;
+  }
+
+  function renderGenCards() {
+    const wrap = $("#genCards");
+    if (!genList.length) {
+      wrap.innerHTML = '<p class="hint">Couldn\'t generate any — check your photo folder and hooks.</p>';
+      return;
+    }
+    wrap.innerHTML = "";
+    genList.forEach((g, i) => {
+      const card = document.createElement("button");
+      card.className = "gen-card";
+      card.innerHTML =
+        `<img src="${g.dataUrl}" alt="Generated post ${i + 1}" />` +
+        `<span class="gen-caption">${escapeAttr(g.filledText)}</span>`;
+      card.addEventListener("click", () => useGeneratedPost(i));
+      wrap.appendChild(card);
+    });
+  }
+
+  function useGeneratedPost(i) {
+    const g = genList[i];
+    if (!g) return;
+    post = freshPost();
+    post.type = "single";
+    post.singleImage = g.img;
+    post.tag = "location";
+    post.location = genLocation;
+    post.day = genDay;
+    post.caption = { hook: g.hook, filledText: g.filledText, item: null };
+    post.captionText = g.filledText;
+    $("#captionText").value = g.filledText;
+    const back = document.querySelector('[data-screen="caption"] .back');
+    if (back) back.dataset.back = "generate";
+    renderCaptionPreview();
+    show("caption");
+  }
+
+  function shuffleArr(a) {
+    const arr = a.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function onGenFolderPicked(e) {
+    const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith("image/"));
+    e.target.value = "";
+    if (!files.length) { alert("That folder didn't have any photos in it."); return; }
+    photoPool = files;
+    refreshPoolUi();
+    runGenerate();
+  }
+
+  /* ---------- NOTIFY SETTINGS ---------- */
+  function renderNotifySettings() {
+    const n = Store.getNotify();
+    $("#notifyEnabled").checked = n.enabled;
+    $("#notifyTime").value = n.time || "09:00";
+    const status = $("#notifyStatus");
+    if (!Notify.supported()) {
+      status.textContent = "This browser doesn't support notifications. On the phone app they'll work fully.";
+    } else if (n.enabled && Notify.permission() === "granted") {
+      status.textContent = `On — you'll get a nudge at ${n.time} on your working days (while the app's open).`;
+    } else if (Notify.permission() === "denied") {
+      status.textContent = "Notifications are blocked in your browser settings — allow them to use reminders.";
+    } else {
+      status.textContent = "Off.";
+    }
+  }
+
+  async function onNotifyToggle(e) {
+    const n = Store.getNotify();
+    if (e.target.checked) {
+      const perm = await Notify.request();
+      if (perm === "granted") { n.enabled = true; }
+      else { n.enabled = false; e.target.checked = false; }
+    } else {
+      n.enabled = false;
+    }
+    Store.setNotify(n);
+    renderNotifySettings();
+  }
+
+  async function notifyTest() {
+    if (Notify.permission() !== "granted") await Notify.request();
+    if (!Notify.show("Test 🐔", "Nice — reminders are working.")) {
+      $("#notifyStatus").textContent = "Couldn't show a notification — check your browser's permission.";
+    }
   }
 
   /* ---------- utils ---------- */

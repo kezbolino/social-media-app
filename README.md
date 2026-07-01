@@ -53,6 +53,19 @@ You don't need this, but if you ever prefer to serve it (e.g. while editing the
 **Menu & Settings** lets you add best sellers / sauces once; food captions pick
 from that list at random. Leave it empty and food captions are simply skipped.
 
+**Work calendar** (home → 📅) — tap the days you're trading and set where you'll
+be. **Generate posts** (home → ✨) uses that day's location, your photo folder,
+and the hook library to hand you **3 ready-made posts**; tap the one you like to
+tweak and share. **Post reminders** (Settings → 🔔) nudge you to post on working
+days.
+
+> **Reminder limitation (important):** a plain web app can only fire a reminder
+> while it has been *opened* around the reminder time — it can't wake itself in
+> the background. So on the web the nudge appears when the app is open on a
+> working day after your chosen time. True scheduled/background reminders come
+> with the phone build: swap `Notify.show()` in `js/notify.js` for the
+> `@capacitor/local-notifications` plugin — nothing else changes.
+
 ---
 
 ## What's in the box
