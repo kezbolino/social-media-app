@@ -52,6 +52,9 @@ You don't need this, but if you ever prefer to serve it (e.g. while editing the
 
 **Menu & Settings** lets you add best sellers / sauces once; food captions pick
 from that list at random. Leave it empty and food captions are simply skipped.
+It also holds an editable **hashtag** bank (curated for London street food) — on
+the caption screen, **# Add hashtags** appends a shuffled, relevant mix (plus
+your pitch location and the brand tag, auto-added); tap it again to re-roll.
 
 **Work calendar** (home → 📅) — tap the days you're trading and set where you'll
 be. **Generate posts** (home → ✨) uses that day's location, your photo folder,

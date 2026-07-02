@@ -95,7 +95,7 @@
           <div id="editorText" class="text-panel" hidden>
             <div class="text-actions">
               <button class="btn btn-secondary btn-sm" data-txt="add">＋ Add text</button>
-              <button class="btn btn-ghost btn-sm" data-txt="hook">🎣 Insert a hook</button>
+              <button class="btn btn-ghost btn-sm" data-txt="hook">🎣 Cheeky hook</button>
               <button class="btn btn-ghost btn-sm" data-txt="delete" id="txtDelete" hidden>🗑 Delete</button>
             </div>
             <div id="txtControls" hidden>
@@ -113,7 +113,7 @@
               <label class="adj-row"><span>Rotate</span>
                 <input type="range" id="txtRotate" min="-45" max="45" step="1" value="0" /></label>
             </div>
-            <p class="hint" id="txtHint">Tap ＋ Add text or 🎣 Insert a hook, then drag it on the photo.</p>
+            <p class="hint" id="txtHint">Tap ＋ Add text, or 🎣 Cheeky hook to drop a pre-written line (tap it again to cycle through more). Then drag it on the photo.</p>
           </div>
           <div id="editorAdjust" class="adjust-panel" hidden>
             <label class="adj-row"><span>Brightness</span>
@@ -208,7 +208,8 @@
             <img id="captionPreview" class="preview-img" alt="Post preview with text overlay" />
           </div>
           <textarea id="captionText" class="caption-box" rows="5"></textarea>
-          <p class="hint">This is your <strong>post caption</strong> (shared as text with the photo). Edit it, or shuffle for a different line. To put words <em>on</em> the photo, use the editor's <strong>Text</strong> tab.</p>
+          <button class="btn btn-secondary" data-action="hashtags">#️⃣ Add hashtags</button>
+          <p class="hint">This is your <strong>post caption</strong> (shared as text with the photo). Shuffle for a different line, add a relevant hashtag mix, or edit it. To put words <em>on</em> the photo, use the editor's <strong>Text</strong> tab.</p>
           <div class="actionbar">
             <div class="row">
               <button class="btn btn-accent" data-action="shuffle">🔀 Shuffle</button>
@@ -302,6 +303,14 @@
           <div class="row">
             <input id="menuInput" class="text-input" type="text" placeholder="e.g. loaded fries" />
             <button class="btn btn-secondary" data-action="add-menu">Add</button>
+          </div>
+
+          <p class="lead" style="margin-top: 28px;">#️⃣ Hashtags</p>
+          <p class="hint">Tapped in on the caption screen — a shuffled, relevant mix each time, plus your pitch location auto-tagged. Tap one to remove it.</p>
+          <div id="hashtagList" class="tag-cloud"></div>
+          <div class="row">
+            <input id="hashtagInput" class="text-input" type="text" placeholder="e.g. #halalfood" />
+            <button class="btn btn-secondary" data-action="add-hashtag">Add</button>
           </div>
 
           <p class="lead" style="margin-top: 28px;">🔔 Post reminders</p>

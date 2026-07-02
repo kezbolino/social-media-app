@@ -55,6 +55,7 @@ const Editor = (() => {
   let modeText = false; // text-only mode (used for collages: no crop/filter)
   let bgRatio = 1; // background image aspect in text-only mode
   let sampleMode = false; // eyedropper: next tap samples a colour from the photo
+  let hookProvider = null; // () => next hook text, supplied by the app
   let zoom = 1; // 1..3
   let offX = 0, offY = 0; // image top-left within the frame, in CSS px
   let frameW = 0, frameH = 0; // preview frame size in CSS px
@@ -157,6 +158,7 @@ const Editor = (() => {
   function open(image, state, opts) {
     opts = opts || {};
     modeText = opts.mode === "text";
+    hookProvider = opts.hookProvider || null;
     src = image;
     bgRatio = src.width / src.height;
     els.screen.classList.toggle("mode-text", modeText);
@@ -516,7 +518,7 @@ const Editor = (() => {
 
   function onTextAction(action) {
     if (action === "add") return addOverlay("");
-    if (action === "hook") return insertHook();
+    if (action === "hook") return cycleHook();
     const ov = selectedOverlay();
     if (!ov) return;
     if (action === "delete") {
@@ -533,13 +535,18 @@ const Editor = (() => {
     }
   }
 
-  function addOverlay(text) {
+  function createOverlay(text) {
     const ov = {
       id: "ov" + ++uidCounter, text: text || "", style: "classic",
       color: "#ffffff", align: "center", highlight: "none",
       cx: 0.5, cy: 0.5, size: 9, rot: 0,
     };
     overlays.push(ov);
+    return ov;
+  }
+
+  function addOverlay(text) {
+    const ov = createOverlay(text);
     selId = ov.id;
     showTab("text");
     syncTextPanel();
@@ -547,20 +554,28 @@ const Editor = (() => {
     if (els.txtInput) els.txtInput.focus();
   }
 
-  // Drop a ready-made cheeky hook onto the photo (variable-free ones so it
-  // needs no location/day).
-  function insertHook() {
-    let text = "Come and get fed.";
+  // Cycle a cheeky hook onto the *current* text box (like the caption Shuffle):
+  // reuse the selected box if there is one, only creating a box the first time.
+  function cycleHook() {
+    let ov = selectedOverlay();
+    if (!ov) { ov = createOverlay(""); selId = ov.id; showTab("text"); }
+    ov.text = hookProvider ? hookProvider() : fallbackHookText();
+    syncTextPanel();
+    render();
+  }
+
+  // Used when no external hook provider is wired: a random variable-free line.
+  function fallbackHookText() {
     try {
       const lib = typeof Hooks !== "undefined" && Hooks.getLibrary ? Hooks.getLibrary() : null;
       if (lib && lib.hooks) {
         const noVar = lib.hooks.filter((h) => !h.uses || h.uses.length === 0);
         const pool = noVar.length ? noVar : lib.hooks;
         const h = pool[Math.floor(Math.random() * pool.length)];
-        text = h.text.replace(/\{[^}]+\}/g, "").replace(/\s+/g, " ").trim();
+        return h.text.replace(/\{[^}]+\}/g, "").replace(/\s+/g, " ").trim();
       }
-    } catch (e) { /* fall back to default line */ }
-    addOverlay(text);
+    } catch (e) { /* ignore */ }
+    return "Come and get fed.";
   }
 
   function setOverlayProp(prop, value) {

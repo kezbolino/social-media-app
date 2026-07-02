@@ -32,6 +32,7 @@
       item: null,
       caption: null, // { hook, filledText, item }
       captionText: "",
+      hashtagBlock: "", // the appended hashtag block, if any
       status: "draft",
       finalBlob: null,
       created: new Date().toISOString(),
@@ -110,6 +111,9 @@
     $("#locationInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") addLocationItem();
     });
+    $("#hashtagInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addHashtagItem();
+    });
     $("#genFolderInput").addEventListener("change", onGenFolderPicked);
     $("#notifyEnabled").addEventListener("change", onNotifyToggle);
     $("#notifyTime").addEventListener("change", (e) => {
@@ -128,7 +132,7 @@
   function handleAction(action, el) {
     switch (action) {
       case "new-post": post = freshPost(); show("type"); break;
-      case "open-settings": renderLocations(); renderMenu(); renderNotifySettings(); show("settings"); break;
+      case "open-settings": renderLocations(); renderMenu(); renderHashtags(); renderNotifySettings(); show("settings"); break;
       case "open-calendar": openCalendar(); break;
       case "open-generate": openGenerate(null); break;
       case "cal-prev": shiftMonth(-1); break;
@@ -138,6 +142,8 @@
       case "gen-folder": $("#genFolderInput").click(); break;
       case "gen-regenerate": runGenerate(); break;
       case "notify-test": notifyTest(); break;
+      case "hashtags": toggleHashtags(); break;
+      case "add-hashtag": addHashtagItem(); break;
       case "choose-single": startSingle(); break;
       case "choose-collage": startCollage(); break;
       case "pick-single": $("#singleInput").click(); break;
@@ -200,10 +206,25 @@
     if (h2) h2.textContent = title;
   }
 
+  // A cheeky-hook cycler for the editor's Text tool — behaves like the caption
+  // Shuffle: each call returns a different pre-written line, filled with any
+  // location/day we already know.
+  function makeHookProvider() {
+    let lastId = null;
+    return () => {
+      const ctx = { location: post.location, day: post.day, menuItems: Store.getMenuItems() };
+      for (const tag of shuffleArr(["location", "other", "brand"])) {
+        const r = Hooks.choose(tag, ctx, lastId);
+        if (r) { lastId = r.hook.id; return r.filledText; }
+      }
+      return "Come and get fed.";
+    };
+  }
+
   // Single photos: full editor (crop / filter / adjust / text).
   function openEditor() {
     setEditorChrome("single", "Edit photo");
-    Editor.open(post.singleImage, post.editState);
+    Editor.open(post.singleImage, post.editState, { hookProvider: makeHookProvider() });
     lastQuizBack = "editor"; // the quiz's Back returns to the editor
     show("editor");
   }
@@ -222,7 +243,7 @@
     catch (e) { bg = null; }
     if (!bg) { lastQuizBack = "collage"; return show("quiz"); }
     setEditorChrome("collage", "Add text");
-    Editor.open(bg, post.editState, { mode: "text" });
+    Editor.open(bg, post.editState, { mode: "text", hookProvider: makeHookProvider() });
     lastQuizBack = "editor";
     show("editor");
   }
@@ -536,7 +557,66 @@
     post.caption = result;
     post.item = result.item;
     post.captionText = result.filledText;
+    post.hashtagBlock = ""; // a new line drops any appended hashtags
     $("#captionText").value = result.filledText;
+  }
+
+  /* ---------- HASHTAGS ---------- */
+  // Append (or re-roll) a relevant, shuffled hashtag block on the caption.
+  function toggleHashtags() {
+    let base = $("#captionText").value;
+    // Strip a previously-appended block so repeated taps re-roll, not stack.
+    if (post.hashtagBlock && base.endsWith(post.hashtagBlock)) {
+      base = base.slice(0, base.length - post.hashtagBlock.length).replace(/\s+$/, "");
+    }
+    const block = buildHashtagBlock();
+    post.hashtagBlock = "\n\n" + block;
+    post.captionText = base + post.hashtagBlock;
+    $("#captionText").value = post.captionText;
+  }
+
+  function buildHashtagBlock() {
+    const chosen = shuffleArr(Store.getHashtags()).slice(0, 12);
+    // Auto-tag the pitch location, if we know it.
+    if (post.location) {
+      const locTag = "#" + post.location.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (locTag.length > 1 && !chosen.some((t) => t.toLowerCase() === locTag)) chosen.unshift(locTag);
+    }
+    const brand = "#chucklingwings";
+    if (!chosen.some((t) => t.toLowerCase() === brand)) chosen.unshift(brand);
+    return chosen.join(" ");
+  }
+
+  function renderHashtags() {
+    const items = Store.getHashtags();
+    const list = $("#hashtagList");
+    list.innerHTML = "";
+    if (!items.length) {
+      list.innerHTML = '<p class="menu-empty">No hashtags yet.</p>';
+      return;
+    }
+    items.forEach((tag, i) => {
+      const chip = document.createElement("button");
+      chip.className = "tag-chip";
+      chip.innerHTML = `${escapeAttr(tag)} <span class="tag-x">✕</span>`;
+      chip.setAttribute("aria-label", "Remove " + tag);
+      chip.addEventListener("click", () => {
+        const next = Store.getHashtags();
+        next.splice(i, 1);
+        Store.setHashtags(next);
+        renderHashtags();
+      });
+      list.appendChild(chip);
+    });
+  }
+
+  function addHashtagItem() {
+    const input = $("#hashtagInput");
+    const val = input.value.trim();
+    if (!val) return;
+    Store.addHashtag(val);
+    input.value = "";
+    renderHashtags();
   }
 
   function shuffleCaption() {

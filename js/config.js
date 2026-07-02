@@ -25,9 +25,30 @@ window.APP_CONFIG = {
     LOCATIONS: "sfp.locations",
     SCHEDULE: "sfp.schedule",
     NOTIFY: "sfp.notify",
+    HASHTAGS: "sfp.hashtags",
   },
 
   // Locations pre-loaded the first time the app runs. The user can add/remove
   // these in Settings.
   DEFAULT_LOCATIONS: ["Greenwich", "Brick Lane", "Camden Market"],
+
+  // Hashtags pre-loaded the first time the app runs (editable in Settings).
+  // Curated for a London street-food / chicken-wings trader: a mix of
+  // street-food scene, London/local, wings-specific, and food-discovery tags
+  // that actually surface posts on Instagram. Keep a spread of big-reach and
+  // niche tags — niche ones are easier to rank in.
+  DEFAULT_HASHTAGS: [
+    // Street-food scene
+    "#streetfood", "#streetfoodlondon", "#londonstreetfood", "#streetfoodmarket",
+    "#streeteats", "#foodtruck", "#foodstall", "#streetfoodie", "#traderlife",
+    // London / local
+    "#london", "#londonfood", "#londoneats", "#londonfoodie", "#eatlondon",
+    "#timeoutlondon", "#secretlondon", "#londonlife",
+    // Wings / chicken
+    "#chickenwings", "#wings", "#friedchicken", "#chickenshop", "#wingwednesday",
+    "#loadedfries", "#comfortfood",
+    // Food discovery / engagement
+    "#foodie", "#instafood", "#foodstagram", "#foodphotography", "#eeeeeats",
+    "#forkyeah", "#feedfeed", "#hungry", "#supportsmallbusiness",
+  ],
 };

@@ -87,6 +87,31 @@ const Store = (() => {
     return recent;
   }
 
+  /* ---- Hashtags (curated, editable; seeded on first run) ---- */
+  function getHashtags() {
+    const stored = read(K.HASHTAGS, null);
+    if (stored == null) {
+      const seed = (window.APP_CONFIG.DEFAULT_HASHTAGS || []).slice();
+      write(K.HASHTAGS, seed);
+      return seed;
+    }
+    return stored;
+  }
+  function setHashtags(items) {
+    write(K.HASHTAGS, items);
+  }
+  function addHashtag(tag) {
+    let t = tag.trim().replace(/\s+/g, "");
+    if (!t) return getHashtags();
+    if (t[0] !== "#") t = "#" + t;
+    const items = getHashtags();
+    if (!items.some((x) => x.toLowerCase() === t.toLowerCase())) {
+      items.push(t);
+      setHashtags(items);
+    }
+    return items;
+  }
+
   /* ---- Work schedule: { "YYYY-MM-DD": { location } } (key present = working) ---- */
   function getSchedule() {
     return read(K.SCHEDULE, {});
@@ -133,6 +158,9 @@ const Store = (() => {
     getLocations,
     setLocations,
     addLocation,
+    getHashtags,
+    setHashtags,
+    addHashtag,
     getSchedule,
     setSchedule,
     getWorkday,
