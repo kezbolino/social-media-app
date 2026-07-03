@@ -548,3 +548,6 @@ html, body {
 }
 .switch-row input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--orange); }
 .time-input { width: auto; padding: 8px 10px; }
+
+/* Review screen: direct-post divider */
+.or-row { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 10px 0 0; }

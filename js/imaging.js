@@ -28,6 +28,12 @@ const Imaging = (() => {
     return fontsReady;
   }
 
+  // Phone cameras produce 12MP+ images; baking those out as full-size PNG data
+  // URLs eats hundreds of MB and can crash a mobile browser. Anything above
+  // this (longest side, px) is downscaled on load — still double the 1080
+  // export, so quality is untouched.
+  const MAX_SOURCE_PX = 2160;
+
   // Turn a file the user picked into an <img> we can both draw and preview.
   // We resolve to an <img> whose src is a data URL, so it stays valid for the
   // whole session (a blob URL would have to be revoked, which kills the
@@ -42,11 +48,29 @@ const Imaging = (() => {
         img.src = dataUrl;
       };
 
-      // Fallback: read the file straight as a data URL (no orientation fix).
+      // Bake a drawable (bitmap or img) to a right-sized JPEG data URL.
+      const bake = (source, w, h) => {
+        const scale = Math.min(1, MAX_SOURCE_PX / Math.max(w, h));
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(w * scale));
+        c.height = Math.max(1, Math.round(h * scale));
+        const ctx = c.getContext("2d");
+        ctx.drawImage(source, 0, 0, c.width, c.height);
+        // JPEG: photos only, no transparency needed, ~10x smaller than PNG.
+        return c.toDataURL("image/jpeg", 0.92);
+      };
+
+      // Fallback: read as a data URL, then still downscale (no orientation fix).
       const readAsDataUrl = () => {
         const reader = new FileReader();
         reader.onerror = () => reject(new Error("That image couldn't be read"));
-        reader.onload = () => finishWithDataUrl(reader.result);
+        reader.onload = () => {
+          const probe = new Image();
+          probe.onload = () =>
+            finishWithDataUrl(bake(probe, probe.width, probe.height));
+          probe.onerror = () => reject(new Error("That image couldn't be loaded"));
+          probe.src = reader.result;
+        };
         reader.readAsDataURL(file);
       };
 
@@ -55,12 +79,9 @@ const Imaging = (() => {
       if (window.createImageBitmap) {
         createImageBitmap(file, { imageOrientation: "from-image" })
           .then((bmp) => {
-            const c = document.createElement("canvas");
-            c.width = bmp.width;
-            c.height = bmp.height;
-            c.getContext("2d").drawImage(bmp, 0, 0);
+            const dataUrl = bake(bmp, bmp.width, bmp.height);
             if (bmp.close) bmp.close();
-            finishWithDataUrl(c.toDataURL("image/png"));
+            finishWithDataUrl(dataUrl);
           })
           .catch(readAsDataUrl);
       } else {

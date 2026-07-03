@@ -70,10 +70,26 @@
       return;
     }
     wireEvents();
+    adaptPhotoPickers();
     Editor.init();
+    renderPublishButtons();
     // Post reminders: check on open, then every few minutes while open.
     Notify.maybeRemind();
     setInterval(() => Notify.maybeRemind(), 5 * 60 * 1000);
+  }
+
+  // Phones can't pick a whole folder (webkitdirectory is desktop-only), so on
+  // touch devices the "folder" inputs become multi-photo pickers instead —
+  // same pool, same shuffle, just selected from the gallery.
+  function adaptPhotoPickers() {
+    const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    if (!coarse) return;
+    ["#folderInput", "#genFolderInput"].forEach((sel) => {
+      const el = $(sel);
+      if (el) el.removeAttribute("webkitdirectory");
+    });
+    $$('[data-action="pick-folder-single"], [data-action="pick-folder-collage"], [data-action="gen-folder"]')
+      .forEach((btn) => (btn.textContent = "🖼️ Pick photos"));
   }
 
   /* ---------- event wiring (delegated) ---------- */
@@ -115,6 +131,11 @@
       if (e.key === "Enter") addHashtagItem();
     });
     $("#genFolderInput").addEventListener("change", onGenFolderPicked);
+    saveMetaField("#metaToken", "accessToken");
+    saveMetaField("#metaPageId", "pageId");
+    saveMetaField("#metaIgId", "igUserId");
+    saveMetaField("#metaCloud", "cloudName");
+    saveMetaField("#metaPreset", "uploadPreset");
     $("#notifyEnabled").addEventListener("change", onNotifyToggle);
     $("#notifyTime").addEventListener("change", (e) => {
       const n = Store.getNotify();
@@ -132,7 +153,7 @@
   function handleAction(action, el) {
     switch (action) {
       case "new-post": post = freshPost(); show("type"); break;
-      case "open-settings": renderLocations(); renderMenu(); renderHashtags(); renderNotifySettings(); show("settings"); break;
+      case "open-settings": renderLocations(); renderMenu(); renderHashtags(); renderNotifySettings(); renderMetaSettings(); show("settings"); break;
       case "open-calendar": openCalendar(); break;
       case "open-generate": openGenerate(null); break;
       case "cal-prev": shiftMonth(-1); break;
@@ -144,6 +165,9 @@
       case "notify-test": notifyTest(); break;
       case "hashtags": toggleHashtags(); break;
       case "add-hashtag": addHashtagItem(); break;
+      case "publish-ig": doPublish("ig"); break;
+      case "publish-fb": doPublish("fb"); break;
+      case "meta-test": metaTest(); break;
       case "choose-single": startSingle(); break;
       case "choose-collage": startCollage(); break;
       case "pick-single": $("#singleInput").click(); break;
@@ -644,16 +668,15 @@
     $("#reviewImage").src = Imaging.toDataURL(canvas);
     $("#reviewCaption").textContent = post.captionText;
     $("#shareNote").hidden = true;
+    $("#publishNote").hidden = true;
     $("#doneHome").hidden = true;
+    renderPublishButtons();
     show("review");
   }
 
-  async function doShare() {
-    if (!post.finalBlob) return;
-    const result = await Sharing.share(post.finalBlob, post.captionText, "streetfood-post.png");
-    if (result.cancelled) return; // user backed out of the share sheet
-
-    // Record the post as shared and log the hook so it rests for the cooldown.
+  // Record the post as shared and log the hook so it rests for the cooldown.
+  // Used by both the share sheet and the direct Meta publish buttons.
+  function markPostShared(via) {
     post.status = "shared";
     if (post.caption) Store.recordHookUse(post.caption.hook.id);
     Store.savePost({
@@ -665,8 +688,17 @@
       day: post.day,
       item: post.item,
       status: "shared",
+      via: via || "share-sheet",
       created: post.created,
     });
+  }
+
+  async function doShare() {
+    if (!post.finalBlob) return;
+    const result = await Sharing.share(post.finalBlob, post.captionText, "chuckling-wings-post.png");
+    if (result.cancelled) return; // user backed out of the share sheet
+
+    markPostShared("share-sheet");
 
     const note = $("#shareNote");
     note.hidden = false;
@@ -677,6 +709,70 @@
             : "Image downloaded — copy your caption above into Instagram or Facebook.")
         : "Shared! Pick Instagram or Facebook to finish posting.";
     $("#doneHome").hidden = false;
+  }
+
+  /* ---------- DIRECT PUBLISH (Meta) ---------- */
+  // Show/hide the direct-post buttons based on what's configured.
+  function renderPublishButtons() {
+    const fb = Publish.isConfiguredFB();
+    const ig = Publish.isConfiguredIG();
+    $("#pubIG").hidden = !ig;
+    $("#pubFB").hidden = !fb;
+    $("#publishRow").hidden = !(fb || ig);
+  }
+
+  async function doPublish(kind) {
+    if (!post.finalBlob) return;
+    const note = $("#publishNote");
+    const btns = [$("#pubIG"), $("#pubFB"), $(".btn[data-action='share']")];
+    btns.forEach((b) => b && (b.disabled = true));
+    note.hidden = false;
+    note.textContent = kind === "ig" ? "Posting to Instagram…" : "Posting to Facebook…";
+    try {
+      if (kind === "ig") await Publish.postToInstagram(post.finalBlob, post.captionText);
+      else await Publish.postToFacebook(post.finalBlob, post.captionText);
+      markPostShared(kind === "ig" ? "instagram-api" : "facebook-api");
+      note.textContent = kind === "ig" ? "Posted to Instagram ✅" : "Posted to Facebook ✅";
+      $("#doneHome").hidden = false;
+    } catch (e) {
+      note.textContent = "Couldn't post: " + e.message;
+    }
+    btns.forEach((b) => b && (b.disabled = false));
+  }
+
+  function renderMetaSettings() {
+    const m = Store.getMeta();
+    $("#metaToken").value = m.accessToken;
+    $("#metaPageId").value = m.pageId;
+    $("#metaIgId").value = m.igUserId;
+    $("#metaCloud").value = m.cloudName;
+    $("#metaPreset").value = m.uploadPreset;
+    const s = $("#metaStatus");
+    if (Publish.isConfiguredFB() && Publish.isConfiguredIG()) s.textContent = "Instagram + Facebook posting is set up.";
+    else if (Publish.isConfiguredFB()) s.textContent = "Facebook posting is set up. Add the Instagram + Cloudinary bits for Instagram.";
+    else if (Publish.isConfiguredIG()) s.textContent = "Instagram posting is set up. Add the Page ID for Facebook.";
+    else s.textContent = "Not set up yet — the app works exactly as before without it.";
+  }
+
+  function saveMetaField(id, key) {
+    $(id).addEventListener("change", (e) => {
+      const m = Store.getMeta();
+      m[key] = e.target.value.trim();
+      Store.setMeta(m);
+      renderMetaSettings();
+      renderPublishButtons();
+    });
+  }
+
+  async function metaTest() {
+    const s = $("#metaStatus");
+    s.textContent = "Testing…";
+    try {
+      const who = await Publish.testConnection();
+      s.textContent = `Connected ✅ — token belongs to "${who.name}".`;
+    } catch (e) {
+      s.textContent = "Test failed: " + e.message;
+    }
   }
 
   /* ---------- SETTINGS / MENU ---------- */

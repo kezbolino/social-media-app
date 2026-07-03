@@ -1,0 +1,16 @@
+{
+  "name": "Chuckling Wings — Wingman",
+  "short_name": "Wingman",
+  "description": "Photo in, caption out, shared. The Chuckling Wings social-media wingman.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a4da1",
+  "theme_color": "#0a4da1",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

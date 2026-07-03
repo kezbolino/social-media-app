@@ -139,6 +139,22 @@ const Store = (() => {
     write(K.NOTIFY, n);
   }
 
+  /* ---- Meta (Facebook/Instagram) publishing credentials ----
+   * Saved only on this device. The access token is sensitive — it never
+   * leaves the phone except in calls to Meta itself. */
+  function getMeta() {
+    return read(K.META, {
+      accessToken: "",
+      pageId: "",
+      igUserId: "",
+      cloudName: "",
+      uploadPreset: "",
+    });
+  }
+  function setMeta(m) {
+    write(K.META, m);
+  }
+
   /* ---- Saved posts: draft -> approved -> shared ---- */
   function getPosts() {
     return read(K.POSTS, []);
@@ -167,6 +183,8 @@ const Store = (() => {
     setWorkday,
     getNotify,
     setNotify,
+    getMeta,
+    setMeta,
     getRecencyLog,
     recordHookUse,
     recentHookIds,

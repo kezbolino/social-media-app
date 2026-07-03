@@ -163,6 +163,24 @@ your Mac, not here.
 
 ---
 
+## Auto-posting (Meta) — now built in, optional
+
+The review screen can post **directly to Instagram and Facebook** once a
+one-time Meta setup is done — see **`docs/META_SETUP.md`** for the plain-English
+walkthrough (Development-Mode app, Page token, linked Instagram account, and a
+free Cloudinary account to host the image for Instagram). Until it's configured,
+the app behaves exactly as before (share sheet only). Credentials are stored
+only on the device.
+
+## Installable app + offline
+
+The app is a **PWA**: hosted over https (e.g. GitHub Pages), the browser's
+**Add to Home Screen** installs it with the Chuckling Wings icon, fullscreen,
+and it keeps working offline (service worker, network-first so new deploys
+always win when online).
+
+A full code audit lives in **`docs/AUDIT.md`**.
+
 ## What's deliberately NOT in V1
 
 Auto-posting, AI captions, scheduling, analytics, a full drag-and-drop editor,

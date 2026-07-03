@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a4da1" />
-    <link rel="icon" href="data:," />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="assets/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
     <title>Chuckling Wings · Wingman</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
@@ -231,6 +233,14 @@
           </div>
           <p id="reviewCaption" class="review-caption"></p>
           <button class="btn btn-primary btn-xl" data-action="share">📤 Share</button>
+          <div id="publishRow" hidden>
+            <p class="or-row">— or post directly —</p>
+            <div class="row">
+              <button class="btn btn-accent" id="pubIG" data-action="publish-ig">📸 Instagram</button>
+              <button class="btn btn-secondary" id="pubFB" data-action="publish-fb">📘 Facebook</button>
+            </div>
+          </div>
+          <p id="publishNote" class="hint" hidden></p>
           <p id="shareNote" class="hint" hidden></p>
           <button class="btn btn-ghost" data-action="go-home" hidden id="doneHome">Done — back to start</button>
         </div>
@@ -325,6 +335,31 @@
           </label>
           <button class="btn btn-ghost btn-sm" data-action="notify-test">Send a test reminder</button>
           <p id="notifyStatus" class="hint"></p>
+
+          <p class="lead" style="margin-top: 28px;">🚀 Auto-posting (Meta) — optional</p>
+          <p class="hint">Post straight to Instagram/Facebook without the share sheet. Needs a one-time Meta setup — see <strong>docs/META_SETUP.md</strong> for the plain-English walkthrough. Everything you paste here stays on this device.</p>
+          <div class="field">
+            <label>Page access token <small>long-lived, from your Meta app</small></label>
+            <input class="text-input" id="metaToken" type="password" autocomplete="off" placeholder="EAAG…" />
+          </div>
+          <div class="field">
+            <label>Facebook Page ID</label>
+            <input class="text-input" id="metaPageId" type="text" inputmode="numeric" placeholder="e.g. 112233445566" />
+          </div>
+          <div class="field">
+            <label>Instagram account ID <small>the linked professional account</small></label>
+            <input class="text-input" id="metaIgId" type="text" inputmode="numeric" placeholder="e.g. 1784…" />
+          </div>
+          <div class="field">
+            <label>Cloudinary cloud name <small>Instagram only — hosts the image</small></label>
+            <input class="text-input" id="metaCloud" type="text" placeholder="e.g. dq1abcxyz" />
+          </div>
+          <div class="field">
+            <label>Cloudinary upload preset <small>an unsigned preset</small></label>
+            <input class="text-input" id="metaPreset" type="text" placeholder="e.g. wingman" />
+          </div>
+          <button class="btn btn-secondary" data-action="meta-test">🔌 Test connection</button>
+          <p id="metaStatus" class="hint"></p>
         </div>
       </section>
     </div>
@@ -339,6 +374,15 @@
     <script src="js/editor.js"></script>
     <script src="js/share.js"></script>
     <script src="js/notify.js"></script>
+    <script src="js/publish.js"></script>
     <script src="js/app.js"></script>
+    <script>
+      // Offline support + installability (needs https or localhost; a plain
+      // file:// open skips this and everything still works).
+      if ("serviceWorker" in navigator &&
+          (location.protocol === "https:" || ["localhost", "127.0.0.1"].includes(location.hostname))) {
+        addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+      }
+    </script>
   </body>
 </html>

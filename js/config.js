@@ -26,6 +26,7 @@ window.APP_CONFIG = {
     SCHEDULE: "sfp.schedule",
     NOTIFY: "sfp.notify",
     HASHTAGS: "sfp.hashtags",
+    META: "sfp.meta",
   },
 
   // Locations pre-loaded the first time the app runs. The user can add/remove
