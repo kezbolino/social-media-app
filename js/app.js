@@ -248,9 +248,9 @@
   // Single photos: full editor (crop / filter / adjust / text).
   function openEditor() {
     setEditorChrome("single", "Edit photo");
-    Editor.open(post.singleImage, post.editState, { hookProvider: makeHookProvider() });
     lastQuizBack = "editor"; // the quiz's Back returns to the editor
-    show("editor");
+    show("editor"); // show first so the editor can measure its real width
+    Editor.open(post.singleImage, post.editState, { hookProvider: makeHookProvider() });
   }
 
   // Collages: compose the layout, then a text-only editor to add captions on it.
@@ -267,9 +267,9 @@
     catch (e) { bg = null; }
     if (!bg) { lastQuizBack = "collage"; return show("quiz"); }
     setEditorChrome("collage", "Add text");
-    Editor.open(bg, post.editState, { mode: "text", hookProvider: makeHookProvider() });
     lastQuizBack = "editor";
-    show("editor");
+    show("editor"); // show first so the editor can measure its real width
+    Editor.open(bg, post.editState, { mode: "text", hookProvider: makeHookProvider() });
   }
 
   async function editorNext() {
@@ -883,6 +883,7 @@
     const lead = (first.getDay() + 6) % 7;
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const schedule = Store.getSchedule();
+    const postedDates = postedDateSet();
     const todayKey = Notify.todayStr();
     const grid = $("#calGrid");
     grid.innerHTML = "";
@@ -895,15 +896,30 @@
       const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       const cell = document.createElement("button");
       cell.className = "cal-cell";
+      const posted = postedDates.has(key);
       if (schedule[key]) cell.classList.add("working");
+      if (posted) cell.classList.add("posted");
       if (key === todayKey) cell.classList.add("today");
       if (key === selectedDate) cell.classList.add("selected");
       cell.dataset.date = key;
-      cell.innerHTML = `<span class="cal-num">${d}</span>` +
-        (schedule[key] ? `<span class="cal-dot"></span>` : "");
+      const marker = posted
+        ? `<span class="cal-tick" title="Posted">✓</span>`
+        : (schedule[key] ? `<span class="cal-dot"></span>` : "");
+      cell.innerHTML = `<span class="cal-num">${d}</span>` + marker;
       cell.addEventListener("click", () => selectCalDay(key));
       grid.appendChild(cell);
     }
+  }
+
+  // Local-date keys (YYYY-MM-DD) that have at least one shared post.
+  function postedDateSet() {
+    const set = new Set();
+    for (const p of Store.getPosts()) {
+      if (p.status !== "shared" || !p.created) continue;
+      const d = new Date(p.created);
+      if (!isNaN(d)) set.add(dateKey(d));
+    }
+    return set;
   }
 
   function selectCalDay(key) {

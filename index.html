@@ -79,6 +79,7 @@
           <div id="editorStage" class="editor-stage">
             <canvas id="editorCanvas"></canvas>
           </div>
+          <div class="editor-scroll">
           <div id="editorAspect" class="chips chips-centre">
             <button class="chip selected" data-aspect="1:1">⬛ Square</button>
             <button class="chip" data-aspect="4:5">▮ Portrait</button>
@@ -129,6 +130,7 @@
           </div>
           <div class="actionbar">
             <button class="btn btn-primary" data-action="editor-next">Next ›</button>
+          </div>
           </div>
         </div>
       </section>
@@ -263,6 +265,10 @@
             <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
           </div>
           <div id="calGrid" class="cal-grid"></div>
+          <div class="cal-legend">
+            <span><i class="lg-dot lg-work"></i> Working day</span>
+            <span><i class="lg-tick">✓</i> Posted</span>
+          </div>
           <div id="calDay" class="cal-day" hidden>
             <p class="cal-day-title" id="calDayTitle"></p>
             <p class="hint">Where are you trading?</p>
