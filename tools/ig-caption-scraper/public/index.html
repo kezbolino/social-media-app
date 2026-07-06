@@ -208,6 +208,9 @@
     Runs entirely on your computer — nothing is uploaded anywhere.<br />
     Please be a good citizen: this grabs <b>public</b> posts for research. Bulk collection is against
     Instagram's terms, so keep it modest and don't republish other people's captions as your own.
+    <br /><br />
+    <button class="btn secondary" id="quit" style="margin-top:4px">⏻ Finished — quit the app</button>
+    <span id="quitMsg" style="display:none; color:var(--ok); margin-left:10px">Stopped. You can close this tab now. 👋</span>
   </p>
 </div>
 
@@ -278,6 +281,12 @@
   $('dlCsv').onclick = () => download('instagram-captions.csv', state.csv, 'text/csv');
   $('dlJson').onclick = () =>
     download('instagram-captions.json', JSON.stringify(state.posts, null, 2), 'application/json');
+
+  $('quit').onclick = async () => {
+    try { await fetch('/api/quit', { method: 'POST' }); } catch {}
+    $('quit').style.display = 'none';
+    $('quitMsg').style.display = 'inline';
+  };
 
   $('go').onclick = async () => {
     const sessionid = $('sessionid').value.trim();

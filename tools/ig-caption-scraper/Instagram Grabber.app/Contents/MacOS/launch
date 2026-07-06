@@ -1,0 +1,40 @@
+#!/bin/bash
+# Executable for "Instagram Grabber.app".
+# Double-clicking the app runs this — no Terminal window appears.
+# It finds Node, then starts the local engine which opens the tool in the browser.
+
+# Apps launched from Finder get a bare PATH that misses Homebrew / node installs,
+# so add the usual locations explicitly.
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# Locate the project folder: this script lives at
+#   <project>/Instagram Grabber.app/Contents/MacOS/launch
+HERE="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$HERE/../../.." && pwd)"
+
+# Find node in the common install locations
+NODE=""
+for c in "$(command -v node 2>/dev/null)" /opt/homebrew/bin/node /usr/local/bin/node; do
+  if [ -n "$c" ] && [ -x "$c" ]; then NODE="$c"; break; fi
+done
+
+if [ -z "$NODE" ]; then
+  BTN=$(osascript <<'APPLESCRIPT' 2>/dev/null
+display dialog "Instagram Grabber needs a small free helper called Node.js — it only takes a minute to install, once.
+
+Click “Get Node.js”, then on the website click the big green “LTS” button and run the installer. After that, open Instagram Grabber again and it’ll just work." buttons {"Not now", "Get Node.js"} default button "Get Node.js" with title "One quick setup step" with icon note
+APPLESCRIPT
+)
+  if echo "$BTN" | grep -q "Get Node.js"; then
+    open "https://nodejs.org/en/download/"
+  fi
+  exit 0
+fi
+
+if [ ! -f "$ROOT/server.js" ]; then
+  osascript -e 'display dialog "Could not find the tool files next to the app. Please keep “Instagram Grabber.app” inside the ig-caption-scraper folder." buttons {"OK"} default button "OK" with title "Instagram Grabber" with icon caution' >/dev/null 2>&1
+  exit 1
+fi
+
+cd "$ROOT" || exit 1
+exec "$NODE" server.js

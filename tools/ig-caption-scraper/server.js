@@ -114,6 +114,13 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, node: process.version }));
   }
+  if (req.method === 'POST' && req.url === '/api/quit') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true }));
+    console.log('\n  Quit requested — shutting down. You can close this.');
+    setTimeout(() => process.exit(0), 200);
+    return;
+  }
   if (req.method === 'GET') return serveStatic(req, res);
   res.writeHead(405).end('Method not allowed');
 });

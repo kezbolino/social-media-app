@@ -1,0 +1,50 @@
+========================================
+  INSTAGRAM GRABBER — how to open it
+========================================
+
+You'll see an app in this folder called:
+
+        Instagram Grabber
+
+------------------------------------------------
+FIRST TIME ONLY  (you do this once):
+------------------------------------------------
+
+1. RIGHT-CLICK the "Instagram Grabber" app
+   (or hold Control and click it).
+
+2. Choose  "Open"  from the little menu.
+
+3. A box pops up saying it's from an
+   unidentified developer. Click  "Open".
+
+That's it. The tool opens in your web browser.
+
+  >> Why? Apple blocks apps it doesn't know the
+     first time you run them. Right-click > Open
+     tells it "yes, I trust this." You only ever
+     do this once.
+
+------------------------------------------------
+EVERY TIME AFTER:
+------------------------------------------------
+
+Just DOUBLE-CLICK "Instagram Grabber". Done.
+
+------------------------------------------------
+WHEN YOU'RE FINISHED:
+------------------------------------------------
+
+In the web page, scroll down and click
+"Finished — quit the app", then close the tab.
+
+------------------------------------------------
+IF IT MENTIONS "Node.js":
+------------------------------------------------
+
+A box may ask you to install a free helper called
+Node.js. Click "Get Node.js", install the big
+green "LTS" button on the website, then open
+Instagram Grabber again. (One-time.)
+
+========================================

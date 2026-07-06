@@ -19,13 +19,17 @@ missing. Or grab it now from **[nodejs.org](https://nodejs.org/en/download)**
 
 ### 2. Start it
 
-- **Mac:** double-click **`Start-Mac.command`**
-- **Windows:** double-click **`Start-Windows.bat`**
+- **Mac:** open the **`Instagram Grabber`** app.
+  **First time only:** right-click it → **Open** → **Open** (Apple blocks unknown
+  apps once; this whitelists it). After that, just double-click it. No black
+  window appears — the tool simply opens in your browser. See
+  **`START HERE (Mac).txt`** for the picture-simple version.
+- **Windows:** double-click **`Start-Windows.bat`** (a small window appears —
+  leave it open; the tool opens in your browser). First time, if SmartScreen
+  warns, click **More info → Run anyway**.
 
-A small black window appears (that's the engine — **leave it open**) and your
-web browser pops open with the tool. On a Mac, the very first time, if it says
-*"cannot be opened because it is from an unidentified developer"*, **right-click
-the file → Open → Open** once, and after that a normal double-click works.
+When you're done, click **"Finished — quit the app"** at the bottom of the web
+page, then close the tab.
 
 ### 3. Use it
 
@@ -100,8 +104,9 @@ between requests, default 3000), `--out` (output folder). Writes
 ## What's in this folder
 
 ```
-Start-Mac.command      Double-click to run (Mac)
+Instagram Grabber.app  Double-click to run (Mac) — right-click > Open the first time
 Start-Windows.bat      Double-click to run (Windows)
+START HERE (Mac).txt   The simplest possible first-time guide
 server.js              The little local engine that powers the web UI
 public/index.html      The web UI you interact with
 lib/scraper.js         The shared scraping engine (used by UI + CLI)
