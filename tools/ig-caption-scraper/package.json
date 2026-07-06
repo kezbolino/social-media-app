@@ -1,0 +1,16 @@
+{
+  "name": "ig-caption-scraper",
+  "version": "1.0.0",
+  "description": "Pull captions + basic metadata for a list of public Instagram handles into JSON/CSV. Runs locally, zero dependencies, uses your own session cookie.",
+  "bin": {
+    "ig-caption-scraper": "scrape.js"
+  },
+  "scripts": {
+    "start": "node scrape.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true,
+  "license": "MIT"
+}

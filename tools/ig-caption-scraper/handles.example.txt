@@ -1,0 +1,8 @@
+# One Instagram handle per line.
+# Lines starting with # are ignored. @ and full profile URLs are fine too.
+# Rename this to handles.txt (or pass any filename) and put your real handles in.
+
+bonappetitmag
+natgeo
+# @some.street.food.vendor
+# https://www.instagram.com/another_vendor/

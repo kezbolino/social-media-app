@@ -1,0 +1,5 @@
+# Never commit your real handle list, scraped output, or cookie
+handles.txt
+output/
+.cookie
+*.sessionid
