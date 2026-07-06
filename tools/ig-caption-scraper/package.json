@@ -6,7 +6,8 @@
     "ig-caption-scraper": "scrape.js"
   },
   "scripts": {
-    "start": "node scrape.js"
+    "start": "node server.js",
+    "cli": "node scrape.js"
   },
   "engines": {
     "node": ">=18"

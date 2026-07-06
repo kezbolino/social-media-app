@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Instagram Caption Grabber</title>
+<style>
+  :root {
+    --bg: #14100c;
+    --panel: #1e1813;
+    --panel-2: #271f18;
+    --line: #3a2f24;
+    --text: #f4ece2;
+    --muted: #b7a793;
+    --accent: #ff7a1a;
+    --accent-press: #e56a10;
+    --ok: #4ccd78;
+    --err: #ff6b6b;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 28px 20px 80px; }
+  header { text-align: center; margin-bottom: 26px; }
+  header h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -.4px; }
+  header p { color: var(--muted); margin: 0; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 22px; margin-bottom: 18px;
+  }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--accent);
+    color: #201200; font-weight: 700; font-size: 14px; margin-right: 10px; flex: 0 0 auto;
+  }
+  .step-head { display: flex; align-items: center; margin-bottom: 14px; }
+  .step-head h2 { font-size: 18px; margin: 0; }
+  label { display: block; font-size: 14px; color: var(--muted); margin: 12px 0 6px; }
+  input[type=text], input[type=password], textarea, input[type=number] {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--line);
+    color: var(--text); border-radius: 10px; padding: 12px 14px; font-size: 15px;
+    font-family: inherit; resize: vertical;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { min-height: 120px; line-height: 1.45; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .row > div { flex: 1 1 180px; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .cookie-row { position: relative; }
+  .toggle-eye {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px;
+  }
+  details.help {
+    margin-top: 12px; background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 10px; padding: 0 14px;
+  }
+  details.help summary {
+    cursor: pointer; padding: 12px 0; color: var(--accent); font-size: 14px; list-style: none;
+  }
+  details.help summary::-webkit-details-marker { display: none; }
+  details.help[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+  details.help ol { margin: 0 0 14px; padding-left: 20px; }
+  details.help li { margin: 7px 0; }
+  details.help code {
+    background: #000; padding: 1px 6px; border-radius: 5px; font-size: 13px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--accent); color: #201200; border: none; border-radius: 12px;
+    padding: 15px 22px; font-size: 17px; font-weight: 700; cursor: pointer; width: 100%;
+    transition: background .12s, transform .05s;
+  }
+  .btn:hover { background: var(--accent-press); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.secondary {
+    background: transparent; color: var(--text); border: 1px solid var(--line);
+    width: auto; padding: 10px 16px; font-size: 14px;
+  }
+  .btn.secondary:hover { background: var(--panel-2); }
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid rgba(0,0,0,.3);
+    border-top-color: #201200; border-radius: 50%; animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #progressCard, #resultsCard { display: none; }
+  .progress-bar {
+    height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; margin: 6px 0 14px;
+  }
+  .progress-bar > div {
+    height: 100%; width: 0%; background: var(--accent); transition: width .3s;
+  }
+  .log {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px;
+    max-height: 220px; overflow: auto; background: #000; border-radius: 10px; padding: 12px;
+  }
+  .log .line { padding: 2px 0; }
+  .log .ok { color: var(--ok); }
+  .log .err { color: var(--err); }
+  .log .muted { color: var(--muted); }
+  .summary-bar {
+    display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; font-size: 14px;
+  }
+  .summary-bar b { font-size: 22px; display: block; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--panel-2); position: sticky; top: 0; color: var(--muted); font-weight: 600; }
+  td.caption { max-width: 380px; }
+  td a { color: var(--accent); text-decoration: none; }
+  tr:last-child td { border-bottom: none; }
+  .banner {
+    padding: 12px 14px; border-radius: 10px; margin-top: 12px; font-size: 14px; display: none;
+  }
+  .banner.err { background: rgba(255,107,107,.12); border: 1px solid var(--err); color: #ffd0d0; }
+  .footnote { color: var(--muted); font-size: 12.5px; margin-top: 26px; text-align: center; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>📸 Instagram Caption Grabber</h1>
+    <p>Paste a few handles, click the button, get a spreadsheet of their captions.</p>
+  </header>
+
+  <!-- Step 1: cookie -->
+  <div class="card">
+    <div class="step-head"><span class="step-num">1</span><h2>Connect your Instagram</h2></div>
+    <p class="hint">This lets the tool see the same posts your browser sees. Your password is never used — only the code below, and it only ever goes to Instagram.</p>
+    <label for="sessionid">Your Instagram <code>sessionid</code> code</label>
+    <div class="cookie-row">
+      <input type="password" id="sessionid" placeholder="paste the long code here" autocomplete="off" spellcheck="false" />
+      <button class="toggle-eye" id="eye" type="button">show</button>
+    </div>
+    <details class="help">
+      <summary>How do I find this code? (30 seconds)</summary>
+      <ol>
+        <li>Open <b>instagram.com</b> in this browser and make sure you're <b>logged in</b>.</li>
+        <li>Press <b>⌥⌘I</b> (Mac) or <b>F12</b> (Windows) to open the developer panel.</li>
+        <li>Click the <b>Application</b> tab. In the left sidebar open <b>Storage → Cookies → https://www.instagram.com</b>.</li>
+        <li>Find the row named <code>sessionid</code> and copy its long <b>Value</b>.</li>
+        <li>Paste it in the box above. (It's remembered on this computer so you only do this once.)</li>
+      </ol>
+      <p class="hint">If results stop working later, your code expired — just grab a fresh one the same way.</p>
+    </details>
+  </div>
+
+  <!-- Step 2: handles -->
+  <div class="card">
+    <div class="step-head"><span class="step-num">2</span><h2>Which accounts?</h2></div>
+    <label for="handles">One handle per line (the <code>@name</code> part — pasting full links is fine too)</label>
+    <textarea id="handles" placeholder="bonappetitmag&#10;natgeo&#10;@some.street.food.vendor"></textarea>
+    <div class="row">
+      <div>
+        <label for="max">Posts per account</label>
+        <input type="number" id="max" value="30" min="1" max="200" />
+        <p class="hint">How many recent posts to grab from each.</p>
+      </div>
+      <div>
+        <label for="delay">Speed (pause between requests, ms)</label>
+        <input type="number" id="delay" value="3000" min="500" max="30000" step="500" />
+        <p class="hint">Higher = slower &amp; safer. Leave as-is unless you get blocked.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: go -->
+  <div class="card">
+    <div class="step-head"><span class="step-num">3</span><h2>Grab them</h2></div>
+    <button class="btn" id="go">Grab Captions</button>
+    <div class="banner err" id="errBanner"></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="card" id="progressCard">
+    <div class="step-head"><h2 style="margin:0">Working…</h2></div>
+    <div class="progress-bar"><div id="bar"></div></div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="card" id="resultsCard">
+    <div class="step-head"><h2 style="margin:0">✅ Results</h2></div>
+    <div class="summary-bar">
+      <div><b id="statPosts">0</b> captions</div>
+      <div><b id="statOk">0</b> accounts ok</div>
+      <div><b id="statFailed">0</b> failed</div>
+    </div>
+    <div class="actions">
+      <button class="btn secondary" id="dlCsv">⬇︎ Download spreadsheet (CSV)</button>
+      <button class="btn secondary" id="dlJson">⬇︎ Download JSON</button>
+    </div>
+    <div class="table-scroll">
+      <table id="tbl">
+        <thead><tr><th>Account</th><th>Date</th><th>Likes</th><th class="caption">Caption</th><th>Link</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="footnote">
+    Runs entirely on your computer — nothing is uploaded anywhere.<br />
+    Please be a good citizen: this grabs <b>public</b> posts for research. Bulk collection is against
+    Instagram's terms, so keep it modest and don't republish other people's captions as your own.
+  </p>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const state = { csv: '', posts: [] };
+
+  // Restore saved cookie + handles (convenience only; stays on this machine)
+  try {
+    $('sessionid').value = localStorage.getItem('ig_sessionid') || '';
+    $('handles').value = localStorage.getItem('ig_handles') || '';
+    if (localStorage.getItem('ig_max')) $('max').value = localStorage.getItem('ig_max');
+  } catch {}
+
+  $('eye').onclick = () => {
+    const f = $('sessionid');
+    const show = f.type === 'password';
+    f.type = show ? 'text' : 'password';
+    $('eye').textContent = show ? 'hide' : 'show';
+  };
+
+  function logLine(text, cls) {
+    const div = document.createElement('div');
+    div.className = 'line' + (cls ? ' ' + cls : '');
+    div.textContent = text;
+    $('log').appendChild(div);
+    $('log').scrollTop = $('log').scrollHeight;
+  }
+
+  function showError(msg) {
+    const b = $('errBanner');
+    b.textContent = '⚠︎ ' + msg;
+    b.style.display = 'block';
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  }
+
+  function renderTable(posts) {
+    const tb = $('tbl').querySelector('tbody');
+    tb.innerHTML = '';
+    for (const p of posts) {
+      const tr = document.createElement('tr');
+      const date = p.timestamp ? p.timestamp.slice(0, 10) : '';
+      const cap = p.caption ? (p.caption.length > 240 ? p.caption.slice(0, 240) + '…' : p.caption) : '';
+      tr.innerHTML =
+        '<td>@' + esc(p.handle) + '</td>' +
+        '<td>' + esc(date) + '</td>' +
+        '<td>' + (p.likes == null ? '' : esc(p.likes)) + '</td>' +
+        '<td class="caption">' + esc(cap) + '</td>' +
+        '<td>' + (p.url ? '<a href="' + esc(p.url) + '" target="_blank" rel="noopener">open ↗</a>' : '') + '</td>';
+      tb.appendChild(tr);
+    }
+  }
+
+  function download(filename, text, mime) {
+    const blob = new Blob([text], { type: mime });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  $('dlCsv').onclick = () => download('instagram-captions.csv', state.csv, 'text/csv');
+  $('dlJson').onclick = () =>
+    download('instagram-captions.json', JSON.stringify(state.posts, null, 2), 'application/json');
+
+  $('go').onclick = async () => {
+    const sessionid = $('sessionid').value.trim();
+    const handles = $('handles').value.trim();
+    const max = $('max').value;
+    const delay = $('delay').value;
+
+    $('errBanner').style.display = 'none';
+    if (!sessionid) return showError('Paste your Instagram code in Step 1 first.');
+    if (!handles) return showError('Add at least one account in Step 2.');
+
+    try {
+      localStorage.setItem('ig_sessionid', sessionid);
+      localStorage.setItem('ig_handles', handles);
+      localStorage.setItem('ig_max', max);
+    } catch {}
+
+    // Reset UI
+    const btn = $('go');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Working…';
+    $('log').innerHTML = '';
+    $('bar').style.width = '0%';
+    $('progressCard').style.display = 'block';
+    $('resultsCard').style.display = 'none';
+    $('progressCard').scrollIntoView({ behavior: 'smooth' });
+
+    let total = 0, doneCount = 0;
+
+    try {
+      const resp = await fetch('/api/scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionid, handles, max, delay }),
+      });
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let idx;
+        while ((idx = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, idx).trim();
+          buf = buf.slice(idx + 1);
+          if (!line) continue;
+          const ev = JSON.parse(line);
+
+          if (ev.type === 'start') {
+            total = ev.total;
+            logLine('Starting — ' + total + ' account(s).', 'muted');
+          } else if (ev.type === 'handle-start') {
+            logLine('@' + ev.handle + ' …');
+          } else if (ev.type === 'handle-done') {
+            doneCount++;
+            const note = ev.note ? ' (' + ev.note + ')' : '';
+            logLine('  ✓ @' + ev.handle + ' — ' + ev.count + ' posts' + note, 'ok');
+            $('bar').style.width = Math.round((doneCount / total) * 100) + '%';
+          } else if (ev.type === 'handle-error') {
+            doneCount++;
+            logLine('  ✗ @' + ev.handle + ' — ' + ev.error, 'err');
+            $('bar').style.width = Math.round((doneCount / total) * 100) + '%';
+          } else if (ev.type === 'done') {
+            $('statOk').textContent = ev.ok;
+            $('statFailed').textContent = ev.failed;
+            $('statPosts').textContent = ev.totalPosts;
+          } else if (ev.type === 'result') {
+            state.posts = ev.posts;
+            state.csv = ev.csv;
+            renderTable(ev.posts);
+            $('statPosts').textContent = ev.posts.length;
+            $('resultsCard').style.display = 'block';
+            $('resultsCard').scrollIntoView({ behavior: 'smooth' });
+          } else if (ev.type === 'fatal') {
+            showError(ev.error);
+          }
+        }
+      }
+    } catch (err) {
+      showError('Something went wrong: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Grab Captions';
+    }
+  };
+</script>
+</body>
+</html>

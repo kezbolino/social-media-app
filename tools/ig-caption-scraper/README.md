@@ -1,137 +1,124 @@
-# ig-caption-scraper
+# Instagram Caption Grabber
 
-Pull **captions** (plus post URL, date, like/comment counts) for a list of
-**public** Instagram handles into tidy **JSON + CSV**.
+Grab the **captions** (plus date, likes, comments, link) from a list of
+**public** Instagram accounts, and download them as a spreadsheet.
 
-Built to run **on your own machine** (a Mac, say), where the internet is open —
-not inside a locked-down cloud box. Zero dependencies, one file, Node 18+.
-
----
-
-## Why it needs your session cookie
-
-Instagram shows almost nothing to logged-out visitors — profiles hit a login
-wall. The reliable fix is to let the script reuse **your own logged-in browser
-session** by pasting in one cookie (`sessionid`). Instagram then serves the
-script exactly what your browser sees.
-
-- Your **password is never used, sent, or stored** — only the `sessionid` cookie.
-- The cookie only ever goes to `instagram.com`.
-- Treat the cookie like a password while it's valid: don't paste it into random
-  places or commit it to git (this folder's `.gitignore` already blocks the
-  common filenames).
+Made to be dead simple: **double-click to open, fill in two boxes, click a
+button, download.** No commands to type.
 
 ---
 
-## Get your `sessionid` cookie (about 30 seconds)
+## The easy way (no Terminal) 👇
 
-1. Open **instagram.com** in a browser and make sure you're **logged in**.
-2. Open DevTools: **⌥⌘I** (Mac) / **F12** (Windows).
-3. Go to the **Application** tab → left sidebar **Storage → Cookies →
-   `https://www.instagram.com`**.
-4. Find the row named **`sessionid`** and copy its **Value** (a long string).
+### 1. One-time: install Node.js (the free engine this uses)
 
-> Tip: the cookie expires when you log out or after a while — if the script
-> starts returning "session expired", grab a fresh one.
+The tool needs Node.js installed once. If you're not sure whether you have it,
+just try step 2 — the launcher will send you to the download page if it's
+missing. Or grab it now from **[nodejs.org](https://nodejs.org/en/download)**
+(install the big green **LTS** button).
 
----
+### 2. Start it
 
-## Run it
+- **Mac:** double-click **`Start-Mac.command`**
+- **Windows:** double-click **`Start-Windows.bat`**
 
-From this folder:
+A small black window appears (that's the engine — **leave it open**) and your
+web browser pops open with the tool. On a Mac, the very first time, if it says
+*"cannot be opened because it is from an unidentified developer"*, **right-click
+the file → Open → Open** once, and after that a normal double-click works.
 
-```bash
-# 1. put your handles in a file (one per line)
-cp handles.example.txt handles.txt
-#    …then edit handles.txt
+### 3. Use it
 
-# 2. run, passing your cookie via env var (keeps it out of your shell history
-#    if you use a leading space, and out of the args list)
-IG_SESSIONID="paste_your_sessionid_here" node scrape.js handles.txt
-```
+The webpage walks you through three boxes:
 
-Or pass handles directly and the cookie as a flag:
+1. **Connect your Instagram** — paste one code (`sessionid`) so the tool sees the
+   same posts your browser does. There's a *"How do I find this code?"* helper
+   right there — it's a 30-second copy-paste from your browser, and no password
+   is ever involved. It's remembered so you only do it once.
+2. **Which accounts** — type the handles, one per line.
+3. **Grab them** — click the button, watch it work, then **Download spreadsheet
+   (CSV)**. Opens straight in Numbers / Excel / Google Sheets.
 
-```bash
-node scrape.js --sessionid "paste_here" natgeo bonappetitmag --max 30
-```
-
-### Options
-
-| Flag                | Default    | Meaning                                        |
-| ------------------- | ---------- | ---------------------------------------------- |
-| `--sessionid <c>`   | `$IG_SESSIONID` | Your sessionid cookie                     |
-| `--max <n>`         | `50`       | Max posts to pull per handle                   |
-| `--delay <ms>`      | `3000`     | Base pause between requests (jittered ±40%)    |
-| `--out <dir>`       | `./output` | Where to write results                         |
-| `-h`, `--help`      |            | Show help                                      |
-
-Handles can be bare (`natgeo`), `@`-prefixed, or full profile URLs — all fine.
+When you're finished, just close the little black window.
 
 ---
 
-## What you get
+## Is this safe / private?
 
-```
-output/
-  captions.csv          all posts from all handles — open in Excel/Sheets
-  captions.json         same data as JSON
-  by-handle/
-    natgeo.json         per-account: profile metadata + that account's posts
-    bonappetitmag.json
-```
-
-Each post record:
-
-```json
-{
-  "handle": "bonappetitmag",
-  "shortcode": "C1abcDefGhi",
-  "url": "https://www.instagram.com/p/C1abcDefGhi/",
-  "timestamp": "2026-05-14T16:03:11.000Z",
-  "is_video": false,
-  "likes": 4210,
-  "comments": 88,
-  "caption": "The crispiest smashed potatoes you'll ever make…"
-}
-```
+- It runs **entirely on your own computer**. Nothing is uploaded to us or anyone
+  else — the posts go straight from Instagram to your machine.
+- Your **password is never used or stored**. The only thing you paste is the
+  `sessionid` cookie, and it only ever gets sent to Instagram (to prove you're
+  logged in). It's kept on your computer so you don't retype it.
+- Don't share that cookie with anyone while it's valid — treat it like a
+  password. This folder's `.gitignore` already stops it (and your results) from
+  being committed to git by accident.
 
 ---
 
-## Being a good citizen (please read)
+## Please use it kindly
 
-- This pulls **public** posts only. **Private** accounts return nothing — the
-  script says so and moves on.
-- Bulk collection is **against Instagram's Terms of Service**, public data or
-  not. Use this on accounts you own or have permission to analyse, keep volumes
-  modest, and don't republish other people's captions as your own.
-- The default delays are deliberately slow and jittered so you don't hammer
-  Instagram (and don't get your account rate-limited or flagged). If you're
-  scraping more than a handful of accounts, **raise `--delay`**, don't lower it.
-- Instagram changes its private web endpoints without notice. If a run suddenly
-  returns errors or empty data, the endpoint shape probably moved — that's the
-  nature of this approach, and the fully-stable alternative is the official
-  **Graph API Business Discovery** route (see `docs/META_SETUP.md` in this repo).
+- It only reads **public** posts. Private accounts return nothing.
+- Bulk-collecting posts is **against Instagram's Terms of Service**, public or
+  not. Keep the volumes modest, use it for **caption research** (inspiration for
+  your own lines), and don't republish other people's captions as your own.
+- The built-in pace is deliberately gentle so you don't get your account
+  rate-limited. If you ever get blocked, raise the **Speed** value (a bigger
+  pause), don't lower it.
+- Instagram occasionally changes how its site works; if the tool suddenly returns
+  errors, that's usually why. The fully-official, never-breaks alternative is the
+  Meta **Graph API Business Discovery** route — see `docs/META_SETUP.md` in this
+  repo.
 
 ---
 
 ## Feeding results into the Street Food Post app
 
 The app's caption library lives in `data/streetfood_hooks.json` (each hook has a
-unique `id` and a `text` with `{location}` / `{day}` / `{item}` placeholders).
-The scraper's `captions.csv` is a good **research input** — skim it for phrasing
-you like, then hand-write your own hooks. Don't paste other vendors' captions in
-verbatim; use them as inspiration for original lines.
+unique `id` and `text` with `{location}` / `{day}` / `{item}` placeholders). The
+downloaded CSV is a great **research input** — skim it for phrasing you like,
+then hand-write your own original hooks.
+
+---
+
+## For power users: the command line (optional)
+
+There's also a scriptable CLI that shares the same engine. You don't need this if
+you're using the double-click app.
+
+```bash
+IG_SESSIONID="<your sessionid cookie>" node scrape.js handles.txt
+node scrape.js --sessionid "<cookie>" natgeo bonappetitmag --max 30 --out ./output
+```
+
+Options: `--sessionid`, `--max` (posts per handle, default 50), `--delay` (ms
+between requests, default 3000), `--out` (output folder). Writes
+`captions.csv`, `captions.json`, and `by-handle/<handle>.json`.
+
+---
+
+## What's in this folder
+
+```
+Start-Mac.command      Double-click to run (Mac)
+Start-Windows.bat      Double-click to run (Windows)
+server.js              The little local engine that powers the web UI
+public/index.html      The web UI you interact with
+lib/scraper.js         The shared scraping engine (used by UI + CLI)
+scrape.js              Optional command-line version
+handles.example.txt    Example handle list (for the CLI)
+```
 
 ---
 
 ## Troubleshooting
 
-| Symptom                                  | Likely cause / fix                                    |
-| ---------------------------------------- | ----------------------------------------------------- |
-| `HTTP 401/403` or "session expired"      | Cookie missing/stale → grab a fresh `sessionid`.      |
-| `got a non-JSON response (login wall)`   | Not logged in / checkpoint → re-login, new cookie.    |
-| Only ~12 posts returned                  | Pagination got blocked; raise `--delay`, retry later. |
-| `HTTP 429`, slow crawl                   | You're rate-limited — the script backs off; wait it out or raise `--delay`. |
-| `not found`                              | Handle is wrong, renamed, or deleted.                 |
-| Empty result, account is real            | It's **private**, or IG changed the endpoint shape.   |
+| Symptom                                   | Fix                                                       |
+| ----------------------------------------- | -------------------------------------------------------- |
+| Browser didn't open                       | Go to **http://127.0.0.1:4785** yourself.                |
+| "session expired" / lots of failures      | Your code is stale — grab a fresh `sessionid` (Step 1 helper). |
+| An account says "private"                 | It is private; there's nothing public to grab.           |
+| Only ~12 posts came back                  | Instagram throttled paging — raise **Speed** and retry later. |
+| Mac: "unidentified developer"             | Right-click `Start-Mac.command` → **Open** → **Open** (first time only). |
+| Windows: "Windows protected your PC"      | Click **More info → Run anyway** (first time only).      |
+| "node is not recognised / command not found" | Install Node.js from nodejs.org, then start it again. |
