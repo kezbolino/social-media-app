@@ -48,7 +48,14 @@
     $$(".screen").forEach((s) =>
       s.classList.toggle("is-active", s.dataset.screen === screen)
     );
+    if (screen === "home") rollGreeting();
     window.scrollTo(0, 0);
+  }
+
+  // Drop a fresh random greeting onto the home screen.
+  function rollGreeting() {
+    const el = document.getElementById("homeGreeting");
+    if (el && window.pickGreeting) el.textContent = window.pickGreeting();
   }
 
   /* ---------- boot ---------- */
@@ -70,6 +77,7 @@
       return;
     }
     wireEvents();
+    rollGreeting();
     adaptPhotoPickers();
     Editor.init();
     renderPublishButtons();

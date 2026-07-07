@@ -140,6 +140,13 @@ html, body {
 .brand-mark { font-size: 60px; line-height: 1; }
 .home h1 { margin: 0; font-size: 2rem; letter-spacing: 0.5px; }
 .home h1 .amp { color: var(--orange); }
+.greeting {
+  color: var(--orange);
+  font-weight: 600;
+  font-size: 1.15rem;
+  margin: 2px 0 4px;
+  min-height: 1.4em;
+}
 .subtitle { color: rgba(255, 255, 255, 0.85); margin: 0 0 22px; max-width: 22rem; }
 .home .btn-primary { background: var(--orange); color: #1a1208; }
 .home .btn-primary:active { background: var(--orange-press); }
