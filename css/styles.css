@@ -139,6 +139,26 @@ html, body {
 }
 .brand-mark { font-size: 60px; line-height: 1; }
 .brand-logo { width: min(340px, 92%); height: auto; display: block; margin: 0 auto 4px; }
+.tagline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin: 0 0 2px;
+}
+.tagline::before,
+.tagline::after {
+  content: "";
+  height: 2px;
+  width: 34px;
+  background: var(--orange);
+  border-radius: 2px;
+}
 .home h1 { margin: 0; font-size: 2rem; letter-spacing: 0.5px; }
 .home h1 .amp { color: var(--orange); }
 .greeting {
