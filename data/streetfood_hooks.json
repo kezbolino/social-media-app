@@ -8,7 +8,8 @@
   "categories": {
     "location": "Posting about where you are / dates",
     "brand": "Brand awareness / general hype",
-    "other": "Weather, last-chance, weekend, FOMO etc."
+    "other": "Weather, last-chance, weekend, FOMO etc.",
+    "events": "Weddings, private parties, corporate catering"
   },
   "hooks": [
     { "id": "loc_001", "tags": ["location"], "text": "Right then, we've parked up at {location}. Come and get fed.", "uses": ["location"] },
@@ -89,6 +90,39 @@
     { "id": "lon_015", "tags": ["location", "london"], "text": "Lovely jubbly - we're back at {location} today.", "uses": ["location"] },
     { "id": "lon_016", "tags": ["location", "london"], "text": "We're at {location} til {day}, so come and 'ave it.", "uses": ["location", "day"] },
     { "id": "lon_017", "tags": ["brand", "london"], "text": "Skip the Tesco meal deal, you absolute diamond. Come find us.", "uses": [] },
-    { "id": "lon_018", "tags": ["brand", "london"], "text": "Even the pigeons know where the good food is. Do you? {location}.", "uses": ["location"] }
+    { "id": "lon_018", "tags": ["brand", "london"], "text": "Even the pigeons know where the good food is. Do you? {location}.", "uses": ["location"] },
+    { "id": "gf_001", "tags": ["brand"], "text": "Every single thing on our menu is gluten free. Batter, chicken, chips, sauces, the lot. Eat the whole thing, no worry.", "uses": [] },
+    { "id": "gf_002", "tags": ["brand"], "text": "Coeliac? Gluten dodger? You can order the ENTIRE menu. All of it. No 'sorry, not that one'.", "uses": [] },
+    { "id": "gf_003", "tags": ["brand"], "text": "100% gluten free, 0% compromise. Wings that don't taste 'free from' anything.", "uses": [] },
+    { "id": "gf_004", "tags": ["brand"], "text": "The whole van is gluten free, so order literally anything. Yes, even the batter. Especially the batter.", "uses": [] },
+    { "id": "gf_005", "tags": ["brand"], "text": "Proper chicken shop energy, fully gluten free. Every wing, every chip, every sauce. Safe and smashing.", "uses": [] },
+    { "id": "gf_006", "tags": ["brand"], "text": "Street food you can actually trust. Gluten free top to bottom, no asterisks.", "uses": [] },
+    { "id": "gf_007", "tags": ["brand"], "text": "Imagine a menu where you can have anything on it. That's us. All gluten free, all yours.", "uses": [] },
+    { "id": "gf_008", "tags": ["brand"], "text": "Gluten free never tasted like this. Crispy batter, proper sauce, zero gluten. Come see.", "uses": [] },
+    { "id": "loc_020", "tags": ["location"], "text": "We're at {location} today and the whole menu's gluten free. Come get properly fed.", "uses": ["location"] },
+    { "id": "loc_021", "tags": ["location"], "text": "{location} - parked up, fryers on, everything gluten free. See you in the queue.", "uses": ["location"] },
+    { "id": "loc_022", "tags": ["location"], "text": "Find us at {location}. Gluten free wings, proper chips, no meal-deal sadness.", "uses": ["location"] },
+    { "id": "loc_023", "tags": ["location"], "text": "Pitched at {location} til {day}. Fully gluten free, dangerously good. Plenty of time to get hooked.", "uses": ["location", "day"] },
+    { "id": "gv_001", "tags": ["location"], "location": "Greenwich", "text": "Greenwich today. Tourist or local, doesn't matter - the wings are gluten free and unreal. Come find us.", "uses": [] },
+    { "id": "gv_002", "tags": ["location"], "location": "Greenwich", "text": "Doing the Meridian and the ships? Refuel with us. Gluten free street food, no tourist-trap nonsense.", "uses": [] },
+    { "id": "gv_003", "tags": ["location"], "location": "Greenwich", "text": "Locals of Greenwich already know. First-timers, welcome. All gluten free, all banging.", "uses": [] },
+    { "id": "gv_004", "tags": ["location"], "location": "Greenwich", "text": "Greenwich Park earned you a proper feed. We're right here - gluten free wings that hit.", "uses": [] },
+    { "id": "cp_001", "tags": ["location"], "location": "Crystal Palace", "text": "Crystal Palace! Yes, we're near the dinosaurs. No, they're not gluten free - but our whole menu is.", "uses": [] },
+    { "id": "cp_002", "tags": ["location"], "location": "Crystal Palace", "text": "CP locals, your gluten free wing fix is parked up. Wave at the dinosaurs on your way over.", "uses": [] },
+    { "id": "cp_003", "tags": ["location"], "location": "Crystal Palace", "text": "Only in Crystal Palace: Victorian dinosaurs AND 100% gluten free wings. What a place.", "uses": [] },
+    { "id": "cp_004", "tags": ["location"], "location": "Crystal Palace", "text": "Crystal Palace crew, we're back. Everything gluten free. Bring the kids, bring the dog, bring your appetite.", "uses": [] },
+    { "id": "lh_001", "tags": ["location"], "location": "Leadenhall Market", "text": "Leadenhall Market - City lunch sorted. Gluten free wings that beat any sad desk salad. Beat the rush.", "uses": [] },
+    { "id": "lh_002", "tags": ["location"], "location": "Leadenhall Market", "text": "Working the City? Leadenhall, lunchtime, us. Fully gluten free, properly quick.", "uses": [] },
+    { "id": "lh_003", "tags": ["location"], "location": "Leadenhall Market", "text": "Suits of Leadenhall - real food that happens to be 100% gluten free. Grab it before the 1pm crush.", "uses": [] },
+    { "id": "lh_004", "tags": ["location"], "location": "Leadenhall Market", "text": "Leadenhall lunch run. Gluten free, fast, miles better than a meal deal. You've earned it.", "uses": [] },
+    { "id": "lh_005", "tags": ["location"], "location": "Leadenhall Market", "text": "City teams - we cater office feeds too. Whole floor, all gluten free. Ask at the van.", "uses": [] },
+    { "id": "evt_001", "tags": ["events"], "text": "Getting married? We cater weddings - proper gluten free street food your guests will actually remember.", "uses": [] },
+    { "id": "evt_002", "tags": ["events"], "text": "Private party, birthday, big do? We bring the food (and the van). 100% gluten free, 100% sorted.", "uses": [] },
+    { "id": "evt_003", "tags": ["events"], "text": "Corporate event or office feed? We do those. Gluten free street food that gets the team to actually show up.", "uses": [] },
+    { "id": "evt_004", "tags": ["events"], "text": "Weddings, birthdays, work dos - if you're feeding a crowd, we've got you. All gluten free, no boring buffet.", "uses": [] },
+    { "id": "evt_005", "tags": ["events"], "text": "Skip the rubber chicken and sad veg. Book us for the wedding - gluten free wings, happy guests, zero drama.", "uses": [] },
+    { "id": "evt_006", "tags": ["events"], "text": "Christmas do? Summer party? We cater it. Everything gluten free, everyone fed, nobody left out.", "uses": [] },
+    { "id": "evt_007", "tags": ["events"], "text": "Fully gluten free catering for weddings and private events - because your coeliac auntie deserves to eat too.", "uses": [] },
+    { "id": "evt_008", "tags": ["events"], "text": "DM us for event catering. Weddings, corporate, private parties - gluten free street food that steals the show.", "uses": [] }
   ]
 }

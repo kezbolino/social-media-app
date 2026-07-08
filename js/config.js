@@ -31,7 +31,7 @@ window.APP_CONFIG = {
 
   // Locations pre-loaded the first time the app runs. The user can add/remove
   // these in Settings.
-  DEFAULT_LOCATIONS: ["Greenwich", "Brick Lane", "Camden Market"],
+  DEFAULT_LOCATIONS: ["Greenwich", "Crystal Palace", "Leadenhall Market"],
 
   // Hashtags pre-loaded the first time the app runs (editable in Settings).
   // Curated for a London street-food / chicken-wings trader: a mix of

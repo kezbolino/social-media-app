@@ -34,6 +34,12 @@ const Hooks = (() => {
   //  - every variable it 'uses' can actually be supplied.
   // (Recency is handled separately so we can relax it if the pool runs dry.)
   function isSatisfiable(hook, ctx) {
+    // A hook can be pinned to one place (e.g. the Crystal Palace dinosaurs
+    // line) — only eligible when the chosen location matches.
+    if (hook.location) {
+      const here = String(ctx.location || "").trim().toLowerCase();
+      if (here !== String(hook.location).trim().toLowerCase()) return false;
+    }
     for (const v of hook.uses) {
       if (v === "location" && !ctx.location) return false;
       if (v === "day" && !ctx.day) return false;
