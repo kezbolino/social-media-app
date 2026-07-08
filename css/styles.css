@@ -143,19 +143,19 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  color: rgba(255, 255, 255, 0.92);
-  font-weight: 700;
-  font-size: 0.82rem;
-  letter-spacing: 0.3em;
+  gap: 14px;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
   margin: 0 0 2px;
 }
 .tagline::before,
 .tagline::after {
   content: "";
-  height: 2px;
-  width: 34px;
+  height: 3px;
+  width: 44px;
   background: var(--orange);
   border-radius: 2px;
 }
