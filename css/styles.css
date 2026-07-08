@@ -619,3 +619,108 @@ html, body {
 
 /* Review screen: direct-post divider */
 .or-row { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 10px 0 0; }
+
+/* =========================================================================
+   FX layer — Duolingo-style juice: chunky 3D buttons, springy transitions,
+   pops & confetti. Kept at the end so these rules win over the base styles.
+   All motion is gated behind prefers-reduced-motion at the bottom.
+   ========================================================================= */
+
+/* Springy easing used throughout. Higher overshoot = bouncier. */
+:root { --spring: cubic-bezier(0.34, 1.8, 0.5, 1); }
+
+/* ---- Chunky 3D buttons: a solid colour "edge" underneath that the button
+   presses down into on tap (the signature Duolingo feel). ---- */
+.btn {
+  --btn-edge: rgba(10, 35, 49, 0.22);
+  box-shadow: 0 4px 0 var(--btn-edge);
+  transition: transform 0.06s var(--spring), box-shadow 0.06s ease,
+    background 0.15s ease;
+}
+.btn-primary { --btn-edge: var(--blue-press); }
+.btn-accent { --btn-edge: var(--orange-press); }
+.home .btn-primary { --btn-edge: var(--orange-press); }
+.btn-secondary { --btn-edge: rgba(10, 77, 161, 0.25); }
+.btn-ghost { box-shadow: none; }
+/* Press the button into its edge. Overrides the old scale(0.98). */
+.btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--btn-edge);
+}
+.btn-ghost:active { transform: translateY(2px); }
+.btn:disabled { box-shadow: 0 4px 0 var(--btn-edge); }
+
+/* The hero CTA gently breathes to invite the first tap. */
+.btn-xl { animation: fx-breathe 2.6s ease-in-out infinite; }
+.btn-xl:active { animation: none; }
+@keyframes fx-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+
+/* ---- Springy screen entrance ---- */
+.screen.is-active { animation: fx-screen-in 0.34s var(--spring) both; }
+@keyframes fx-screen-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Home: logo drops in, then each control rises in a stagger ---- */
+.home .brand-logo { animation: fx-drop-in 0.5s var(--spring) both; }
+.home .tagline { animation: fx-rise 0.45s var(--spring) 0.08s both; }
+.home .greeting { animation: fx-rise 0.45s var(--spring) 0.14s both; }
+.home .btn { animation: fx-rise 0.5s var(--spring) both; }
+.home .btn:nth-of-type(1) { animation-delay: 0.20s; }
+.home .btn:nth-of-type(2) { animation-delay: 0.28s; }
+.home .btn:nth-of-type(3) { animation-delay: 0.36s; }
+.home .btn:nth-of-type(4) { animation-delay: 0.44s; }
+@keyframes fx-drop-in {
+  from { opacity: 0; transform: translateY(-18px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fx-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Re-rolled greeting gives a little pop. */
+.greeting.fx-pop { animation: fx-pop 0.4s var(--spring); }
+
+/* ---- Tiles & gen-cards: subtle lift, press down on tap ---- */
+.tile, .gen-card {
+  transition: transform 0.12s var(--spring), box-shadow 0.12s ease,
+    background 0.15s ease;
+}
+.tile:active, .gen-card:active { transform: translateY(2px) scale(0.99); }
+
+/* ---- Chips: springy select ---- */
+.chip { transition: transform 0.15s var(--spring), background 0.15s ease,
+    border-color 0.15s ease; }
+.chip:active { transform: scale(0.94); }
+.chip.selected { animation: fx-pop 0.3s var(--spring); }
+
+/* ---- Reusable pop (fired from JS via FX.pop) ---- */
+.fx-pop { animation: fx-pop 0.5s var(--spring); }
+@keyframes fx-pop {
+  0% { transform: scale(0.86); }
+  50% { transform: scale(1.11); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Confetti canvas overlay ---- */
+.fx-confetti {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .btn-xl, .screen.is-active, .home .brand-logo, .home .tagline,
+  .home .greeting, .home .btn, .greeting.fx-pop, .chip.selected, .fx-pop {
+    animation: none !important;
+  }
+  .btn { transition: background 0.15s ease; }
+}

@@ -55,7 +55,10 @@
   // Drop a fresh random greeting onto the home screen.
   function rollGreeting() {
     const el = document.getElementById("homeGreeting");
-    if (el && window.pickGreeting) el.textContent = window.pickGreeting();
+    if (el && window.pickGreeting) {
+      el.textContent = window.pickGreeting();
+      if (window.FX) FX.pop(el);
+    }
   }
 
   /* ---------- boot ---------- */
@@ -592,6 +595,8 @@
     post.captionText = result.filledText;
     post.hashtagBlock = ""; // a new line drops any appended hashtags
     $("#captionText").value = result.filledText;
+    // Bounce the fresh line + preview so a Shuffle feels alive.
+    if (window.FX) { FX.pop($("#captionText")); FX.pop($("#captionPreview")); }
   }
 
   /* ---------- HASHTAGS ---------- */
@@ -687,6 +692,7 @@
   // Used by both the share sheet and the direct Meta publish buttons.
   function markPostShared(via) {
     post.status = "shared";
+    if (window.FX) FX.confetti(); // 🎉 the win
     if (post.caption) Store.recordHookUse(post.caption.hook.id);
     Store.savePost({
       id: post.id,

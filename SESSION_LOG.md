@@ -1,5 +1,34 @@
 # Session Log
 
+## 2026-07-08 (pm) — Fixed the dead deploy + Duolingo-style animations
+**Done**
+- **Live-site bug found & fixed.** GitHub Pages was silently deploying the stale
+  `claude/new-session-wq4q6o` branch, NOT `main` — so every "merge to main = live"
+  session since 2026-07-07 was a no-op (site frozen pre-logo, pre-greetings).
+  Diagnosed via WebFetch fingerprint (greetings.js 404 + 🐔 home) vs branch trees.
+  Ke repointed Settings → Pages → source `main` / root. Now merges actually go live.
+- **New animation layer (`js/fx.js`)** — Duolingo feel: chunky 3D buttons that
+  press into a coloured edge, springy screen transitions, staggered home entrance,
+  a gently breathing hero CTA, pops on caption Shuffle + new greeting, light
+  haptics, canvas confetti + a WebAudio chime on the share "win". CSS appended to
+  `styles.css`; hooks in `app.js` (rollGreeting / setCaption / markPostShared);
+  `fx.js` loaded in `index.html`. Honours `prefers-reduced-motion`.
+- **Tuning per Ke:** bouncier spring (overshoot 1.8), confetti trimmed 110→55,
+  added the celebratory chime.
+- Built an interactive Artifact demo (phone mockup, real logo/colours) so the
+  motion + sound could be felt before shipping.
+- Added `.claude/launch.json` (python http.server on 8123) for local preview.
+
+**Notes**
+- Confetti + chime fire from `markPostShared`, the single seam both the share
+  sheet and direct Meta publish flow through — so every share celebrates.
+- Memory saved: Pages now serves from `main` (see agent memory `pages-deploy-source`).
+
+**Next**
+- Same backlog: Buffer-style **post queue + reminders** (the big one), content
+  packs, post history "run it back", hashtag rotation, weather mode.
+- Maybe a Settings toggle for sound / reduced motion.
+
 ## 2026-07-08 — Caption library expansion + user-editable hooks
 **Done**
 - Default locations → Greenwich, Crystal Palace, Leadenhall Market.
