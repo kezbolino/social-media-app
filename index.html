@@ -333,6 +333,26 @@
             <button class="btn btn-secondary" data-action="add-hashtag">Add</button>
           </div>
 
+          <p class="lead" style="margin-top: 28px;">💬 My captions</p>
+          <p class="hint">Write your own lines — they join the shuffle with the built-in ones. Tip: type <strong>{location}</strong> or <strong>{day}</strong> and the app fills them in. Tap ✕ to remove one.</p>
+          <div id="userHookList" class="menu-list"></div>
+          <div class="field">
+            <input id="userHookText" class="text-input" type="text" placeholder="e.g. Fresh batch on at {location} — get in quick." />
+          </div>
+          <div class="row">
+            <select id="userHookTag" class="text-input">
+              <option value="brand">Brand / hype</option>
+              <option value="location">Where we are</option>
+              <option value="other">Something else</option>
+              <option value="events">Weddings &amp; events</option>
+            </select>
+            <select id="userHookLoc" class="text-input">
+              <option value="">Any location</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" data-action="add-userhook">Add caption</button>
+          <p id="userHookError" class="hint"></p>
+
           <p class="lead" style="margin-top: 28px;">🔔 Post reminders</p>
           <p class="hint">Get a nudge to post on the days you're working (set those in the Work calendar).</p>
           <label class="switch-row">

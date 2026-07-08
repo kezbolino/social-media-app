@@ -161,7 +161,7 @@
   function handleAction(action, el) {
     switch (action) {
       case "new-post": post = freshPost(); show("type"); break;
-      case "open-settings": renderLocations(); renderMenu(); renderHashtags(); renderNotifySettings(); renderMetaSettings(); show("settings"); break;
+      case "open-settings": renderLocations(); renderMenu(); renderHashtags(); renderUserHooks(); renderNotifySettings(); renderMetaSettings(); show("settings"); break;
       case "open-calendar": openCalendar(); break;
       case "open-generate": openGenerate(null); break;
       case "cal-prev": shiftMonth(-1); break;
@@ -173,6 +173,7 @@
       case "notify-test": notifyTest(); break;
       case "hashtags": toggleHashtags(); break;
       case "add-hashtag": addHashtagItem(); break;
+      case "add-userhook": addUserHookItem(); break;
       case "publish-ig": doPublish("ig"); break;
       case "publish-fb": doPublish("fb"); break;
       case "meta-test": metaTest(); break;
@@ -858,6 +859,72 @@
     Store.addLocation(val);
     input.value = "";
     renderLocations();
+  }
+
+  /* ---------- MY CAPTIONS (user's own hooks) ---------- */
+  const USER_TAG_LABELS = {
+    brand: "Brand", location: "Where we are", other: "Something else", events: "Events",
+  };
+
+  function renderUserHooks() {
+    // Keep the "only at" dropdown in step with the saved locations.
+    const locSel = $("#userHookLoc");
+    if (locSel) {
+      const keep = locSel.value;
+      locSel.innerHTML =
+        '<option value="">Any location</option>' +
+        Store.getLocations()
+          .map((l) => `<option value="${escapeAttr(l)}">Only at ${escapeAttr(l)}</option>`)
+          .join("");
+      locSel.value = keep;
+    }
+    const list = $("#userHookList");
+    if (!list) return;
+    const hooks = Store.getUserHooks();
+    list.innerHTML = "";
+    if (!hooks.length) {
+      list.innerHTML = '<p class="menu-empty">No captions of your own yet.</p>';
+      return;
+    }
+    hooks.forEach((h) => {
+      const row = document.createElement("div");
+      row.className = "menu-item";
+      const span = document.createElement("span");
+      const where = h.location ? ` · ${h.location}` : "";
+      span.textContent = `${h.text}  (${USER_TAG_LABELS[h.tags[0]] || h.tags[0]}${where})`;
+      const del = document.createElement("button");
+      del.textContent = "✕";
+      del.setAttribute("aria-label", "Remove caption");
+      del.addEventListener("click", () => {
+        Store.removeUserHook(h.id);
+        Hooks.reloadUserHooks();
+        renderUserHooks();
+      });
+      row.appendChild(span);
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function addUserHookItem() {
+    const textEl = $("#userHookText");
+    const err = $("#userHookError");
+    const text = textEl.value.trim();
+    if (!text) { err.textContent = "Type a caption first."; return; }
+    const tag = $("#userHookTag").value || "brand";
+    const loc = $("#userHookLoc").value || "";
+    // Work out which blanks the line needs from the placeholders it contains.
+    const uses = [];
+    if (/\{location\}/.test(text)) uses.push("location");
+    if (/\{day\}/.test(text)) uses.push("day");
+    if (/\{item\}/.test(text)) uses.push("item");
+    const hook = { id: "user_" + Date.now(), tags: [tag], text, uses };
+    if (loc) hook.location = loc;
+    Store.addUserHook(hook);
+    Hooks.reloadUserHooks();
+    textEl.value = "";
+    err.textContent = "Added — it's in the shuffle now.";
+    renderUserHooks();
   }
 
   /* ---------- WORK CALENDAR ---------- */

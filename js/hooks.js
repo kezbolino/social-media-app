@@ -8,18 +8,38 @@
  */
 const Hooks = (() => {
   let library = null; // { variables, categories, hooks: [...] }
+  let userHooks = []; // the trader's own lines, added in Settings
 
   async function init() {
     // Prefer the embedded copy (lets the app run by just opening the file,
     // no server). Fall back to fetching the JSON when served over http.
     if (window.HOOK_LIBRARY) {
       library = window.HOOK_LIBRARY;
-      return library;
+    } else {
+      const res = await fetch(window.APP_CONFIG.HOOKS_URL);
+      if (!res.ok) throw new Error("Could not load the hook library");
+      library = await res.json();
     }
-    const res = await fetch(window.APP_CONFIG.HOOKS_URL);
-    if (!res.ok) throw new Error("Could not load the hook library");
-    library = await res.json();
+    reloadUserHooks();
     return library;
+  }
+
+  // Re-read the user's own captions from storage (call after they add/remove
+  // one so it's available immediately, no reload needed).
+  function reloadUserHooks() {
+    try {
+      userHooks =
+        typeof Store !== "undefined" && Store.getUserHooks
+          ? Store.getUserHooks() || []
+          : [];
+    } catch (e) {
+      userHooks = [];
+    }
+  }
+
+  // Built-in library + the trader's own lines, treated as one pool.
+  function allHooks() {
+    return (library ? library.hooks : []).concat(userHooks);
   }
 
   // Fill {location} / {day} / {item} placeholders.
@@ -50,7 +70,7 @@ const Hooks = (() => {
 
   // The full eligible pool for a tag + context, before recency is applied.
   function basePool(tag, ctx) {
-    return library.hooks.filter(
+    return allHooks().filter(
       (h) => h.tags.includes(tag) && isSatisfiable(h, ctx)
     );
   }
@@ -60,7 +80,7 @@ const Hooks = (() => {
   // menu, not a text box).
   function inputVarsForTag(tag) {
     const vars = new Set();
-    for (const h of library.hooks) {
+    for (const h of allHooks()) {
       if (!h.tags.includes(tag)) continue;
       for (const v of h.uses) if (v === "location" || v === "day") vars.add(v);
     }
@@ -102,5 +122,5 @@ const Hooks = (() => {
     return library;
   }
 
-  return { init, choose, inputVarsForTag, fillText, basePool, getLibrary };
+  return { init, choose, inputVarsForTag, fillText, basePool, getLibrary, reloadUserHooks };
 })();

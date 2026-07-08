@@ -112,6 +112,25 @@ const Store = (() => {
     return items;
   }
 
+  /* ---- User's own caption hooks: [{ id, tags, text, uses, location? }] ---- */
+  function getUserHooks() {
+    return read(K.USER_HOOKS, []);
+  }
+  function setUserHooks(hooks) {
+    write(K.USER_HOOKS, hooks);
+  }
+  function addUserHook(hook) {
+    const hooks = getUserHooks();
+    hooks.push(hook);
+    setUserHooks(hooks);
+    return hooks;
+  }
+  function removeUserHook(id) {
+    const hooks = getUserHooks().filter((h) => h.id !== id);
+    setUserHooks(hooks);
+    return hooks;
+  }
+
   /* ---- Work schedule: { "YYYY-MM-DD": { location } } (key present = working) ---- */
   function getSchedule() {
     return read(K.SCHEDULE, {});
@@ -190,5 +209,9 @@ const Store = (() => {
     recentHookIds,
     getPosts,
     savePost,
+    getUserHooks,
+    setUserHooks,
+    addUserHook,
+    removeUserHook,
   };
 })();
