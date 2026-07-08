@@ -1,5 +1,32 @@
 # Session Log
 
+## 2026-07-08 — Caption library expansion + user-editable hooks
+**Done**
+- Default locations → Greenwich, Crystal Palace, Leadenhall Market.
+- +33 hooks (72 → 105): gluten-free USP lines (ALL food is GF — made it the
+  headline, not a niche), place-locked lines (Greenwich tourists/locals,
+  Crystal Palace dinosaurs, Leadenhall City/corporate), and a new **Events**
+  category (weddings/private + corporate catering).
+- Engine: hooks can pin to one place via an optional `location` field; new
+  `events` quiz tile (needs no details → jumps straight to caption).
+- **New "My captions" Settings screen**: trader adds/edits/deletes their own
+  lines (category + optional "only at" location lock), saved on-device
+  (`sfp.userHooks`), merged into the shuffle live via `Hooks.reloadUserHooks()`.
+  `{location}`/`{day}`/`{item}` auto-detected into `uses`.
+- Kept `streetfood_hooks.js` + `.json` in sync (105 hooks each). All verified in
+  the browser (place-lock, events, add/delete round-trip). Merged to `main`.
+
+**Notes**
+- New default locations only seed on a FRESH install — existing phones keep the
+  old ones (swap them in Settings → Saved locations).
+- `sw.js` is network-first → deploys serve fresh code online, no version bump.
+
+**Discussed / next (not built)**
+- Buffer-style **post queue + reminder publishing** (the big one — mockup
+  sketched). Then: content packs (toggle/boost caption sets), post history
+  "run it back", hashtag-set rotation, weather mode. AI could later draft lines
+  INTO a pack for approval (needs a Groq key; app stays offline-first).
+
 ## 2026-07-07 — Git setup + home-screen refresh
 **Done**
 - Turned `~/Documents/Work/Street Food Post/` into a real git repo tracking
