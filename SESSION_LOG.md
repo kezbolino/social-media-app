@@ -11,8 +11,10 @@
 - Added **50 rotating greetings** (`js/greetings.js`) — Tommy / Boss man,
   occasional cheek; re-rolls on boot and every return to home. Wired via
   `rollGreeting()` in `js/app.js` + `.greeting` / `.tagline` styles.
+- Tightened the logo (`logo.svg` viewBox had ~31% empty space below the text →
+  cropped to the artwork) to kill the big gap; enlarged the WINGMAN label.
 - Added `.gitignore` (.DS_Store).
-- All committed + pushed to `claude/whats-next-npcojg`.
+- All committed + pushed, then **merged to `main` (live)**.
 
 **Decisions**
 - Logo font couldn't be identified (text is outlined vectors; WhatTheFont
@@ -21,9 +23,11 @@
   the wordmark in a mismatched font.
 
 **Pending / next**
-- NOT live yet — everything's on `claude/whats-next-npcojg`, not `main`. Say
-  "go live" to merge → main (updates kezbolino.github.io/social-media-app/).
-- Optional: tighten the gap between the logo and the WINGMAN label.
+- Went live this session: `claude/whats-next-npcojg` fast-forward-merged into
+  `main` and pushed (updates kezbolino.github.io/social-media-app/). New standing
+  rule: **go live automatically on every session end.**
+- GitHub Pages source branch not 100% confirmed — if the live site doesn't update
+  in a few mins, check repo Settings → Pages is serving from `main`.
 
 **Cross-project (other repos, this session)**
 - Instagram Caption Grabber: moved to `~/Documents/Work/`, cleared Gatekeeper
