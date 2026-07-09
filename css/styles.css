@@ -681,6 +681,7 @@ html, body {
 
 /* Reserve room at the bottom of the hub screens so their content never
    sits behind the fixed nav bar. */
+#app.has-bottomnav [data-screen="type"] .pad,
 #app.has-bottomnav [data-screen="calendar"] .pad,
 #app.has-bottomnav [data-screen="generate"] .pad,
 #app.has-bottomnav [data-screen="settings"] .pad {

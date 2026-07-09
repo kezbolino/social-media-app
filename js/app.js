@@ -47,7 +47,7 @@
   // The bottom nav only shows on these hub screens — hidden during the
   // guided post-creation flow so it doesn't fight with that flow's own
   // sticky actionbar.
-  const HUB_SCREENS = new Set(["home", "calendar", "generate", "settings"]);
+  const HUB_SCREENS = new Set(["home", "type", "calendar", "generate", "settings"]);
 
   function show(screen) {
     $$(".screen").forEach((s) =>
