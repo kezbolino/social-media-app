@@ -206,7 +206,7 @@
       case "open-generate": openGenerate(null); break;
       case "open-queue": openQueue(); break;
       case "open-history": openHistory(); break;
-      case "queue-add": queueAdd(); break;
+      case "queue-add": queueAdd(el); break;
       case "cal-prev": shiftMonth(-1); break;
       case "cal-next": shiftMonth(1); break;
       case "cal-clear": clearCalDay(); break;
@@ -708,6 +708,7 @@
     err.textContent = vars.includes("location") && !post.location
       ? "Add a location to get a caption for this kind of post."
       : "No caption fits those details — try a different answer or add a location.";
+    if (window.FX) FX.wiggle(err); // a friendly "oi, look here" shimmy
   }
 
   // Compose the post image (with the location/day text overlaid) for the
@@ -841,6 +842,7 @@
     Store.addHashtag(val);
     input.value = "";
     renderHashtags();
+    if (window.FX) FX.pop($("#hashtagList").lastElementChild); // fresh tag bounces
   }
 
   function shuffleCaption() {
@@ -1050,6 +1052,7 @@
     Store.setMenuItems(items);
     input.value = "";
     renderMenu();
+    if (window.FX) FX.pop($("#menuList").lastElementChild); // fresh row bounces
   }
 
   function renderLocations() {
@@ -1087,6 +1090,7 @@
     Store.addLocation(val);
     input.value = "";
     renderLocations();
+    if (window.FX) FX.pop($("#locationList").lastElementChild); // fresh row bounces
   }
 
   /* ---------- MY CAPTIONS (user's own hooks) ---------- */
@@ -1153,6 +1157,7 @@
     textEl.value = "";
     err.textContent = "Added — it's in the shuffle now.";
     renderUserHooks();
+    if (window.FX) FX.pop(err);
   }
 
   /* ---------- WORK CALENDAR ---------- */
@@ -1321,6 +1326,7 @@
     if (selectedDate) {
       Store.setWorkday(selectedDate, val);
       selectCalDay(selectedDate);
+      celebrateWorkday(selectedDate);
     }
   }
 
@@ -1328,6 +1334,15 @@
     if (!selectedDate) return;
     Store.setWorkday(selectedDate, loc);
     selectCalDay(selectedDate);
+    celebrateWorkday(selectedDate);
+  }
+
+  // Marking a working day is a small win — the day's cell gets a quiet
+  // sparkle-burst + bounce (the big confetti stays reserved for sharing).
+  function celebrateWorkday(key) {
+    if (!window.FX) return;
+    const cell = document.querySelector(`.cal-cell[data-date="${key}"]`);
+    if (cell) FX.sparkle(cell, { count: 18 });
   }
   function clearCalDay() {
     if (!selectedDate) return;
@@ -1554,10 +1569,14 @@
     });
   }
 
-  function queueAdd() {
+  function queueAdd(btn) {
     const date = $("#queueDate").value;
     const err = $("#queueError");
-    if (!date) { err.textContent = "Pick a day first."; return; }
+    if (!date) {
+      err.textContent = "Pick a day first.";
+      if (window.FX) FX.wiggle(err);
+      return;
+    }
     Store.addQueueItem({
       id: "q_" + Date.now(),
       date,
@@ -1569,6 +1588,7 @@
     $("#queueNote").value = "";
     err.textContent = "Added to the queue. 🗓";
     renderQueue();
+    if (window.FX && btn) FX.sparkle(btn, { count: 14 }); // little reward puff
   }
 
   // Turn a queued item into a live post: seed location/day (+ its note as the
@@ -1605,6 +1625,7 @@
     }
     note.hidden = false;
     note.textContent = ok ? "Caption copied — paste it into Instagram or Facebook. 📋" : "Couldn't copy — select the caption above and copy it by hand.";
+    if (window.FX) FX.pop(note);
   }
 
   function saveImage() {
@@ -1621,6 +1642,7 @@
     const note = $("#shareNote");
     note.hidden = false;
     note.textContent = blobs.length > 1 ? `Saved ${blobs.length} images to your downloads. ⬇️` : "Image saved to your downloads. ⬇️";
+    if (window.FX) FX.pop(note);
   }
 
   /* ---------- NOTIFY SETTINGS ---------- */
