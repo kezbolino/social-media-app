@@ -182,6 +182,33 @@ const Store = (() => {
     write(K.INSTAGRAM, v);
   }
 
+  /* ---- Post queue: [{ id, date (YYYY-MM-DD), location, caption, created, done }]
+   * Lightweight plans — "post something at this pitch on this day" — not full
+   * posts (no image blobs; localStorage would choke on those). The reminder
+   * engine nudges when an item's date has arrived. ---- */
+  function getQueue() {
+    return read(K.QUEUE, []);
+  }
+  function setQueue(q) {
+    write(K.QUEUE, q);
+  }
+  function addQueueItem(item) {
+    const q = getQueue();
+    q.push(item);
+    setQueue(q);
+    return q;
+  }
+  function updateQueueItem(id, patch) {
+    const q = getQueue().map((it) => (it.id === id ? { ...it, ...patch } : it));
+    setQueue(q);
+    return q;
+  }
+  function removeQueueItem(id) {
+    const q = getQueue().filter((it) => it.id !== id);
+    setQueue(q);
+    return q;
+  }
+
   /* ---- Saved posts: draft -> approved -> shared ---- */
   function getPosts() {
     return read(K.POSTS, []);
@@ -223,5 +250,10 @@ const Store = (() => {
     removeUserHook,
     getInstagram,
     setInstagram,
+    getQueue,
+    setQueue,
+    addQueueItem,
+    updateQueueItem,
+    removeQueueItem,
   };
 })();

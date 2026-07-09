@@ -10,13 +10,21 @@
  * @capacitor/share plugin — the rest of the app doesn't change.
  */
 const Sharing = (() => {
-  async function share(blob, caption, filename = "post.png") {
-    const file = new File([blob], filename, { type: "image/png" });
+  // `blobOrBlobs` may be a single Blob or an array (a carousel of images). One
+  // caption applies to the whole set.
+  async function share(blobOrBlobs, caption, filename = "post.png") {
+    const blobs = Array.isArray(blobOrBlobs) ? blobOrBlobs : [blobOrBlobs];
+    const files = blobs.map((b, i) => {
+      const name = blobs.length > 1
+        ? filename.replace(/(\.\w+)?$/, `-${i + 1}$1`)
+        : filename;
+      return new File([b], name, { type: "image/png" });
+    });
 
-    // Preferred path: native share sheet with the image attached.
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    // Preferred path: native share sheet with the image(s) attached.
+    if (navigator.canShare && navigator.canShare({ files })) {
       try {
-        await navigator.share({ files: [file], text: caption });
+        await navigator.share({ files, text: caption });
         return { method: "share", ok: true };
       } catch (e) {
         if (e && e.name === "AbortError") return { method: "share", ok: false, cancelled: true };
@@ -24,7 +32,7 @@ const Sharing = (() => {
       }
     }
 
-    // Fallback: copy caption + download image.
+    // Fallback: copy caption + download the image(s).
     let copied = false;
     try {
       await navigator.clipboard.writeText(caption);
@@ -32,14 +40,15 @@ const Sharing = (() => {
     } catch (e) {
       /* clipboard may be blocked; not fatal */
     }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    files.forEach((file, i) => {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      // Stagger a touch so browsers don't drop rapid multi-downloads.
+      setTimeout(() => { a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }, i * 150);
+    });
     return { method: "fallback", ok: true, captionCopied: copied };
   }
 

@@ -39,16 +39,19 @@ You don't need this, but if you ever prefer to serve it (e.g. while editing the
 ## The flow (what your brother does)
 
 1. **New Post**
-2. **Single photo** or **Collage**
+2. **Single photo**, **Collage**, or **Carousel**
 3. Add the photo(s). For a collage, tap a layout, drop photos into the slots,
-   or hit **Try another layout** to cycle.
+   or hit **Try another layout** to cycle. For a carousel, pick **2–10 photos**
+   (the first is the cover) — they post as a swipeable Instagram carousel.
 4. **One quick question** — is the post about *where you are*, *brand hype*, or
    *something else* (weather/last day/weekend)?
 5. **Fill the blanks** it needs — usually just **location**, sometimes **day**.
 6. **Caption appears**, already filled in. **Shuffle** for a different line, or
    **tap to edit** it.
 7. **Review** the finished image + caption together.
-8. **Share** → the phone's share sheet opens → pick Instagram or Facebook.
+8. **Share** → the phone's share sheet opens → pick Instagram or Facebook. Or
+   use **Copy caption** / **Save image** on the Review screen to grab them
+   manually if the share sheet is being fiddly (carousels save every frame).
 
 **Menu & Settings** lets you add best sellers / sauces once; food captions pick
 from that list at random. Leave it empty and food captions are simply skipped.
@@ -62,6 +65,13 @@ be. **Generate posts** (home → ✨) uses that day's location, your photo folde
 and the hook library to hand you **3 ready-made posts**; tap the one you like to
 tweak and share. **Post reminders** (Settings → 🔔) nudge you to post on working
 days.
+
+**Post queue** (home → 🗓) — line up posts for the days ahead (a day, optional
+pitch, and a caption/note). On the day, the reminder nudges you that posts are
+queued; tap **Make** to turn a queued item into a live post with the location
+and note pre-filled. **Run it back** (home → 🔁) lists posts you've already
+shared — tap one to rebuild it with today's photo and a fresh, shuffleable
+caption in the same vein.
 
 A **sticky bottom nav** (New Post / Calendar / Generate / Settings — minimal
 Heroicons) sits on the hub screens for quick jumps between them; it's hidden

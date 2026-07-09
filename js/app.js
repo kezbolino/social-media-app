@@ -26,6 +26,7 @@
       exportSize: null, // { width, height } chosen in the editor
       editState: null, // saved editor settings, so Back re-opens where you left
       collageImages: [], // aligned to template.boxes
+      carouselImages: [], // ordered images for a carousel post
       tag: null, // 'location' | 'brand' | 'other'
       location: "",
       day: "",
@@ -33,8 +34,10 @@
       caption: null, // { hook, filledText, item }
       captionText: "",
       hashtagBlock: "", // the appended hashtag block, if any
+      fromHistory: false, // seeded from a past post / queue item (skip the quiz)
       status: "draft",
-      finalBlob: null,
+      finalBlob: null, // the (first) exported image
+      finalBlobs: null, // all exported images (carousel); single => [finalBlob]
       created: new Date().toISOString(),
     };
   }
@@ -47,7 +50,7 @@
   // The bottom nav only shows on these hub screens — hidden during the
   // guided post-creation flow so it doesn't fight with that flow's own
   // sticky actionbar.
-  const HUB_SCREENS = new Set(["home", "type", "calendar", "generate", "settings"]);
+  const HUB_SCREENS = new Set(["home", "type", "calendar", "generate", "queue", "history", "settings"]);
 
   // Direction of the next screen wipe: "back" slides in from the left, anything
   // else from the right. Set by handleBack / go-home just before they show().
@@ -127,6 +130,12 @@
       const calLoc = e.target.closest("[data-cal-loc]");
       if (calLoc) return pickCalLocation(calLoc.dataset.calLoc);
 
+      const qMake = e.target.closest("[data-q-make]");
+      if (qMake) return makeFromQueue(Store.getQueue().find((x) => x.id === qMake.dataset.qMake));
+
+      const qDel = e.target.closest("[data-q-del]");
+      if (qDel) { Store.removeQueueItem(qDel.dataset.qDel); return renderQueue(); }
+
       const loc = e.target.closest("[data-loc]");
       if (loc) return pickChip("location", loc.dataset.loc);
 
@@ -142,6 +151,7 @@
 
     $("#singleInput").addEventListener("change", onSinglePhoto);
     $("#collageInput").addEventListener("change", onCollagePhoto);
+    $("#carouselInput").addEventListener("change", onCarouselPicked);
     $("#folderInput").addEventListener("change", onFolderPicked);
     $("#captionText").addEventListener("input", (e) => {
       post.captionText = e.target.value;
@@ -183,6 +193,9 @@
       case "open-settings": openSettings(); break;
       case "open-calendar": openCalendar(); break;
       case "open-generate": openGenerate(null); break;
+      case "open-queue": openQueue(); break;
+      case "open-history": openHistory(); break;
+      case "queue-add": queueAdd(); break;
       case "cal-prev": shiftMonth(-1); break;
       case "cal-next": shiftMonth(1); break;
       case "cal-clear": clearCalDay(); break;
@@ -198,6 +211,11 @@
       case "meta-test": metaTest(); break;
       case "choose-single": startSingle(); break;
       case "choose-collage": startCollage(); break;
+      case "choose-carousel": startCarousel(); break;
+      case "pick-carousel": $("#carouselInput").click(); break;
+      case "carousel-next": carouselNext(); break;
+      case "copy-caption": copyCaption(); break;
+      case "save-image": saveImage(); break;
       case "pick-single": $("#singleInput").click(); break;
       case "pick-folder-single": folderTarget = "single"; $("#folderInput").click(); break;
       case "shuffle-single": shuffleSinglePhoto(); break;
@@ -310,7 +328,22 @@
     } catch (e) {
       post.baseImage = null; // fall back if anything fails
     }
+    // Seeded from a past post / queue item: the line is already chosen, so skip
+    // the quiz and drop straight onto the caption screen (still shuffleable).
+    if (post.fromHistory && post.captionText) return goToSeededCaption("editor");
     show("quiz");
+  }
+
+  // Land on the caption screen with a pre-seeded line (Run it back / queue).
+  function goToSeededCaption(backTarget) {
+    post.hashtagBlock = "";
+    applyHashtags();
+    $("#captionText").value = post.captionText;
+    updateHashtagBtnLabel();
+    const back = document.querySelector('[data-screen="caption"] .back');
+    if (back) back.dataset.back = backTarget;
+    renderCaptionPreview();
+    show("caption");
   }
 
   /* ---------- PHOTO FOLDER + SHUFFLE ---------- */
@@ -460,6 +493,63 @@
     dest.getContext("2d").drawImage(canvas, 0, 0);
   }
 
+  /* ---------- CAROUSEL ---------- */
+  const CAROUSEL_MAX = 10;
+
+  function startCarousel() {
+    post = freshPost();
+    post.type = "carousel";
+    post.carouselImages = [];
+    renderCarouselStrip();
+    show("carousel");
+  }
+
+  async function onCarouselPicked(e) {
+    const files = Array.from(e.target.files || []).filter((f) =>
+      f.type.startsWith("image/")
+    );
+    e.target.value = "";
+    if (!files.length) return;
+    const room = CAROUSEL_MAX - post.carouselImages.length;
+    for (const file of files.slice(0, room)) {
+      try { post.carouselImages.push(await Imaging.loadImageFromFile(file)); }
+      catch (err) { /* skip a bad file */ }
+    }
+    renderCarouselStrip();
+  }
+
+  function renderCarouselStrip() {
+    const strip = $("#carouselStrip");
+    strip.innerHTML = "";
+    post.carouselImages.forEach((img, i) => {
+      const thumb = document.createElement("button");
+      thumb.className = "carousel-thumb";
+      thumb.setAttribute("aria-label", `Photo ${i + 1} — tap to remove`);
+      thumb.innerHTML =
+        `<img src="${img.src}" alt="Photo ${i + 1}" />` +
+        `<span class="thumb-num">${i + 1}</span>` +
+        `<span class="thumb-x">✕</span>`;
+      thumb.addEventListener("click", () => {
+        post.carouselImages.splice(i, 1);
+        renderCarouselStrip();
+      });
+      strip.appendChild(thumb);
+    });
+    const n = post.carouselImages.length;
+    const note = $("#carouselNote");
+    note.hidden = n === 0;
+    note.textContent = n
+      ? `${n} photo${n > 1 ? "s" : ""} added${n >= CAROUSEL_MAX ? " (max)" : ""} — tap one to remove it.`
+      : "";
+    $("#carouselNext").disabled = n < 2;
+  }
+
+  function carouselNext() {
+    if (post.carouselImages.length < 2) return;
+    lastQuizBack = "carousel"; // the quiz's Back returns here (no editor step)
+    show("quiz");
+  }
+
   /* ---------- QUIZ + DETAILS ---------- */
   function chooseTag(tag) {
     post.tag = tag;
@@ -583,6 +673,11 @@
   async function composePostImage() {
     // The editor bakes crop/filter/text into the base image; the caption is
     // just the post text now (pasted when sharing), never burned on.
+    if (post.type === "carousel") {
+      // Cover (first) image drives the preview; the rest export in buildReview.
+      const cover = post.carouselImages[0];
+      return cover ? Imaging.renderSingle(cover, null) : null;
+    }
     if (post.baseImage) return Imaging.renderPrepared(post.baseImage, null);
     if (post.type === "single") {
       if (!post.singleImage) return null;
@@ -709,11 +804,30 @@
   async function buildReview() {
     post.captionText = $("#captionText").value;
     await Imaging.ensureFonts();
-    const canvas = await composePostImage();
-    post.finalBlob = await Imaging.toBlob(canvas);
+
+    const badge = $("#reviewBadge");
+    if (post.type === "carousel") {
+      // Export every frame; the cover drives the preview.
+      post.finalBlobs = [];
+      let coverCanvas = null;
+      for (const img of post.carouselImages) {
+        const c = Imaging.renderSingle(img, null);
+        if (!coverCanvas) coverCanvas = c;
+        post.finalBlobs.push(await Imaging.toBlob(c));
+      }
+      post.finalBlob = post.finalBlobs[0];
+      $("#reviewImage").src = Imaging.toDataURL(coverCanvas);
+      badge.hidden = false;
+      badge.textContent = `1 / ${post.finalBlobs.length}`;
+    } else {
+      const canvas = await composePostImage();
+      post.finalBlob = await Imaging.toBlob(canvas);
+      post.finalBlobs = [post.finalBlob];
+      $("#reviewImage").src = Imaging.toDataURL(canvas);
+      badge.hidden = true;
+    }
     post.status = "approved";
 
-    $("#reviewImage").src = Imaging.toDataURL(canvas);
     $("#reviewCaption").textContent = post.captionText;
     $("#shareNote").hidden = true;
     $("#publishNote").hidden = true;
@@ -736,6 +850,8 @@
       location: post.location,
       day: post.day,
       item: post.item,
+      tag: post.tag, // remembered so "Run it back" can pick a fresh caption
+      hookId: post.caption ? post.caption.hook.id : null,
       status: "shared",
       via: via || "share-sheet",
       created: post.created,
@@ -744,7 +860,8 @@
 
   async function doShare() {
     if (!post.finalBlob) return;
-    const result = await Sharing.share(post.finalBlob, post.captionText, "chuckling-wings-post.png");
+    const blobs = post.finalBlobs && post.finalBlobs.length ? post.finalBlobs : [post.finalBlob];
+    const result = await Sharing.share(blobs, post.captionText, "chuckling-wings-post.png");
     if (result.cancelled) return; // user backed out of the share sheet
 
     markPostShared("share-sheet");
@@ -763,8 +880,11 @@
   /* ---------- DIRECT PUBLISH (Meta) ---------- */
   // Show/hide the direct-post buttons based on what's configured.
   function renderPublishButtons() {
-    const fb = Publish.isConfiguredFB();
-    const ig = Publish.isConfiguredIG();
+    // Direct Meta publishing posts a single image; carousels go via the share
+    // sheet only (Instagram builds the carousel from the multiple files).
+    const carousel = post.type === "carousel";
+    const fb = !carousel && Publish.isConfiguredFB();
+    const ig = !carousel && Publish.isConfiguredIG();
     $("#pubIG").hidden = !ig;
     $("#pubFB").hidden = !fb;
     $("#publishRow").hidden = !(fb || ig);
@@ -1191,6 +1311,178 @@
     photoPool = files;
     refreshPoolUi();
     runGenerate();
+  }
+
+  /* ---------- RUN IT BACK (post history) ---------- */
+  function inferTag(saved) {
+    if (saved.tag) return saved.tag;
+    return saved.location ? "location" : "brand";
+  }
+
+  function openHistory() {
+    renderHistory();
+    show("history");
+  }
+
+  function renderHistory() {
+    // Most-recent first; only shared posts that carried a caption are reusable.
+    const posts = Store.getPosts()
+      .filter((p) => p.status === "shared" && p.caption)
+      .slice()
+      .reverse()
+      .slice(0, 40);
+    const list = $("#historyList");
+    const empty = $("#historyEmpty");
+    list.innerHTML = "";
+    if (!posts.length) { empty.hidden = false; return; }
+    empty.hidden = true;
+    posts.forEach((p) => {
+      const card = document.createElement("button");
+      card.className = "gen-card";
+      const when = p.created ? new Date(p.created) : null;
+      const meta = [p.location, when && !isNaN(when) ? when.toLocaleDateString() : null]
+        .filter(Boolean).join(" · ");
+      card.innerHTML =
+        `<span class="gen-caption">` +
+        `<strong style="display:block;color:var(--muted);font-weight:600;font-size:.78rem;margin-bottom:3px;">${escapeAttr(meta || "Past post")}</strong>` +
+        `${escapeAttr(p.caption)}</span>`;
+      card.addEventListener("click", () => runItBack(p));
+      list.appendChild(card);
+    });
+  }
+
+  // Start a fresh single post pre-seeded from a past post: same tag/location/day
+  // and its caption, dropping the user on the photo step for today's picture.
+  function runItBack(saved) {
+    post = freshPost();
+    post.fromHistory = true;
+    post.tag = inferTag(saved);
+    post.location = saved.location || "";
+    post.day = saved.day || "";
+    post.captionText = saved.caption || "";
+    post.caption = null; // no hook object — Shuffle will pick a fresh line by tag
+    startSingle(); // resets the single-photo UI, keeps the seeded context
+  }
+
+  /* ---------- POST QUEUE ---------- */
+  function weekdayName(dateStr) {
+    if (!dateStr) return "";
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return WEEKDAYS[new Date(y, m - 1, d).getDay()];
+  }
+  function fmtQueueDate(dateStr) {
+    if (!dateStr) return "";
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    return `${WEEKDAYS[dt.getDay()].slice(0, 3)} ${d} ${MONTHS[m - 1].slice(0, 3)}`;
+  }
+
+  function openQueue() {
+    const dateEl = $("#queueDate");
+    if (!dateEl.value) dateEl.value = Notify.todayStr();
+    const locSel = $("#queueLoc");
+    locSel.innerHTML =
+      '<option value="">Any location</option>' +
+      Store.getLocations().map((l) => `<option value="${escapeAttr(l)}">${escapeAttr(l)}</option>`).join("");
+    $("#queueError").textContent = "";
+    renderQueue();
+    show("queue");
+  }
+
+  function renderQueue() {
+    const today = Notify.todayStr();
+    const items = Store.getQueue().slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    const list = $("#queueList");
+    const empty = $("#queueEmpty");
+    list.innerHTML = "";
+    if (!items.length) {
+      empty.hidden = false;
+      empty.textContent = "Nothing queued yet — add one below.";
+      return;
+    }
+    empty.hidden = true;
+    items.forEach((it) => {
+      const row = document.createElement("div");
+      const due = it.date && it.date <= today;
+      row.className = "queue-item" + (due ? " is-due" : "");
+      const loc = it.location ? ` · <span class="queue-loc">${escapeAttr(it.location)}</span>` : "";
+      const cap = it.caption ? `<div class="queue-cap">${escapeAttr(it.caption)}</div>` : "";
+      row.innerHTML =
+        `<div class="queue-body"><div class="queue-when">${fmtQueueDate(it.date)}${due ? " · today" : ""}${loc}</div>${cap}</div>` +
+        `<div class="queue-actions">` +
+        `<button class="btn btn-primary btn-sm" data-q-make="${it.id}">Make</button>` +
+        `<button class="queue-x" data-q-del="${it.id}" aria-label="Remove">✕</button></div>`;
+      list.appendChild(row);
+    });
+  }
+
+  function queueAdd() {
+    const date = $("#queueDate").value;
+    const err = $("#queueError");
+    if (!date) { err.textContent = "Pick a day first."; return; }
+    Store.addQueueItem({
+      id: "q_" + Date.now(),
+      date,
+      location: $("#queueLoc").value || "",
+      caption: $("#queueNote").value.trim(),
+      created: new Date().toISOString(),
+      done: false,
+    });
+    $("#queueNote").value = "";
+    err.textContent = "Added to the queue. 🗓";
+    renderQueue();
+  }
+
+  // Turn a queued item into a live post: seed location/day (+ its note as the
+  // caption, if any) and jump to the photo step.
+  function makeFromQueue(item) {
+    if (!item) return;
+    post = freshPost();
+    post.fromHistory = true;
+    post.location = item.location || "";
+    post.tag = item.location ? "location" : "brand";
+    post.day = weekdayName(item.date);
+    post.captionText = item.caption || "";
+    post.caption = null;
+    startSingle();
+  }
+
+  /* ---------- QUICK ACTIONS (review) ---------- */
+  async function copyCaption() {
+    const note = $("#shareNote");
+    let ok = false;
+    try { await navigator.clipboard.writeText(post.captionText); ok = true; }
+    catch (e) {
+      // Fallback: select a temporary textarea and execCommand copy.
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = post.captionText;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        ok = document.execCommand("copy");
+        ta.remove();
+      } catch (e2) { ok = false; }
+    }
+    note.hidden = false;
+    note.textContent = ok ? "Caption copied — paste it into Instagram or Facebook. 📋" : "Couldn't copy — select the caption above and copy it by hand.";
+  }
+
+  function saveImage() {
+    const blobs = post.finalBlobs && post.finalBlobs.length ? post.finalBlobs : (post.finalBlob ? [post.finalBlob] : []);
+    if (!blobs.length) return;
+    blobs.forEach((b, i) => {
+      const url = URL.createObjectURL(b);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = blobs.length > 1 ? `chuckling-wings-post-${i + 1}.png` : "chuckling-wings-post.png";
+      document.body.appendChild(a);
+      setTimeout(() => { a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }, i * 150);
+    });
+    const note = $("#shareNote");
+    note.hidden = false;
+    note.textContent = blobs.length > 1 ? `Saved ${blobs.length} images to your downloads. ⬇️` : "Image saved to your downloads. ⬇️";
   }
 
   /* ---------- NOTIFY SETTINGS ---------- */
