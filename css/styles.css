@@ -92,6 +92,7 @@ html, body {
   min-height: 100%;
   position: relative;
   background: var(--bg);
+  overflow-x: hidden; /* the screen-wipe slide must never spawn a scrollbar */
 }
 
 /* ---- Screens ---- */
@@ -697,17 +698,30 @@ html, body {
    All motion is gated behind prefers-reduced-motion at the bottom.
    ========================================================================= */
 
-/* Springy easing used throughout. Higher overshoot = bouncier. */
-:root { --spring: cubic-bezier(0.34, 1.8, 0.5, 1); }
+/* Real spring easings, generated from damped-spring physics and baked into
+   CSS linear() — an honest spring curve (variable overshoot + settle), not a
+   two-point cubic-bezier fake. --spring is bouncy (buttons/pops/chips);
+   --spring-smooth settles with one gentle overshoot (screen wipes). */
+:root {
+  --spring: linear(0, 0.3177, 0.8813, 1.2533, 1.3082, 1.1606, 0.9887, 0.9025,
+    0.9121, 0.9678, 1.0164, 1.0331, 1.0231, 1.0044, 0.9918, 0.9897, 0.9945,
+    1.0002, 1.0032, 1.003, 1.0011, 0.9995, 0.9989, 1);
+  --spring-smooth: linear(0, 0.0885, 0.2855, 0.5115, 0.7174, 0.8787, 0.9888,
+    1.0525, 1.0798, 1.0822, 1.0703, 1.0523, 1.0337, 1.0178, 1.006, 0.9984,
+    0.9944, 0.9931, 0.9934, 0.9947, 0.9963, 0.9977, 0.9989, 1);
+}
 
 /* ---- Chunky 3D buttons: a solid colour "edge" underneath that the button
    presses down into on tap (the signature Duolingo feel). ---- */
 .btn {
   --btn-edge: rgba(10, 35, 49, 0.22);
   box-shadow: 0 4px 0 var(--btn-edge);
-  transition: transform 0.06s var(--spring), box-shadow 0.06s ease,
+  /* Release: springs back over 0.32s so it overshoots past rest and settles. */
+  transition: transform 0.32s var(--spring), box-shadow 0.12s ease,
     background 0.15s ease;
 }
+/* Press: snap straight down, no spring — the bounce is on the way back up. */
+.btn:active { transition: transform 0.06s ease, box-shadow 0.06s ease; }
 .btn-primary { --btn-edge: var(--blue-press); }
 .btn-accent { --btn-edge: var(--orange-press); }
 .home .btn-primary { --btn-edge: var(--orange-press); }
@@ -729,11 +743,18 @@ html, body {
   50% { transform: scale(1.025); }
 }
 
-/* ---- Springy screen entrance ---- */
-.screen.is-active { animation: fx-screen-in 0.34s var(--spring) both; }
-@keyframes fx-screen-in {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ---- Screen wipe: incoming screen slides in horizontally. Direction is set
+   by #app.nav-back (a ‹ Back / home navigation wipes in from the left; going
+   forward wipes in from the right). ---- */
+.screen.is-active { animation: fx-wipe-fwd 0.36s var(--spring-smooth) both; }
+#app.nav-back .screen.is-active { animation-name: fx-wipe-back; }
+@keyframes fx-wipe-fwd {
+  from { opacity: 0; transform: translateX(38px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes fx-wipe-back {
+  from { opacity: 0; transform: translateX(-38px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 /* ---- Home: logo drops in, then each control rises in a stagger ---- */

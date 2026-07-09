@@ -49,11 +49,17 @@
   // sticky actionbar.
   const HUB_SCREENS = new Set(["home", "type", "calendar", "generate", "settings"]);
 
+  // Direction of the next screen wipe: "back" slides in from the left, anything
+  // else from the right. Set by handleBack / go-home just before they show().
+  let navDir = "fwd";
   function show(screen) {
+    const app = $("#app");
+    app.classList.toggle("nav-back", navDir === "back");
+    navDir = "fwd"; // consumed — default forward until a Back sets it again
     $$(".screen").forEach((s) =>
       s.classList.toggle("is-active", s.dataset.screen === screen)
     );
-    $("#app").classList.toggle("has-bottomnav", HUB_SCREENS.has(screen));
+    app.classList.toggle("has-bottomnav", HUB_SCREENS.has(screen));
     $$(".navbtn[data-nav]").forEach((b) =>
       b.classList.toggle("is-active", b.dataset.nav === screen)
     );
@@ -171,6 +177,7 @@
   }
 
   function handleBack(target) {
+    navDir = "back";
     if (target === "") return show(lastQuizBack); // quiz back is dynamic
     show(target);
   }
@@ -211,7 +218,7 @@
       case "shuffle": shuffleCaption(); break;
       case "caption-next": buildReview(); break;
       case "share": doShare(); break;
-      case "go-home": post = freshPost(); show("home"); break;
+      case "go-home": navDir = "back"; post = freshPost(); show("home"); break;
       case "add-menu": addMenuItem(); break;
     }
   }
