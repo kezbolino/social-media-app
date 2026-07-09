@@ -589,6 +589,49 @@ html, body {
 }
 .cal-day-title { font-weight: 700; color: var(--blue); margin: 0 0 8px; }
 
+/* Quick-remove list of the month's working days */
+.cal-workdays { margin: 14px 0 0; }
+.cal-workdays:empty { margin: 0; }
+.cal-workdays-title { font-size: 0.82rem; font-weight: 700; color: var(--muted); margin: 0 0 8px; }
+.cal-wchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 6px;
+}
+.cal-wx {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 2px 4px;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.cal-wx:active { background: rgba(0, 0, 0, 0.08); }
+
+/* "What's scheduled" panel inside the day view */
+.cal-schedule { margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.cal-schedule:empty { margin: 0; }
+.cal-sched-item {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--orange);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+.cal-sched-item.is-posted { border-left-color: #2b8a3e; }
+.cal-sched-when { font-weight: 700; font-size: 0.85rem; color: var(--blue); }
+.cal-sched-cap { font-size: 0.85rem; color: var(--text); margin-top: 3px; line-height: 1.35; }
+.cal-sched-empty { font-size: 0.85rem; color: var(--muted); margin: 0; }
+
+/* Add-a-place row in the day view */
+.cal-addloc { display: flex; gap: 8px; align-items: center; margin: 0 0 12px; }
+.cal-addloc .text-entry { flex: 1; width: auto; margin: 0; }
+.cal-addloc .btn-sm { flex: 0 0 auto; }
+
 /* ---- Generate posts ---- */
 .gen-cards { display: flex; flex-direction: column; gap: 12px; margin: 8px 0 14px; }
 .gen-card {

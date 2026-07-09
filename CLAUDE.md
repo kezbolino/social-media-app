@@ -36,3 +36,15 @@ static server.
 - 2026-07-09: Home screen decluttered — removed Calendar & Settings buttons from the
   home list (still reachable via bottom nav). "+ New Post" dropped `.btn-xl` so it
   matches the other home buttons. Back buttons stripped to arrow-only with aria-label.
+- 2026-07-09: Work calendar upgrades (`renderCalendar`/`selectCalDay` in app.js):
+  - "Working days in <month>" quick-remove list under the grid (`#calWorkdays`,
+    `renderWorkdaysList`) — each day is a chip; tap it to jump, tap its ✕ to
+    un-mark (`removeWorkday`). data-attrs `data-cal-day` / `data-cal-remove`.
+  - Tapping a day now shows what's lined up (`#calDaySchedule`,
+    `renderCalDaySchedule`): queued plans (from `Store.getQueue()`, matched on
+    `date`) and already-posted posts that day (shared posts matched on `created`).
+  - Day panel has an inline "Add another place…" input (`#calDayAddLoc`,
+    `addCalDayLocation`, action `cal-add-loc`) that saves a new pitch via
+    `Store.addLocation` and sets it for the day in one go. Note: the location
+    chips list only what's in `Store.getLocations()`; if a user only sees one, their
+    saved list is short — the add-place input is how they grow it.

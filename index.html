@@ -305,10 +305,16 @@
             <span><i class="lg-dot lg-work"></i> Working day</span>
             <span><i class="lg-tick">✓</i> Posted</span>
           </div>
+          <div id="calWorkdays" class="cal-workdays"></div>
           <div id="calDay" class="cal-day" hidden>
             <p class="cal-day-title" id="calDayTitle"></p>
+            <div id="calDaySchedule" class="cal-schedule"></div>
             <p class="hint">Where are you trading?</p>
             <div id="calDayLocs" class="chips"></div>
+            <div class="cal-addloc">
+              <input id="calDayAddLoc" type="text" class="text-entry" placeholder="Add another place…" autocomplete="off" />
+              <button class="btn btn-secondary btn-sm" data-action="cal-add-loc">Add</button>
+            </div>
             <button class="btn btn-ghost btn-sm" data-action="cal-clear">✕ Not working this day</button>
             <button class="btn btn-primary" data-action="cal-generate">✨ Generate posts for this day</button>
           </div>
