@@ -92,7 +92,12 @@ html, body {
   min-height: 100%;
   position: relative;
   background: var(--bg);
-  overflow-x: hidden; /* the screen-wipe slide must never spawn a scrollbar */
+  /* The screen-wipe slide (and springy overshoots) must never spawn a
+     scrollbar. `clip` also stops focus/scrollIntoView from silently
+     scrolling the app sideways; `hidden` stays as the older-browser
+     fallback. */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ---- Screens ---- */
@@ -115,8 +120,12 @@ html, body {
   background: none;
   border: none;
   color: #fff;
-  font-size: 1rem;
-  padding: 6px 4px;
+  font-size: 1.7rem;
+  line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px 8px;
+  margin-left: -8px;
   cursor: pointer;
   opacity: 0.95;
 }
@@ -585,6 +594,51 @@ html, body {
 }
 .cal-day-title { font-weight: 700; color: var(--blue); margin: 0 0 8px; }
 
+/* Quick-remove list of the month's working days */
+.cal-workdays { margin: 14px 0 0; }
+.cal-workdays:empty { margin: 0; }
+.cal-workdays-title { font-size: 0.82rem; font-weight: 700; color: var(--muted); margin: 0 0 8px; }
+.cal-wchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 6px;
+}
+.cal-wx {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 2px 4px;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.cal-wx:active { background: rgba(0, 0, 0, 0.08); }
+
+/* "What's scheduled" panel inside the day view */
+.cal-schedule { margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.cal-schedule:empty { margin: 0; }
+.cal-sched-item {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--orange);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+.cal-sched-item.is-posted { border-left-color: #2b8a3e; }
+.cal-sched-when { font-weight: 700; font-size: 0.85rem; color: var(--blue); }
+.cal-sched-cap { font-size: 0.85rem; color: var(--text); margin-top: 3px; line-height: 1.35; }
+.cal-sched-empty { font-size: 0.85rem; color: var(--muted); margin: 0; }
+
+/* Add-a-place row in the day view */
+.cal-addloc { display: flex; gap: 8px; align-items: center; margin: 0 0 12px; }
+/* min-width: 0 lets the input actually shrink in the flex row — without it
+   the row overflows the viewport and the Add button gets pushed off-screen. */
+.cal-addloc .text-entry { flex: 1; width: auto; min-width: 0; margin: 0; }
+.cal-addloc .btn-sm { flex: 0 0 auto; }
+
 /* ---- Generate posts ---- */
 .gen-cards { display: flex; flex-direction: column; gap: 12px; margin: 8px 0 14px; }
 .gen-card {
@@ -856,11 +910,14 @@ html, body {
   to { opacity: 1; transform: translateX(0); }
 }
 
-/* ---- Home: logo drops in, then each control rises in a stagger ---- */
-.home .brand-logo { animation: fx-drop-in 0.5s var(--spring) both; }
-.home .tagline { animation: fx-rise 0.45s var(--spring) 0.08s both; }
-.home .greeting { animation: fx-rise 0.45s var(--spring) 0.14s both; }
-.home .btn { animation: fx-rise 0.5s var(--spring) both; }
+/* ---- Home: logo drops in, then each control rises in a stagger.
+   Entrances fill *backwards* (not forwards) — a forwards fill would keep
+   overriding transforms after the animation ends, freezing the buttons'
+   3D press-down. ---- */
+.home .brand-logo { animation: fx-drop-in 0.5s var(--spring) backwards; }
+.home .tagline { animation: fx-rise 0.45s var(--spring) 0.08s backwards; }
+.home .greeting { animation: fx-rise 0.45s var(--spring) 0.14s backwards; }
+.home .btn { animation: fx-rise 0.5s var(--spring) backwards; }
 .home .btn:nth-of-type(1) { animation-delay: 0.20s; }
 .home .btn:nth-of-type(2) { animation-delay: 0.28s; }
 .home .btn:nth-of-type(3) { animation-delay: 0.36s; }
@@ -898,6 +955,110 @@ html, body {
   100% { transform: scale(1); }
 }
 
+/* ---- Reusable wiggle (fired from JS via FX.wiggle) — a cheeky shimmy ---- */
+.fx-wiggle { animation: fx-wiggle 0.45s var(--spring); }
+@keyframes fx-wiggle {
+  0% { transform: rotate(0); }
+  20% { transform: rotate(-5deg) scale(1.05); }
+  45% { transform: rotate(4deg) scale(1.07); }
+  70% { transform: rotate(-2.5deg) scale(1.03); }
+  100% { transform: rotate(0) scale(1); }
+}
+
+/* ---- Back arrow: springy press so even "‹" feels alive ---- */
+.back { transition: transform 0.35s var(--spring); }
+.back:active { transform: scale(0.78); transition: transform 0.06s ease; }
+
+/* ---- Tiles rise in with a stagger whenever their screen appears (the
+   screens re-display on entry, so the entrance replays — same energy as the
+   home screen). The weather tile keeps its loading pulse untouched. ---- */
+.screen.is-active .tile:not(.is-loading) { animation: fx-rise 0.42s var(--spring) backwards; }
+.screen.is-active .tile:nth-of-type(2) { animation-delay: 0.06s; }
+.screen.is-active .tile:nth-of-type(3) { animation-delay: 0.12s; }
+.screen.is-active .tile:nth-of-type(4) { animation-delay: 0.18s; }
+.screen.is-active .tile:nth-of-type(5) { animation-delay: 0.24s; }
+/* …and their emoji does a happy little tilt while pressed. */
+.tile-icon { transition: transform 0.35s var(--spring); }
+.tile:active .tile-icon {
+  transform: scale(1.22) rotate(-8deg);
+  transition: transform 0.08s ease;
+}
+
+/* ---- Lists pop in with a quick stagger (generate cards, history, queue,
+   settings rows, day schedule). Rebuilt lists replay it — a fast, subtle
+   rise so re-renders feel snappy, not laggy. ---- */
+.gen-card, .queue-item, .menu-item, .cal-sched-item {
+  animation: fx-rise 0.32s var(--spring-smooth) backwards;
+}
+:is(.gen-card, .queue-item, .menu-item, .cal-sched-item):nth-child(2) { animation-delay: 0.05s; }
+:is(.gen-card, .queue-item, .menu-item, .cal-sched-item):nth-child(3) { animation-delay: 0.1s; }
+:is(.gen-card, .queue-item, .menu-item, .cal-sched-item):nth-child(4) { animation-delay: 0.15s; }
+:is(.gen-card, .queue-item, .menu-item, .cal-sched-item):nth-child(n + 5) { animation-delay: 0.19s; }
+
+/* ---- Chips bounce in one after another (details day/location pickers,
+   calendar day chips, working-days list). The spring easing overshoots, so
+   each chip lands with a tiny pop of its own. ---- */
+.chips .chip, .tag-cloud .tag-chip { animation: fx-chip-in 0.32s var(--spring) backwards; }
+:is(.chips .chip, .tag-cloud .tag-chip):nth-child(2) { animation-delay: 0.03s; }
+:is(.chips .chip, .tag-cloud .tag-chip):nth-child(3) { animation-delay: 0.06s; }
+:is(.chips .chip, .tag-cloud .tag-chip):nth-child(4) { animation-delay: 0.09s; }
+:is(.chips .chip, .tag-cloud .tag-chip):nth-child(5) { animation-delay: 0.12s; }
+:is(.chips .chip, .tag-cloud .tag-chip):nth-child(6) { animation-delay: 0.15s; }
+:is(.chips .chip, .tag-cloud .tag-chip):nth-child(n + 7) { animation-delay: 0.18s; }
+@keyframes fx-chip-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+/* A picked chip announces itself with the pop (wins over the entrance rule
+   above so tapping a chip still bounces even without a re-render). */
+.chips .chip.selected { animation: fx-pop 0.3s var(--spring); }
+
+/* ---- Carousel thumbs bounce in as photos land ---- */
+.carousel-thumb { animation: fx-chip-in 0.3s var(--spring) backwards; }
+
+/* ---- Editor tabs: springy press ---- */
+.etab { transition: transform 0.3s var(--spring), background 0.15s ease, color 0.15s ease; }
+.etab:active { transform: scale(0.92); transition: transform 0.06s ease; }
+
+/* ---- Collage slots: springy press; a freshly-filled slot pops ---- */
+.slot { transition: transform 0.3s var(--spring), border-color 0.15s ease, color 0.15s ease; }
+.slot:active { transform: scale(0.94); transition: transform 0.06s ease; }
+.slot.filled { animation: fx-pop 0.35s var(--spring); }
+
+/* ---- Calendar: cells squash on press and spring back; picking a day pops
+   it; the day panel bounces up on first reveal. ---- */
+.cal-cell { transition: transform 0.35s var(--spring), background 0.15s ease, border-color 0.15s ease; }
+.cal-cell:active { transform: scale(0.82); transition: transform 0.06s ease; }
+.cal-cell.selected { animation: fx-pop 0.35s var(--spring); }
+.cal-day { animation: fx-spring-up 0.42s var(--spring) both; }
+@keyframes fx-spring-up {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---- Bottom nav: the icon of the tab you land on does a joyful bounce ---- */
+.navbtn.is-active svg { animation: fx-nav-pop 0.5s var(--spring); }
+@keyframes fx-nav-pop {
+  from { transform: scale(0.6) rotate(-8deg); }
+  to { transform: scale(1) rotate(0); }
+}
+
+/* ---- Home hero CTA: a soft orange pulse-ring invites the first tap.
+   Lives on a pseudo-element so it never fights the entrance/press motion. ---- */
+.home .btn-primary { position: relative; }
+.home .btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: fx-pulse-ring 3s ease-out 1.8s infinite;
+}
+@keyframes fx-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(255, 210, 63, 0.55); }
+  55%, 100% { box-shadow: 0 0 0 18px rgba(255, 210, 63, 0); }
+}
+
 /* ---- Confetti canvas overlay ---- */
 .fx-confetti {
   position: fixed;
@@ -910,8 +1071,13 @@ html, body {
 
 @media (prefers-reduced-motion: reduce) {
   .btn, .btn-xl, .screen.is-active, .home .brand-logo, .home .tagline,
-  .home .greeting, .home .btn, .greeting.fx-pop, .chip.selected, .fx-pop {
+  .home .greeting, .home .btn, .greeting.fx-pop, .chip.selected, .fx-pop,
+  .fx-wiggle, .screen.is-active .tile, .chips .chip, .tag-cloud .tag-chip,
+  .chips .chip.selected, .gen-card, .queue-item, .menu-item, .cal-sched-item,
+  .cal-day, .cal-cell.selected, .navbtn.is-active svg, .slot.filled,
+  .carousel-thumb, .home .btn-primary::after {
     animation: none !important;
   }
   .btn { transition: background 0.15s ease; }
+  .back, .tile-icon, .slot, .cal-cell, .etab { transition: none; }
 }

@@ -70,8 +70,10 @@
   }
 
   function confetti(opts = {}) {
-    buzz(18);
-    chime(); // the win sound — plays even if motion is reduced
+    // quiet mode = a small everyday sparkle: light buzz, no chime — the full
+    // fanfare (chime + big burst) is saved for real wins like sharing a post.
+    buzz(opts.quiet ? 10 : 18);
+    if (!opts.quiet) chime(); // the win sound — plays even if motion is reduced
     if (reduceMotion) return;
     ensureCanvas();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -81,6 +83,7 @@
     canvas.style.height = window.innerHeight + "px";
 
     const count = opts.count || 55;
+    const power = opts.power || 1; // <1 = a gentler, smaller burst
     // Launch from a point — default just below top-centre, like a party popper.
     const ox = (opts.x != null ? opts.x : window.innerWidth / 2) * dpr;
     const oy = (opts.y != null ? opts.y : window.innerHeight * 0.32) * dpr;
@@ -88,13 +91,13 @@
     const bits = [];
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = (4 + Math.random() * 9) * dpr;
+      const speed = (4 + Math.random() * 9) * dpr * power;
       bits.push({
         x: ox,
         y: oy,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 6 * dpr, // bias upward on burst
-        size: (6 + Math.random() * 7) * dpr,
+        vy: Math.sin(angle) * speed - 6 * dpr * power, // bias upward on burst
+        size: (6 + Math.random() * 7) * dpr * Math.max(power, 0.7),
         color: COLORS[(Math.random() * COLORS.length) | 0],
         rot: Math.random() * Math.PI,
         vr: (Math.random() - 0.5) * 0.35,
@@ -134,15 +137,39 @@
     frame();
   }
 
+  /* ---- sparkle: a small, quiet confetti puff from an element — everyday
+     delight for little wins (marking a working day, adding a pitch). Also
+     bounces the element itself so the tap feels rewarded. ---- */
+  function sparkle(el, opts = {}) {
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    confetti({
+      x: r.left + r.width / 2,
+      y: r.top + r.height / 2,
+      count: opts.count || 16,
+      power: opts.power || 0.55,
+      quiet: true,
+    });
+    pop(el);
+  }
+
+  /* ---- wiggle: a cheeky one-shot shimmy (removals, "look here" nudges) ---- */
+  function wiggle(el) {
+    if (!el || reduceMotion) return;
+    el.classList.remove("fx-wiggle");
+    void el.offsetWidth; // reflow so the animation restarts
+    el.classList.add("fx-wiggle");
+  }
+
   /* ---- global light haptic on any tappable press ---- */
   document.addEventListener(
     "pointerdown",
     (e) => {
-      const t = e.target.closest(".btn, .tile, .chip, .gen-card, .tag-chip, .navbtn");
+      const t = e.target.closest(".btn, .tile, .chip, .gen-card, .tag-chip, .navbtn, .cal-cell, .slot, .back, .etab");
       if (t && !t.disabled) buzz(6);
     },
     { passive: true }
   );
 
-  window.FX = { confetti, pop, buzz };
+  window.FX = { confetti, sparkle, pop, wiggle, buzz };
 })();

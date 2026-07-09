@@ -129,6 +129,12 @@
       const back = e.target.closest("[data-back]");
       if (back) return handleBack(back.dataset.back);
 
+      const calRemove = e.target.closest("[data-cal-remove]");
+      if (calRemove) return removeWorkday(calRemove.dataset.calRemove);
+
+      const calJump = e.target.closest("[data-cal-day]");
+      if (calJump) return selectCalDay(calJump.dataset.calDay);
+
       const calLoc = e.target.closest("[data-cal-loc]");
       if (calLoc) return pickCalLocation(calLoc.dataset.calLoc);
 
@@ -165,6 +171,9 @@
     $("#locationInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") addLocationItem();
     });
+    $("#calDayAddLoc").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addCalDayLocation();
+    });
     $("#hashtagInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") addHashtagItem();
     });
@@ -197,10 +206,11 @@
       case "open-generate": openGenerate(null); break;
       case "open-queue": openQueue(); break;
       case "open-history": openHistory(); break;
-      case "queue-add": queueAdd(); break;
+      case "queue-add": queueAdd(el); break;
       case "cal-prev": shiftMonth(-1); break;
       case "cal-next": shiftMonth(1); break;
       case "cal-clear": clearCalDay(); break;
+      case "cal-add-loc": addCalDayLocation(); break;
       case "cal-generate": openGenerate(selectedDate); break;
       case "gen-folder": $("#genFolderInput").click(); break;
       case "gen-regenerate": runGenerate(); break;
@@ -698,6 +708,7 @@
     err.textContent = vars.includes("location") && !post.location
       ? "Add a location to get a caption for this kind of post."
       : "No caption fits those details — try a different answer or add a location.";
+    if (window.FX) FX.wiggle(err); // a friendly "oi, look here" shimmy
   }
 
   // Compose the post image (with the location/day text overlaid) for the
@@ -831,6 +842,7 @@
     Store.addHashtag(val);
     input.value = "";
     renderHashtags();
+    if (window.FX) FX.pop($("#hashtagList").lastElementChild); // fresh tag bounces
   }
 
   function shuffleCaption() {
@@ -1040,6 +1052,7 @@
     Store.setMenuItems(items);
     input.value = "";
     renderMenu();
+    if (window.FX) FX.pop($("#menuList").lastElementChild); // fresh row bounces
   }
 
   function renderLocations() {
@@ -1077,6 +1090,7 @@
     Store.addLocation(val);
     input.value = "";
     renderLocations();
+    if (window.FX) FX.pop($("#locationList").lastElementChild); // fresh row bounces
   }
 
   /* ---------- MY CAPTIONS (user's own hooks) ---------- */
@@ -1143,12 +1157,14 @@
     textEl.value = "";
     err.textContent = "Added — it's in the shuffle now.";
     renderUserHooks();
+    if (window.FX) FX.pop(err);
   }
 
   /* ---------- WORK CALENDAR ---------- */
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
     "August", "September", "October", "November", "December"];
   const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const SHORT_WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   let calView = new Date(); // any date within the shown month
   let selectedDate = null; // "YYYY-MM-DD"
 
@@ -1202,6 +1218,43 @@
       cell.addEventListener("click", () => selectCalDay(key));
       grid.appendChild(cell);
     }
+    renderWorkdaysList();
+  }
+
+  // Quick list of the shown month's working days, each removable with one tap —
+  // so you don't have to hunt for a day on the grid to un-mark it.
+  function renderWorkdaysList() {
+    const wrap = $("#calWorkdays");
+    if (!wrap) return;
+    const year = calView.getFullYear(), month = calView.getMonth();
+    const schedule = Store.getSchedule();
+    const keys = Object.keys(schedule)
+      .filter((k) => {
+        const [y, m] = k.split("-").map(Number);
+        return y === year && m - 1 === month;
+      })
+      .sort();
+    if (!keys.length) { wrap.innerHTML = ""; return; }
+    wrap.innerHTML =
+      `<p class="cal-workdays-title">Working days in ${MONTHS[month]}</p>` +
+      `<div class="chips">` +
+      keys.map((k) => {
+        const [y, m, d] = k.split("-").map(Number);
+        const dt = new Date(y, m - 1, d);
+        const wd = schedule[k];
+        const where = wd && wd.location ? ` · ${escapeAttr(wd.location)}` : "";
+        const label = `${SHORT_WEEKDAYS[dt.getDay()]} ${d}`;
+        return `<span class="chip cal-wchip${k === selectedDate ? " selected" : ""}" data-cal-day="${k}">` +
+          `${label}${where}` +
+          `<button class="cal-wx" data-cal-remove="${k}" aria-label="Remove ${label}">✕</button></span>`;
+      }).join("") +
+      `</div>`;
+  }
+
+  function removeWorkday(key) {
+    Store.setWorkday(key, null);
+    if (selectedDate === key) { selectedDate = null; $("#calDay").hidden = true; }
+    renderCalendar();
   }
 
   // Local-date keys (YYYY-MM-DD) that have at least one shared post.
@@ -1231,13 +1284,65 @@
     } else {
       wrap.innerHTML = `<button class="chip${wd ? " selected" : ""}" data-cal-loc="">Working</button>`;
     }
+    const addInput = $("#calDayAddLoc");
+    if (addInput) addInput.value = "";
+    renderCalDaySchedule(key);
     $("#calDay").hidden = false;
+  }
+
+  // Show what's lined up for the tapped day: queued plans and anything already
+  // posted that day.
+  function renderCalDaySchedule(key) {
+    const wrap = $("#calDaySchedule");
+    if (!wrap) return;
+    const queued = Store.getQueue().filter((q) => q.date === key);
+    const posted = Store.getPosts().filter(
+      (p) => p.status === "shared" && p.created && dateKey(new Date(p.created)) === key
+    );
+    let html = "";
+    for (const q of queued) {
+      const loc = q.location ? ` · ${escapeAttr(q.location)}` : "";
+      const cap = q.caption ? `<div class="cal-sched-cap">${escapeAttr(q.caption)}</div>` : "";
+      html += `<div class="cal-sched-item"><div class="cal-sched-when">🗓 Queued${loc}</div>${cap}</div>`;
+    }
+    for (const p of posted) {
+      const loc = p.location ? ` · ${escapeAttr(p.location)}` : "";
+      const cap = p.caption ? `<div class="cal-sched-cap">${escapeAttr(p.caption)}</div>` : "";
+      html += `<div class="cal-sched-item is-posted"><div class="cal-sched-when">✓ Posted${loc}</div>${cap}</div>`;
+    }
+    if (!html) html = `<p class="cal-sched-empty">Nothing scheduled for this day yet.</p>`;
+    wrap.innerHTML = html;
+  }
+
+  // Add a one-off / new pitch straight from the day panel, then select it for
+  // this day so it's set in one go.
+  function addCalDayLocation() {
+    const input = $("#calDayAddLoc");
+    if (!input) return;
+    const val = input.value.trim();
+    if (!val) return;
+    Store.addLocation(val);
+    input.value = "";
+    if (selectedDate) {
+      Store.setWorkday(selectedDate, val);
+      selectCalDay(selectedDate);
+      celebrateWorkday(selectedDate);
+    }
   }
 
   function pickCalLocation(loc) {
     if (!selectedDate) return;
     Store.setWorkday(selectedDate, loc);
     selectCalDay(selectedDate);
+    celebrateWorkday(selectedDate);
+  }
+
+  // Marking a working day is a small win — the day's cell gets a quiet
+  // sparkle-burst + bounce (the big confetti stays reserved for sharing).
+  function celebrateWorkday(key) {
+    if (!window.FX) return;
+    const cell = document.querySelector(`.cal-cell[data-date="${key}"]`);
+    if (cell) FX.sparkle(cell, { count: 18 });
   }
   function clearCalDay() {
     if (!selectedDate) return;
@@ -1464,10 +1569,14 @@
     });
   }
 
-  function queueAdd() {
+  function queueAdd(btn) {
     const date = $("#queueDate").value;
     const err = $("#queueError");
-    if (!date) { err.textContent = "Pick a day first."; return; }
+    if (!date) {
+      err.textContent = "Pick a day first.";
+      if (window.FX) FX.wiggle(err);
+      return;
+    }
     Store.addQueueItem({
       id: "q_" + Date.now(),
       date,
@@ -1479,6 +1588,7 @@
     $("#queueNote").value = "";
     err.textContent = "Added to the queue. 🗓";
     renderQueue();
+    if (window.FX && btn) FX.sparkle(btn, { count: 14 }); // little reward puff
   }
 
   // Turn a queued item into a live post: seed location/day (+ its note as the
@@ -1515,6 +1625,7 @@
     }
     note.hidden = false;
     note.textContent = ok ? "Caption copied — paste it into Instagram or Facebook. 📋" : "Couldn't copy — select the caption above and copy it by hand.";
+    if (window.FX) FX.pop(note);
   }
 
   function saveImage() {
@@ -1531,6 +1642,7 @@
     const note = $("#shareNote");
     note.hidden = false;
     note.textContent = blobs.length > 1 ? `Saved ${blobs.length} images to your downloads. ⬇️` : "Image saved to your downloads. ⬇️";
+    if (window.FX) FX.pop(note);
   }
 
   /* ---------- NOTIFY SETTINGS ---------- */
