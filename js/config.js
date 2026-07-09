@@ -30,6 +30,7 @@ window.APP_CONFIG = {
     USER_HOOKS: "sfp.userHooks",
     INSTAGRAM: "sfp.instagram",
     QUEUE: "sfp.queue",
+    WEATHER: "sfp.weatherCache",
   },
 
   // Locations pre-loaded the first time the app runs. The user can add/remove

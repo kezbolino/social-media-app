@@ -60,6 +60,13 @@ const Hooks = (() => {
       const here = String(ctx.location || "").trim().toLowerCase();
       if (here !== String(hook.location).trim().toLowerCase()) return false;
     }
+    // A hook can be pinned to a weather condition (sun / rain / cold …) — only
+    // eligible when weather mode has supplied a matching current condition.
+    if (hook.weather) {
+      if (!ctx.weather) return false;
+      const conds = Array.isArray(hook.weather) ? hook.weather : [hook.weather];
+      if (!conds.includes(ctx.weather)) return false;
+    }
     for (const v of hook.uses) {
       if (v === "location" && !ctx.location) return false;
       if (v === "day" && !ctx.day) return false;

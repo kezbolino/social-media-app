@@ -27,9 +27,11 @@
       editState: null, // saved editor settings, so Back re-opens where you left
       collageImages: [], // aligned to template.boxes
       carouselImages: [], // ordered images for a carousel post
-      tag: null, // 'location' | 'brand' | 'other'
+      tag: null, // 'location' | 'brand' | 'other' | 'events' | 'weather'
       location: "",
       day: "",
+      weather: null, // current condition bucket for a weather post
+      weatherLabel: "", // human-readable weather status for the note
       item: null,
       caption: null, // { hook, filledText, item }
       captionText: "",
@@ -553,11 +555,55 @@
   /* ---------- QUIZ + DETAILS ---------- */
   function chooseTag(tag) {
     post.tag = tag;
+    if (tag === "weather") return chooseWeather();
     // If this kind of post needs no typed details, skip the (empty) details
     // screen and go straight to the caption.
     if (Hooks.inputVarsForTag(tag).length === 0 && resolveCaption("quiz")) return;
     renderDetailFields();
     show("details");
+  }
+
+  // Weather mode: look up the current conditions, then pick a weather-matched
+  // line. Degrades gracefully — if we can't read the weather (offline, location
+  // blocked, desktop), fall back to the generic cheeky lines so there's always
+  // a caption.
+  async function chooseWeather() {
+    post.tag = "weather";
+    if (!post.location) post.location = Store.getLocations()[0] || "";
+    const tile = document.querySelector('[data-tag="weather"]');
+    if (tile) tile.classList.add("is-loading");
+    const w = await Weather.getCurrent();
+    if (tile) tile.classList.remove("is-loading");
+
+    post.weather = w ? w.condition : null;
+    post.weatherLabel = w ? `${w.emoji} ${Math.round(w.tempC)}° · ${w.label} right now` : "";
+
+    const ctx = {
+      location: post.location,
+      day: post.day,
+      menuItems: Store.getMenuItems(),
+      weather: post.weather,
+    };
+    let result = Hooks.choose("weather", ctx);
+    if (!result) {
+      // No live weather (or nothing matched) — use the general lines instead.
+      post.tag = "other";
+      post.weatherLabel = w ? post.weatherLabel : "Couldn't check the weather — here's a general line. (Allow location, or you may be offline.)";
+      result = Hooks.choose("other", ctx) || Hooks.choose("brand", ctx);
+    }
+    if (!result) return;
+    setCaption(result);
+    renderCaptionPreview();
+    const back = document.querySelector('[data-screen="caption"] .back');
+    if (back) back.dataset.back = "quiz";
+    show("caption");
+  }
+
+  function updateWeatherNote() {
+    const el = $("#weatherNote");
+    if (!el) return;
+    if (post.weatherLabel) { el.hidden = false; el.textContent = post.weatherLabel; }
+    else el.hidden = true;
   }
 
   // Pick a caption from the current post context and move to the caption
@@ -708,6 +754,7 @@
     applyHashtags(); // hashtags are added automatically on every fresh line
     $("#captionText").value = post.captionText;
     updateHashtagBtnLabel();
+    updateWeatherNote();
     // Bounce the fresh line + preview so a Shuffle feels alive.
     if (window.FX) { FX.pop($("#captionText")); FX.pop($("#captionPreview")); }
   }
@@ -791,6 +838,7 @@
       location: post.location,
       day: post.day,
       menuItems: Store.getMenuItems(),
+      weather: post.weather,
     };
     const excludeId = post.caption ? post.caption.hook.id : null;
     const result = Hooks.choose(post.tag, ctx, excludeId);

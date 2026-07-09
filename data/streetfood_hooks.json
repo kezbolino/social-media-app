@@ -9,7 +9,8 @@
     "location": "Posting about where you are / dates",
     "brand": "Brand awareness / general hype",
     "other": "Weather, last-chance, weekend, FOMO etc.",
-    "events": "Weddings, private parties, corporate catering"
+    "events": "Weddings, private parties, corporate catering",
+    "weather": "Live weather-matched lines (sun, cloud, rain, cold, hot)"
   },
   "hooks": [
     { "id": "loc_001", "tags": ["location"], "text": "Right then, we've parked up at {location}. Come and get fed.", "uses": ["location"] },
@@ -123,6 +124,36 @@
     { "id": "evt_005", "tags": ["events"], "text": "Skip the rubber chicken and sad veg. Book us for the wedding - gluten free wings, happy guests, zero drama.", "uses": [] },
     { "id": "evt_006", "tags": ["events"], "text": "Christmas do? Summer party? We cater it. Everything gluten free, everyone fed, nobody left out.", "uses": [] },
     { "id": "evt_007", "tags": ["events"], "text": "Fully gluten free catering for weddings and private events - because your coeliac auntie deserves to eat too.", "uses": [] },
-    { "id": "evt_008", "tags": ["events"], "text": "DM us for event catering. Weddings, corporate, private parties - gluten free street food that steals the show.", "uses": [] }
+    { "id": "evt_008", "tags": ["events"], "text": "DM us for event catering. Weddings, corporate, private parties - gluten free street food that steals the show.", "uses": [] },
+
+    { "id": "wx_sun_01", "tags": ["weather"], "weather": "sun", "text": "Sun's out, wings out. Come find us before the queue does.", "uses": [] },
+    { "id": "wx_sun_02", "tags": ["weather"], "weather": "sun", "text": "Proper sunny one at {location} today. Gluten free wings and a cold drink - sorted.", "uses": ["location"] },
+    { "id": "wx_sun_03", "tags": ["weather"], "weather": "sun", "text": "Blue skies and gluten free wings. Name a better combo, we'll wait.", "uses": [] },
+    { "id": "wx_sun_04", "tags": ["weather"], "weather": "sun", "text": "Sun's got the park busy - we've got the food. Swing by {location}.", "uses": ["location"] },
+    { "id": "wx_sun_05", "tags": ["weather"], "weather": "sun", "text": "Too nice to cook. Let us do it - gluten free and unreal.", "uses": [] },
+
+    { "id": "wx_cld_01", "tags": ["weather"], "weather": "cloud", "text": "Grey skies? Our wings are the pop of colour your day needs.", "uses": [] },
+    { "id": "wx_cld_02", "tags": ["weather"], "weather": "cloud", "text": "Bit of a grey one at {location}. Hot, gluten free, sorts your mood right out.", "uses": ["location"] },
+    { "id": "wx_cld_03", "tags": ["weather"], "weather": "cloud", "text": "Moody sky, cheerful food. Come get fed.", "uses": [] },
+    { "id": "wx_cld_04", "tags": ["weather"], "weather": "cloud", "text": "Overcast at {location} - perfect excuse for something hot and gluten free.", "uses": ["location"] },
+    { "id": "wx_cld_05", "tags": ["weather"], "weather": "cloud", "text": "No sun? No bother. We bring the warm glow (it's the fryer).", "uses": [] },
+
+    { "id": "wx_rain_01", "tags": ["weather"], "weather": "rain", "text": "It's chucking it down - duck in for hot, gluten free wings. We're not going anywhere.", "uses": [] },
+    { "id": "wx_rain_02", "tags": ["weather"], "weather": "rain", "text": "Rain at {location}? Perfect wing weather. Hot food, dry spot, come hide.", "uses": ["location"] },
+    { "id": "wx_rain_03", "tags": ["weather"], "weather": "rain", "text": "British summer doing its thing. Warm gluten free wings say it's fine, actually.", "uses": [] },
+    { "id": "wx_rain_04", "tags": ["weather"], "weather": "rain", "text": "Soggy one at {location}. Treat yourself - you've earned the wings.", "uses": ["location"] },
+    { "id": "wx_rain_05", "tags": ["weather"], "weather": "rain", "text": "Don't let a bit of rain win. Hot, gluten free, worth the dash.", "uses": [] },
+
+    { "id": "wx_cold_01", "tags": ["weather"], "weather": "cold", "text": "Freezing out - warm up with gluten free wings straight off the heat.", "uses": [] },
+    { "id": "wx_cold_02", "tags": ["weather"], "weather": "cold", "text": "Nippy at {location}? We're the cure. Hot food, gluten free, come thaw out.", "uses": ["location"] },
+    { "id": "wx_cold_03", "tags": ["weather"], "weather": "cold", "text": "Cold hands, warm wings. That's the deal. Come get some.", "uses": [] },
+    { "id": "wx_cold_04", "tags": ["weather"], "weather": "cold", "text": "Brass monkeys at {location}. Hot gluten free wings sort that right out.", "uses": ["location"] },
+    { "id": "wx_cold_05", "tags": ["weather"], "weather": "cold", "text": "Baltic out there. We've got the hot, gluten free antidote.", "uses": [] },
+
+    { "id": "wx_hot_01", "tags": ["weather"], "weather": "hot", "text": "Scorcher today - grab gluten free wings and a cold one, sit in the sun.", "uses": [] },
+    { "id": "wx_hot_02", "tags": ["weather"], "weather": "hot", "text": "Roasting at {location}. Too hot to cook - let us. Gluten free and easy.", "uses": ["location"] },
+    { "id": "wx_hot_03", "tags": ["weather"], "weather": "hot", "text": "Heatwave says someone else should cook. That's us. Gluten free, sorted.", "uses": [] },
+    { "id": "wx_hot_04", "tags": ["weather"], "weather": "hot", "text": "Proper warm one at {location}. Wings, cold drink, no washing up. You're welcome.", "uses": ["location"] },
+    { "id": "wx_hot_05", "tags": ["weather"], "weather": "hot", "text": "Too hot to move? We'll bring the flavour, you bring the appetite.", "uses": [] }
   ]
 }

@@ -43,8 +43,9 @@ You don't need this, but if you ever prefer to serve it (e.g. while editing the
 3. Add the photo(s). For a collage, tap a layout, drop photos into the slots,
    or hit **Try another layout** to cycle. For a carousel, pick **2–10 photos**
    (the first is the cover) — they post as a swipeable Instagram carousel.
-4. **One quick question** — is the post about *where you are*, *brand hype*, or
-   *something else* (weather/last day/weekend)?
+4. **One quick question** — is the post about *where you are*, *brand hype*,
+   *today's weather*, *weddings & events*, or *something else* (last day /
+   weekend / FOMO)?
 5. **Fill the blanks** it needs — usually just **location**, sometimes **day**.
 6. **Caption appears**, already filled in. **Shuffle** for a different line, or
    **tap to edit** it.
@@ -65,6 +66,13 @@ be. **Generate posts** (home → ✨) uses that day's location, your photo folde
 and the hook library to hand you **3 ready-made posts**; tap the one you like to
 tweak and share. **Post reminders** (Settings → 🔔) nudge you to post on working
 days.
+
+**Weather mode** — pick **🌦️ Today's weather** on the quiz question and the app
+checks the current conditions where you're standing (free Open-Meteo lookup, no
+API key) and hands you a caption that matches — a rainy-day line when it's
+chucking it down, a scorcher line in a heatwave, and so on. It's offline-safe:
+if you're offline or block location it quietly falls back to a general line. The
+reading is cached for 30 minutes.
 
 **Post queue** (home → 🗓) — line up posts for the days ahead (a day, optional
 pitch, and a caption/note). On the day, the reminder nudges you that posts are

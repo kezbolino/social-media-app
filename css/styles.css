@@ -603,6 +603,21 @@ html, body {
 .gen-card img { width: 96px; height: 96px; object-fit: cover; border-radius: 12px; flex: 0 0 auto; }
 .gen-caption { font-size: 0.98rem; line-height: 1.35; color: var(--text); }
 
+/* ---- Weather mode ---- */
+.weather-note {
+  display: inline-block;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 14px;
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--blue);
+}
+.tile.is-loading { opacity: 0.55; pointer-events: none; animation: fx-pulse 1s ease-in-out infinite; }
+@keyframes fx-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.8; } }
+
 /* ---- Carousel photo strip ---- */
 .carousel-strip {
   display: flex;
