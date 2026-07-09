@@ -157,11 +157,6 @@
       if (e.key === "Enter") addHashtagItem();
     });
     $("#genFolderInput").addEventListener("change", onGenFolderPicked);
-    $("#igHandle").addEventListener("change", (e) => {
-      const handle = normaliseIgHandle(e.target.value);
-      Store.setInstagram({ handle });
-      e.target.value = handle;
-    });
     saveMetaField("#metaToken", "accessToken");
     saveMetaField("#metaPageId", "pageId");
     saveMetaField("#metaIgId", "igUserId");
@@ -186,7 +181,6 @@
     switch (action) {
       case "new-post": post = freshPost(); show("type"); break;
       case "open-settings": openSettings(); break;
-      case "open-instagram": openInstagram(); break;
       case "open-calendar": openCalendar(); break;
       case "open-generate": openGenerate(null); break;
       case "cal-prev": shiftMonth(-1); break;
@@ -831,46 +825,14 @@
   }
 
   /* ---------- SETTINGS / MENU ---------- */
-  // Renders every settings sub-panel and shows the screen. Shared by the nav's
-  // Settings icon and the Instagram button's "add your handle first" fallback.
-  function openSettings(focusSel) {
+  function openSettings() {
     renderLocations();
     renderMenu();
     renderHashtags();
     renderUserHooks();
     renderNotifySettings();
     renderMetaSettings();
-    renderInstagramSettings();
     show("settings");
-    if (focusSel) {
-      const el = $(focusSel);
-      if (el) { el.focus(); if (window.FX) FX.pop(el); }
-    }
-  }
-
-  /* ---------- INSTAGRAM QUICK LINK ---------- */
-  function renderInstagramSettings() {
-    const ig = Store.getInstagram();
-    $("#igHandle").value = ig.handle || "";
-  }
-
-  // Strip a leading @, a full instagram.com URL, or a trailing slash so
-  // whatever the trader pastes in still resolves to a clean handle.
-  function normaliseIgHandle(raw) {
-    return raw
-      .trim()
-      .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
-      .replace(/^@/, "")
-      .replace(/\/.*$/, "");
-  }
-
-  function openInstagram() {
-    const handle = normaliseIgHandle(Store.getInstagram().handle || "");
-    if (!handle) {
-      openSettings("#igHandle");
-      return;
-    }
-    window.open(`https://www.instagram.com/${encodeURIComponent(handle)}/`, "_blank", "noopener");
   }
 
   function renderMenu() {

@@ -716,8 +716,8 @@ html, body {
 .btn {
   --btn-edge: rgba(10, 35, 49, 0.22);
   box-shadow: 0 4px 0 var(--btn-edge);
-  /* Release: springs back over 0.32s so it overshoots past rest and settles. */
-  transition: transform 0.32s var(--spring), box-shadow 0.12s ease,
+  /* Release: springs back over 0.42s so it overshoots past rest and settles. */
+  transition: transform 0.42s var(--spring), box-shadow 0.14s ease,
     background 0.15s ease;
 }
 /* Press: snap straight down, no spring — the bounce is on the way back up. */
@@ -746,7 +746,7 @@ html, body {
 /* ---- Screen wipe: incoming screen slides in horizontally. Direction is set
    by #app.nav-back (a ‹ Back / home navigation wipes in from the left; going
    forward wipes in from the right). ---- */
-.screen.is-active { animation: fx-wipe-fwd 0.36s var(--spring-smooth) both; }
+.screen.is-active { animation: fx-wipe-fwd 0.46s var(--spring-smooth) both; }
 #app.nav-back .screen.is-active { animation-name: fx-wipe-back; }
 @keyframes fx-wipe-fwd {
   from { opacity: 0; transform: translateX(38px); }

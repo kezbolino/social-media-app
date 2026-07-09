@@ -63,11 +63,10 @@ and the hook library to hand you **3 ready-made posts**; tap the one you like to
 tweak and share. **Post reminders** (Settings → 🔔) nudge you to post on working
 days.
 
-A **sticky bottom nav** (Home / New Post / Calendar / Generate / Instagram /
-Settings — minimal Heroicons) sits on the hub screens for quick jumps between
-them; it's hidden during the guided New Post flow so it doesn't crowd that
-screen's own **Next** button. The Instagram icon opens your public profile in
-the browser — set your **@handle** once in Settings → 📸 Instagram profile.
+A **sticky bottom nav** (New Post / Calendar / Generate / Settings — minimal
+Heroicons) sits on the hub screens for quick jumps between them; it's hidden
+during the guided New Post flow so it doesn't crowd that screen's own **Next**
+button.
 
 > **Reminder limitation (important):** a plain web app can only fire a reminder
 > while it has been *opened* around the reminder time — it can't wake itself in
