@@ -52,15 +52,22 @@ You don't need this, but if you ever prefer to serve it (e.g. while editing the
 
 **Menu & Settings** lets you add best sellers / sauces once; food captions pick
 from that list at random. Leave it empty and food captions are simply skipped.
-It also holds an editable **hashtag** bank (curated for London street food) — on
-the caption screen, **# Add hashtags** appends a shuffled, relevant mix (plus
-your pitch location and the brand tag, auto-added); tap it again to re-roll.
+It also holds an editable **hashtag** bank (curated for London street food) — a
+shuffled, relevant mix (plus your pitch location and the brand tag) is added to
+every caption automatically; tap **Remove hashtags** on the caption screen if
+you'd rather post without them (tap again to put them back).
 
 **Work calendar** (home → 📅) — tap the days you're trading and set where you'll
 be. **Generate posts** (home → ✨) uses that day's location, your photo folder,
 and the hook library to hand you **3 ready-made posts**; tap the one you like to
 tweak and share. **Post reminders** (Settings → 🔔) nudge you to post on working
 days.
+
+A **sticky bottom nav** (Home / New Post / Calendar / Generate / Instagram /
+Settings — minimal Heroicons) sits on the hub screens for quick jumps between
+them; it's hidden during the guided New Post flow so it doesn't crowd that
+screen's own **Next** button. The Instagram icon opens your public profile in
+the browser — set your **@handle** once in Settings → 📸 Instagram profile.
 
 > **Reminder limitation (important):** a plain web app can only fire a reminder
 > while it has been *opened* around the reminder time — it can't wake itself in

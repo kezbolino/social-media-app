@@ -44,9 +44,18 @@
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   let lastQuizBack = "type"; // where the quiz "Back" should go
 
+  // The bottom nav only shows on these hub screens — hidden during the
+  // guided post-creation flow so it doesn't fight with that flow's own
+  // sticky actionbar.
+  const HUB_SCREENS = new Set(["home", "calendar", "generate", "settings"]);
+
   function show(screen) {
     $$(".screen").forEach((s) =>
       s.classList.toggle("is-active", s.dataset.screen === screen)
+    );
+    $("#app").classList.toggle("has-bottomnav", HUB_SCREENS.has(screen));
+    $$(".navbtn[data-nav]").forEach((b) =>
+      b.classList.toggle("is-active", b.dataset.nav === screen)
     );
     if (screen === "home") rollGreeting();
     window.scrollTo(0, 0);
@@ -142,6 +151,11 @@
       if (e.key === "Enter") addHashtagItem();
     });
     $("#genFolderInput").addEventListener("change", onGenFolderPicked);
+    $("#igHandle").addEventListener("change", (e) => {
+      const handle = normaliseIgHandle(e.target.value);
+      Store.setInstagram({ handle });
+      e.target.value = handle;
+    });
     saveMetaField("#metaToken", "accessToken");
     saveMetaField("#metaPageId", "pageId");
     saveMetaField("#metaIgId", "igUserId");
@@ -164,7 +178,8 @@
   function handleAction(action, el) {
     switch (action) {
       case "new-post": post = freshPost(); show("type"); break;
-      case "open-settings": renderLocations(); renderMenu(); renderHashtags(); renderUserHooks(); renderNotifySettings(); renderMetaSettings(); show("settings"); break;
+      case "open-settings": openSettings(); break;
+      case "open-instagram": openInstagram(); break;
       case "open-calendar": openCalendar(); break;
       case "open-generate": openGenerate(null); break;
       case "cal-prev": shiftMonth(-1); break;
@@ -594,23 +609,41 @@
     post.item = result.item;
     post.captionText = result.filledText;
     post.hashtagBlock = ""; // a new line drops any appended hashtags
-    $("#captionText").value = result.filledText;
+    applyHashtags(); // hashtags are added automatically on every fresh line
+    $("#captionText").value = post.captionText;
+    updateHashtagBtnLabel();
     // Bounce the fresh line + preview so a Shuffle feels alive.
     if (window.FX) { FX.pop($("#captionText")); FX.pop($("#captionPreview")); }
   }
 
   /* ---------- HASHTAGS ---------- */
-  // Append (or re-roll) a relevant, shuffled hashtag block on the caption.
-  function toggleHashtags() {
-    let base = $("#captionText").value;
-    // Strip a previously-appended block so repeated taps re-roll, not stack.
-    if (post.hashtagBlock && base.endsWith(post.hashtagBlock)) {
-      base = base.slice(0, base.length - post.hashtagBlock.length).replace(/\s+$/, "");
-    }
+  // A relevant, shuffled hashtag block is appended automatically whenever a
+  // caption is picked; this button just lets the trader take it back off (or
+  // put it back on) for that post.
+  function applyHashtags() {
     const block = buildHashtagBlock();
     post.hashtagBlock = "\n\n" + block;
-    post.captionText = base + post.hashtagBlock;
+    post.captionText = post.captionText + post.hashtagBlock;
+  }
+
+  function removeHashtags() {
+    if (!post.hashtagBlock) return;
+    post.captionText = post.captionText
+      .slice(0, post.captionText.length - post.hashtagBlock.length)
+      .replace(/\s+$/, "");
+    post.hashtagBlock = "";
+  }
+
+  function toggleHashtags() {
+    if (post.hashtagBlock) removeHashtags();
+    else applyHashtags();
     $("#captionText").value = post.captionText;
+    updateHashtagBtnLabel();
+  }
+
+  function updateHashtagBtnLabel() {
+    const btn = $('[data-action="hashtags"]');
+    if (btn) btn.textContent = post.hashtagBlock ? "🗑 Remove hashtags" : "#️⃣ Add hashtags";
   }
 
   function buildHashtagBlock() {
@@ -791,6 +824,48 @@
   }
 
   /* ---------- SETTINGS / MENU ---------- */
+  // Renders every settings sub-panel and shows the screen. Shared by the nav's
+  // Settings icon and the Instagram button's "add your handle first" fallback.
+  function openSettings(focusSel) {
+    renderLocations();
+    renderMenu();
+    renderHashtags();
+    renderUserHooks();
+    renderNotifySettings();
+    renderMetaSettings();
+    renderInstagramSettings();
+    show("settings");
+    if (focusSel) {
+      const el = $(focusSel);
+      if (el) { el.focus(); if (window.FX) FX.pop(el); }
+    }
+  }
+
+  /* ---------- INSTAGRAM QUICK LINK ---------- */
+  function renderInstagramSettings() {
+    const ig = Store.getInstagram();
+    $("#igHandle").value = ig.handle || "";
+  }
+
+  // Strip a leading @, a full instagram.com URL, or a trailing slash so
+  // whatever the trader pastes in still resolves to a clean handle.
+  function normaliseIgHandle(raw) {
+    return raw
+      .trim()
+      .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+      .replace(/^@/, "")
+      .replace(/\/.*$/, "");
+  }
+
+  function openInstagram() {
+    const handle = normaliseIgHandle(Store.getInstagram().handle || "");
+    if (!handle) {
+      openSettings("#igHandle");
+      return;
+    }
+    window.open(`https://www.instagram.com/${encodeURIComponent(handle)}/`, "_blank", "noopener");
+  }
+
   function renderMenu() {
     const items = Store.getMenuItems();
     const list = $("#menuList");
@@ -1121,7 +1196,10 @@
     post.day = genDay;
     post.caption = { hook: g.hook, filledText: g.filledText, item: null };
     post.captionText = g.filledText;
-    $("#captionText").value = g.filledText;
+    post.hashtagBlock = "";
+    applyHashtags();
+    $("#captionText").value = post.captionText;
+    updateHashtagBtnLabel();
     const back = document.querySelector('[data-screen="caption"] .back');
     if (back) back.dataset.back = "generate";
     renderCaptionPreview();

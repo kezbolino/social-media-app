@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
-    <div id="app">
+    <div id="app" class="has-bottomnav">
       <!-- ===== HOME ===== -->
       <section class="screen is-active" data-screen="home">
         <div class="home">
@@ -216,8 +216,8 @@
             <img id="captionPreview" class="preview-img" alt="Post preview with text overlay" />
           </div>
           <textarea id="captionText" class="caption-box" rows="5"></textarea>
-          <button class="btn btn-secondary" data-action="hashtags">#️⃣ Add hashtags</button>
-          <p class="hint">This is your <strong>post caption</strong> (shared as text with the photo). Shuffle for a different line, add a relevant hashtag mix, or edit it. To put words <em>on</em> the photo, use the editor's <strong>Text</strong> tab.</p>
+          <button class="btn btn-secondary" data-action="hashtags">🗑 Remove hashtags</button>
+          <p class="hint">This is your <strong>post caption</strong> (shared as text with the photo). A relevant hashtag mix is added automatically — tap <strong>Remove hashtags</strong> if you'd rather post without them. Shuffle for a different line, or edit it. To put words <em>on</em> the photo, use the editor's <strong>Text</strong> tab.</p>
           <div class="actionbar">
             <div class="row">
               <button class="btn btn-accent" data-action="shuffle">🔀 Shuffle</button>
@@ -366,6 +366,12 @@
           <button class="btn btn-ghost btn-sm" data-action="notify-test">Send a test reminder</button>
           <p id="notifyStatus" class="hint"></p>
 
+          <p class="lead" style="margin-top: 28px;">📸 Instagram profile</p>
+          <p class="hint">Your public @handle — the Instagram icon in the bottom nav opens this profile in the browser/app.</p>
+          <div class="field">
+            <input class="text-input" id="igHandle" type="text" autocomplete="off" placeholder="e.g. chucklingwings (no @ needed)" />
+          </div>
+
           <p class="lead" style="margin-top: 28px;">🚀 Auto-posting (Meta) — optional</p>
           <p class="hint">Post straight to Instagram/Facebook without the share sheet. Needs a one-time Meta setup — see <strong>docs/META_SETUP.md</strong> for the plain-English walkthrough. Everything you paste here stays on this device.</p>
           <div class="field">
@@ -392,6 +398,28 @@
           <p id="metaStatus" class="hint"></p>
         </div>
       </section>
+
+      <!-- ===== BOTTOM NAV ===== -->
+      <nav class="bottomnav" id="bottomNav" aria-label="Primary">
+        <button class="navbtn is-active" data-nav="home" data-action="go-home" aria-label="Home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+        </button>
+        <button class="navbtn" data-action="new-post" aria-label="New post">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        </button>
+        <button class="navbtn" data-nav="calendar" data-action="open-calendar" aria-label="Work calendar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/></svg>
+        </button>
+        <button class="navbtn" data-nav="generate" data-action="open-generate" aria-label="Generate posts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/></svg>
+        </button>
+        <button class="navbtn" data-action="open-instagram" aria-label="Open Instagram profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"/></svg>
+        </button>
+        <button class="navbtn" data-nav="settings" data-action="open-settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+        </button>
+      </nav>
     </div>
 
     <!-- Embedded data so the app runs by simply opening this file (no server). -->

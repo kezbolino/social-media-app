@@ -174,6 +174,14 @@ const Store = (() => {
     write(K.META, m);
   }
 
+  /* ---- Instagram profile (public @handle, for the quick-open nav button) ---- */
+  function getInstagram() {
+    return read(K.INSTAGRAM, { handle: "" });
+  }
+  function setInstagram(v) {
+    write(K.INSTAGRAM, v);
+  }
+
   /* ---- Saved posts: draft -> approved -> shared ---- */
   function getPosts() {
     return read(K.POSTS, []);
@@ -213,5 +221,7 @@ const Store = (() => {
     setUserHooks,
     addUserHook,
     removeUserHook,
+    getInstagram,
+    setInstagram,
   };
 })();

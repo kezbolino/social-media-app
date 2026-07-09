@@ -28,6 +28,7 @@ window.APP_CONFIG = {
     HASHTAGS: "sfp.hashtags",
     META: "sfp.meta",
     USER_HOOKS: "sfp.userHooks",
+    INSTAGRAM: "sfp.instagram",
   },
 
   // Locations pre-loaded the first time the app runs. The user can add/remove

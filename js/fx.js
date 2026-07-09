@@ -18,10 +18,23 @@
     } catch (_) {}
   }
 
-  /* ---- celebratory chime: a short rising C-major arpeggio, synthesised on
-     the fly so it needs no audio file (stays offline). Kicks off from a tap,
-     so autoplay policies are happy. ---- */
+  /* ---- celebratory chime: a bright two-note bell (a fifth apart), each note
+     layered with a quiet octave-up shimmer for a metallic "ding" character.
+     Synthesised on the fly so it needs no audio file (stays offline). Kicks
+     off from a tap, so autoplay policies are happy. ---- */
   let audioCtx;
+  function bellTone(f, t, peak, dur) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = f;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(peak, t + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.05);
+  }
   function chime() {
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -29,19 +42,11 @@
       audioCtx = audioCtx || new AC();
       if (audioCtx.state === "suspended") audioCtx.resume();
       const now = audioCtx.currentTime;
-      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+      const notes = [880, 1318.51]; // A5, E6 — a bright bell fifth
       notes.forEach((f, i) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "triangle";
-        osc.frequency.value = f;
-        const t = now + i * 0.075;
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.16, t + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
-        osc.connect(gain).connect(audioCtx.destination);
-        osc.start(t);
-        osc.stop(t + 0.38);
+        const t = now + i * 0.12;
+        bellTone(f, t, 0.2, 0.55); // fundamental
+        bellTone(f * 2, t, 0.05, 0.35); // quiet octave shimmer
       });
     } catch (_) {}
   }
@@ -133,7 +138,7 @@
   document.addEventListener(
     "pointerdown",
     (e) => {
-      const t = e.target.closest(".btn, .tile, .chip, .gen-card, .tag-chip");
+      const t = e.target.closest(".btn, .tile, .chip, .gen-card, .tag-chip, .navbtn");
       if (t && !t.disabled) buzz(6);
     },
     { passive: true }

@@ -68,6 +68,7 @@
   --line: #d6deea;
   --error: #c0362c;
   --radius: 16px;
+  --navh: 54px;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -619,6 +620,75 @@ html, body {
 
 /* Review screen: direct-post divider */
 .or-row { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 10px 0 0; }
+
+/* ---- Sticky bottom nav ----
+   Icon-only, Instagram-style minimal tab bar. Lives outside the .screen
+   sections (fixed to the viewport) and is only shown on the hub screens —
+   the guided post-creation flow (photo/editor/quiz/caption/review) hides it
+   so it doesn't fight with that flow's own sticky actionbar. */
+.bottomnav {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 520px;
+  display: none;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  padding: 8px 4px max(8px, env(safe-area-inset-bottom));
+  z-index: 50;
+  box-shadow: 0 -2px 10px rgba(10, 77, 161, 0.08);
+}
+#app.has-bottomnav .bottomnav { display: flex; }
+.navbtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  padding: 8px 2px;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 12px;
+}
+.navbtn svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.15s var(--spring), color 0.15s ease;
+}
+.navbtn::after {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+.navbtn.is-active { color: var(--blue); }
+.navbtn.is-active svg { stroke-width: 2; }
+.navbtn.is-active::after { background: var(--orange); }
+/* Light press feedback: the icon dips down then springs back via the
+   bouncy easing on release — same feel as the rest of the app's buttons. */
+.navbtn:active svg { transform: scale(0.78); }
+.navbtn:active { color: var(--blue); }
+
+/* Reserve room at the bottom of the hub screens so their content never
+   sits behind the fixed nav bar. */
+#app.has-bottomnav [data-screen="calendar"] .pad,
+#app.has-bottomnav [data-screen="generate"] .pad,
+#app.has-bottomnav [data-screen="settings"] .pad {
+  padding-bottom: calc(40px + var(--navh) + env(safe-area-inset-bottom));
+}
+#app.has-bottomnav [data-screen="home"] .home {
+  padding-bottom: calc(24px + var(--navh) + env(safe-area-inset-bottom));
+}
 
 /* =========================================================================
    FX layer — Duolingo-style juice: chunky 3D buttons, springy transitions,
