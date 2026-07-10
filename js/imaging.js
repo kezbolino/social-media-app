@@ -184,14 +184,14 @@ const Imaging = (() => {
   // SINGLE PHOTO: one image fitted to the export square. If `captionText` is
   // given, draw it onto the photo in a branded bottom panel (full caption,
   // wrapped to fit — never cut off).
-  function renderSingle(img, captionText) {
+  function renderSingle(img, captionText, styleOpts) {
     const { width, height } = window.APP_CONFIG.EXPORT;
     const canvas = newCanvas(width, height);
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, width, height);
     drawCover(ctx, img, { x: 0, y: 0, width, height });
-    if (captionText) drawCaptionPanel(ctx, captionText, width, height);
+    if (captionText) drawCaptionPanel(ctx, captionText, width, height, styleOpts);
     return canvas;
   }
 
@@ -234,22 +234,49 @@ const Imaging = (() => {
     const panelH = Math.min(maxPanelH, Math.round(textH + padY * 2));
     const y = H - panelH;
 
-    const grad = ctx.createLinearGradient(0, y, 0, H);
-    grad.addColorStop(0, "rgba(10,77,161,0)");
-    grad.addColorStop(0.22, "rgba(10,77,161,0.82)");
-    grad.addColorStop(1, "rgba(10,77,161,0.94)");
+    // Style knobs (default = the brand-blue gradient panel, white text):
+    //   fill: "gradient" | "solid" | "scrim" | "none"
+    //   fillRGB: [r,g,b] base colour for gradient/solid
+    //   color: text colour;  accent: top accent line colour (null to skip)
+    //   shadow: false to drop the text shadow (for light panels)
+    const fill = opts.fill || "gradient";
+    const rgb = opts.fillRGB || [10, 77, 161];
+    const rgbStr = rgb.join(",");
+    const accent = opts.accent === undefined ? "#f58b1f" : opts.accent;
+    const useShadow = opts.shadow !== false;
+
     ctx.save();
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, y, W, panelH);
-    ctx.fillStyle = "#f58b1f";
-    ctx.fillRect(0, y, W, Math.max(6, Math.round(H * 0.008)));
+    if (fill === "gradient") {
+      const grad = ctx.createLinearGradient(0, y, 0, H);
+      grad.addColorStop(0, `rgba(${rgbStr},0)`);
+      grad.addColorStop(0.22, `rgba(${rgbStr},0.82)`);
+      grad.addColorStop(1, `rgba(${rgbStr},0.94)`);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, y, W, panelH);
+    } else if (fill === "scrim") {
+      const grad = ctx.createLinearGradient(0, y, 0, H);
+      grad.addColorStop(0, "rgba(0,0,0,0)");
+      grad.addColorStop(0.3, "rgba(0,0,0,0.32)");
+      grad.addColorStop(1, "rgba(0,0,0,0.62)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, y, W, panelH);
+    } else if (fill === "solid") {
+      ctx.fillStyle = `rgb(${rgbStr})`;
+      ctx.fillRect(0, y, W, panelH);
+    }
+    if (accent) {
+      ctx.fillStyle = accent;
+      ctx.fillRect(0, y, W, Math.max(6, Math.round(H * 0.008)));
+    }
 
     ctx.font = `${weight} ${fontSize}px ${FONT_FAMILY}`;
     ctx.fillStyle = opts.color || "#ffffff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.shadowColor = "rgba(0,0,0,0.45)";
-    ctx.shadowBlur = Math.max(3, fontSize * 0.08);
+    if (useShadow) {
+      ctx.shadowColor = fill === "scrim" ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.45)";
+      ctx.shadowBlur = Math.max(3, fontSize * (fill === "scrim" ? 0.16 : 0.08));
+    }
     const startY = y + panelH / 2 - ((lines.length - 1) * lineH) / 2;
     lines.forEach((l, i) => ctx.fillText(l, W / 2, startY + i * lineH));
     ctx.restore();

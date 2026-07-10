@@ -1475,6 +1475,16 @@
   const reduceMotion = window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // On-brand caption looks, rotated across a batch so the deck isn't samey.
+  // Passed to Imaging.renderSingle → drawCaptionPanel (see imaging.js).
+  const CAPTION_STYLES = [
+    { fill: "gradient", fillRGB: [10, 77, 161], color: "#ffffff", accent: "#f58b1f" }, // brand blue, white text
+    { fill: "solid", fillRGB: [245, 139, 31], color: "#1a1208", accent: null },        // orange block, dark text
+    { fill: "solid", fillRGB: [255, 250, 242], color: "#0a4da1", accent: "#f58b1f", shadow: false }, // cream, blue text
+    { fill: "gradient", fillRGB: [21, 35, 49], color: "#ffffff", accent: "#f58b1f" },  // charcoal, white text
+    { fill: "scrim", color: "#ffffff", accent: null },                                 // minimal — soft dark scrim
+  ];
+
   function openGenerate(dateStr) {
     const key = dateStr || Notify.todayStr();
     const [y, m, d] = key.split("-").map(Number);
@@ -1542,6 +1552,7 @@
       try { imgs.push(await Imaging.loadImageFromFile(f)); } catch (e) { /* skip a bad file */ }
     }
     if (!imgs.length) return out;
+    const styleOrder = shuffleArr(CAPTION_STYLES); // varied but every style shows
     let guard = 0;
     while (out.length < GEN_TARGET && guard < GEN_TARGET * 4) {
       guard++;
@@ -1557,9 +1568,10 @@
       }
       if (!picked) break; // out of fresh captions — stop with what we have
       usedHookIds.push(picked.hook.id);
-      // Burn the caption onto the photo (brand-blue panel, white text). We keep
+      // Burn the caption onto the photo in a rotating on-brand style. We keep
       // the captioned image as the post's source so it stays baked in when shared.
-      const canvas = Imaging.renderSingle(img, picked.filledText);
+      const style = styleOrder[out.length % styleOrder.length];
+      const canvas = Imaging.renderSingle(img, picked.filledText, style);
       const dataUrl = Imaging.toDataURL(canvas);
       let composite = img;
       try { composite = await Imaging.loadImageFromUrl(dataUrl); } catch (e) { /* fall back to raw */ }

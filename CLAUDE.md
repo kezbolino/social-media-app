@@ -44,6 +44,13 @@ static server.
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-10: Caption looks now **vary across a batch** instead of always blue/white.
+  `drawCaptionPanel` (imaging.js) is parametrised — `fill` (gradient|solid|scrim|none),
+  `fillRGB`, `color`, `accent`, `shadow` — and `renderSingle(img, caption, styleOpts)`
+  forwards them. `CAPTION_STYLES` in app.js holds 5 on-brand looks (brand-blue,
+  orange block, cream/blue, charcoal, minimal scrim); `buildGeneratedPosts` shuffles
+  them and rotates one per card. The chosen style is baked into each card's composite
+  image, so it carries through to sharing. Version → v0.05.
 - 2026-07-10: Swipe-deck posts now have the caption **burnt onto the image**
   (`buildGeneratedPosts` calls `Imaging.renderSingle(img, picked.filledText)` —
   the existing brand-blue panel + white text). The captioned canvas is turned back
