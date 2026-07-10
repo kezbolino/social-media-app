@@ -82,6 +82,20 @@
     }
   }
 
+  // Fill an empty-state <p> with a mascot pose + message, so blank screens feel
+  // charming rather than dead. Text is set via textContent (never innerHTML).
+  function mascotEmpty(el, state, text) {
+    if (!el) return;
+    el.classList.add("mascot-empty");
+    el.innerHTML = "";
+    if (window.Mascot) el.appendChild(Mascot.el(state, { anim: "float", size: "lg" }));
+    const span = document.createElement("span");
+    span.className = "mascot-empty-msg";
+    span.textContent = text;
+    el.appendChild(span);
+    el.hidden = false;
+  }
+
   /* ---------- boot ---------- */
   async function boot() {
     try {
@@ -453,7 +467,10 @@
     }
     const items = await Photos.all();
     if (!items.length) {
-      grid.innerHTML = '<p class="stash-empty">No photos saved yet — tap “Add photos”.</p>';
+      grid.innerHTML =
+        '<div class="stash-empty mascot-empty">' +
+        (window.Mascot ? Mascot.html("relaxing", { anim: "float", size: "lg" }) : "") +
+        '<span class="mascot-empty-msg">No photos saved yet — tap “Add photos”.</span></div>';
       if (note) note.textContent = "";
       return;
     }
@@ -970,6 +987,8 @@
     $("#shareNote").hidden = true;
     $("#publishNote").hidden = true;
     $("#doneHome").hidden = true;
+    const cm = $("#celebrateMascot");
+    if (cm) cm.hidden = true; // reset the win mascot until this post is shared
     renderPublishButtons();
     show("review");
   }
@@ -979,6 +998,8 @@
   function markPostShared(via) {
     post.status = "shared";
     if (window.FX) FX.confetti(); // 🎉 the win
+    const cm = $("#celebrateMascot"); // the mascot joins the party
+    if (cm) { cm.hidden = false; if (window.FX) FX.pop(cm); }
     if (post.caption) Store.recordHookUse(post.caption.hook.id);
     Store.savePost({
       id: post.id,
@@ -1452,12 +1473,15 @@
     const empty = $("#genEmpty");
     if (!photoPool.length) {
       $("#genCards").innerHTML = "";
-      empty.hidden = false;
-      empty.textContent = "Load a photo folder to generate posts from your pictures.";
+      mascotEmpty(empty, "relaxing", "Load a photo folder to generate posts from your pictures.");
       return;
     }
     empty.hidden = true;
-    $("#genCards").innerHTML = '<p class="hint">Cooking up posts…</p>';
+    empty.classList.remove("mascot-empty");
+    $("#genCards").innerHTML =
+      '<div class="gen-loading">' +
+      (window.Mascot ? Mascot.html("loading", { anim: "bob", size: "lg" }) : "") +
+      '<p class="hint">Cooking up posts…</p></div>';
     genList = await buildGeneratedPosts();
     renderGenCards();
   }
@@ -1566,7 +1590,10 @@
     const list = $("#historyList");
     const empty = $("#historyEmpty");
     list.innerHTML = "";
-    if (!posts.length) { empty.hidden = false; return; }
+    if (!posts.length) {
+      mascotEmpty(empty, "sad", "No posts yet — once you share a few, they'll show up here to reuse.");
+      return;
+    }
     empty.hidden = true;
     posts.forEach((p) => {
       const card = document.createElement("button");
@@ -1628,8 +1655,7 @@
     const empty = $("#queueEmpty");
     list.innerHTML = "";
     if (!items.length) {
-      empty.hidden = false;
-      empty.textContent = "Nothing queued yet — add one below.";
+      mascotEmpty(empty, "sleeping", "Nothing queued yet — add one below.");
       return;
     }
     empty.hidden = true;

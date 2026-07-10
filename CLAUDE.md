@@ -40,6 +40,32 @@ static server.
   screen in index.html (currently `v0.01`). Bump it there.
 
 ## Notable changes
+- 2026-07-10: Mascot moods — the Chuckling Wings chicken as dynamic feedback:
+  - `assets/mascot/` — 12 transparent PNG poses sliced from the owner's 1024×1024
+    sprite sheet (a 4×3 grid). Names match what each shows: `idle`, `loading`
+    (laptop + coffee + checkmark bubbles), `thinking` (lightbulb), `celebrate`
+    (wings up + confetti), `sleeping` (Zzz), `relaxing` (armchair), `singing`
+    (music note), `confused` (?), `thumbsup`, `sad`, `excited` (sparkles),
+    `waving`. Each ≤ ~272px longest side, ~50–95KB, ~816KB total.
+  - Slicing was done offline in headless Chromium (no ImageMagick/PIL here): the
+    sheet has NO alpha (opaque light/white bg), so background was removed by a
+    border flood-fill (edge-connected bright/neutral pixels → transparent), which
+    keeps enclosed light props (laptop, pillow, coffee, checkmark bubbles) intact.
+    Then hand-tuned per-pose crop boxes (cut lines in the true gutters) so no
+    neighbour bleeds in. Slice script lives in the session scratchpad, not the repo.
+  - `js/mascot.js` — tiny `Mascot` helper (loaded before app.js, exposes
+    `window.Mascot`): `Mascot.url/html/el/set`, friendly per-state alt text, and
+    animation classes. Pure presentation, offline-safe.
+  - Where states are wired: LOADING = Generate "Cooking up posts…" (bob);
+    SUCCESS = `#celebrateMascot` on the Review screen, shown in `markPostShared`
+    alongside `FX.confetti` and reset in `buildReview`; EMPTY STATES via the
+    `mascotEmpty()` helper — Generate (relaxing), Queue (sleeping), Run-it-back
+    (sad), and the photo-stash grid (relaxing); GREETING = `#homeMascot` waving
+    above the home greeting (the logo.svg stays the main brand mark).
+  - CSS (`css/styles.css`, mascot block before the reduced-motion block): sized
+    by height with `width:auto` so varied pose aspect ratios never distort;
+    motions `mascot-bob/float/sway/spin/pop` — all disabled in the
+    `prefers-reduced-motion` block (extended to cover them).
 - 2026-07-10: Persistent photo stash + version number:
   - `js/photos.js` — a small IndexedDB module (`Photos.add/all/count/remove/clear`,
     `Photos.supported`) storing image blobs on the device. localStorage can't hold
