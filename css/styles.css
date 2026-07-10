@@ -706,7 +706,7 @@ html, body {
 .gen-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 26px 0; text-align: center; }
 .gen-empty .btn { width: auto; }
 
-.gen-deck { position: relative; height: min(56vh, 430px); margin: 8px 0 14px; }
+.gen-deck { position: relative; width: 100%; aspect-ratio: 1 / 1.14; margin: 8px 0 14px; }
 .swipe-card {
   position: absolute;
   inset: 0;
@@ -722,13 +722,13 @@ html, body {
   will-change: transform;
 }
 .swipe-card img {
-  width: 100%; height: 60%; object-fit: cover; flex: 0 0 auto;
+  width: 100%; aspect-ratio: 1 / 1; height: auto; object-fit: cover; flex: 0 0 auto;
   pointer-events: none; user-select: none;
 }
 .swipe-cap {
-  flex: 1; padding: 12px 14px; font-size: 0.92rem; line-height: 1.4; color: var(--text);
-  white-space: pre-wrap; overflow: hidden;
-  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+  flex: 1 1 auto; min-height: 0; padding: 8px 14px; font-size: 0.82rem; line-height: 1.35;
+  color: var(--muted); white-space: pre-wrap; overflow: hidden; text-align: center;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
 .swipe-card.depth-1 { transform: translateY(10px) scale(0.955); }
 .swipe-card.depth-2 { transform: translateY(20px) scale(0.91); }

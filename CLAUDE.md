@@ -44,6 +44,14 @@ static server.
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-10: Swipe-deck posts now have the caption **burnt onto the image**
+  (`buildGeneratedPosts` calls `Imaging.renderSingle(img, picked.filledText)` —
+  the existing brand-blue panel + white text). The captioned canvas is turned back
+  into an `<img>` (`loadImageFromUrl`) and stored as the item's `img`, so the caption
+  stays baked in when the post is shared (Post → `buildReview` re-renders that
+  composite). Swipe cards now show the whole **square** image (so the bottom caption
+  panel isn't cropped — `.gen-deck` uses `aspect-ratio:1/1.14`, `.swipe-card img` is
+  square) and only the hashtags sit under it. Version → v0.04.
 - 2026-07-10: Generate posts → Tinder-style swipe deck (js/app.js, index.html, css):
   - `buildGeneratedPosts` now makes **up to 10** distinct posts (was 3), decoding a
     few stash photos once and reusing them across varied captions. Each item is
