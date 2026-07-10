@@ -31,8 +31,34 @@ static server.
 - Back buttons use `class="back"` with just the `‹` glyph (no "Back" text); they
   carry `aria-label="Back"` for screen readers and a 44px min tap target.
 - `data-back` value is the screen to return to (empty string = default/home flow).
+- Cross-script modules use the `const X = (()=>{})()` IIFE pattern. A top-level
+  `const` in a classic `<script>` is a lexical global (reachable by bare name,
+  e.g. `Store`, `Photos`) but is NOT a property of `window` — so any
+  `if (window.X)` guard needs the module to also do `window.X = X` (see the tail
+  of `js/photos.js`, and `window.FX = …` in `js/fx.js`).
+- App version string lives in one place: `#appVersion` at the bottom of the home
+  screen in index.html (currently `v0.01`). Bump it there.
 
 ## Notable changes
+- 2026-07-10: Persistent photo stash + version number:
+  - `js/photos.js` — a small IndexedDB module (`Photos.add/all/count/remove/clear`,
+    `Photos.supported`) storing image blobs on the device. localStorage can't hold
+    blobs; IndexedDB can. Loaded before app.js in index.html; exposed via
+    `window.Photos`.
+  - Settings "📸 My chicken photos" section: add photos once (multi-select), saved
+    on the device, shown as a thumbnail grid with ✕ remove + "Clear all"
+    (`renderStash`, `onStashPicked`, `removeStashPhoto`, `clearStash`,
+    `data-stash-remove`). On boot `loadPhotoStash()` seeds the in-memory `photoPool`
+    from the stash so shuffle/generate work with no re-picking each session.
+  - Why a stash and not a real folder: phone browsers can't bind to a live device
+    folder (no persistent directory access on iOS Safari), so a saved stash is the
+    offline-first stand-in for "point at my chicken pics, grab at random".
+  - IndexedDB gotcha: a transaction goes inactive once control returns to the event
+    loop, so `photos.js` creates each transaction and issues all its requests
+    synchronously (no await between) and resolves on `tx.oncomplete` — don't
+    `await` a store handle and then write to it.
+  - Home screen shows `v0.01` (`.app-version`, `#appVersion`).
+- 2026-07-09: Duolingo-style animation pass ("juice" layer, css/styles.css + js/fx.js):
 - 2026-07-09: Duolingo-style animation pass ("juice" layer, css/styles.css + js/fx.js):
   - New FX helpers: `FX.sparkle(el)` (small quiet confetti puff + pop at an
     element — used for everyday wins) and `FX.wiggle(el)` (one-shot shimmy for
