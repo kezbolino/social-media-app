@@ -11,6 +11,7 @@
   // the Shuffle buttons pull random pictures from. Cleared when the app reloads.
   let photoPool = [];
   let folderTarget = "single"; // which screen asked to load a folder
+  let stashUrls = []; // object URLs for stash thumbnails, revoked on re-render
 
   // The post currently being built.
   let post = freshPost();
@@ -102,6 +103,7 @@
     wireEvents();
     rollGreeting();
     adaptPhotoPickers();
+    loadPhotoStash();
     Editor.init();
     renderPublishButtons();
     // Post reminders: check on open, then every few minutes while open.
@@ -128,6 +130,9 @@
     document.addEventListener("click", (e) => {
       const back = e.target.closest("[data-back]");
       if (back) return handleBack(back.dataset.back);
+
+      const stashRemove = e.target.closest("[data-stash-remove]");
+      if (stashRemove) return removeStashPhoto(stashRemove.dataset.stashRemove);
 
       const calRemove = e.target.closest("[data-cal-remove]");
       if (calRemove) return removeWorkday(calRemove.dataset.calRemove);
@@ -178,6 +183,7 @@
       if (e.key === "Enter") addHashtagItem();
     });
     $("#genFolderInput").addEventListener("change", onGenFolderPicked);
+    $("#stashInput").addEventListener("change", onStashPicked);
     saveMetaField("#metaToken", "accessToken");
     saveMetaField("#metaPageId", "pageId");
     saveMetaField("#metaIgId", "igUserId");
@@ -213,6 +219,8 @@
       case "cal-add-loc": addCalDayLocation(); break;
       case "cal-generate": openGenerate(selectedDate); break;
       case "gen-folder": $("#genFolderInput").click(); break;
+      case "stash-add": $("#stashInput").click(); break;
+      case "stash-clear": clearStash(); break;
       case "gen-regenerate": runGenerate(); break;
       case "notify-test": notifyTest(); break;
       case "hashtags": toggleHashtags(); break;
@@ -386,6 +394,76 @@
         if (note) { note.hidden = !has; note.textContent = label; }
       }
     );
+  }
+
+  /* ---------- SAVED PHOTO STASH (persistent chicken photos) ---------- */
+  // Seed the in-memory pool from the device's saved stash so shuffle/generate
+  // work the moment the app opens — no re-picking every session.
+  async function loadPhotoStash() {
+    if (!window.Photos || !Photos.supported) return;
+    try {
+      const items = await Photos.all();
+      if (!items.length) return;
+      photoPool = items.map((it) => it.blob);
+      refreshPoolUi();
+    } catch (e) { /* the stash is a nicety — never block boot on it */ }
+  }
+
+  async function onStashPicked(e) {
+    const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith("image/"));
+    e.target.value = "";
+    if (!files.length) return;
+    const note = $("#stashNote");
+    if (note) note.textContent = "Saving…";
+    const added = await Photos.add(files);
+    await loadPhotoStash();
+    await renderStash();
+    if (note) note.textContent = added ? `Added ${added} photo${added === 1 ? "" : "s"}. 📸` : "";
+    const btn = $('[data-action="stash-add"]');
+    if (window.FX && FX.sparkle && btn) FX.sparkle(btn);
+  }
+
+  async function removeStashPhoto(id) {
+    await Photos.remove(id);
+    await loadPhotoStash();
+    await renderStash();
+  }
+
+  async function clearStash() {
+    const n = await Photos.count();
+    if (!n) return;
+    if (!confirm(`Remove all ${n} saved photo${n === 1 ? "" : "s"}?`)) return;
+    await Photos.clear();
+    photoPool = [];
+    refreshPoolUi();
+    await renderStash();
+  }
+
+  async function renderStash() {
+    const grid = $("#stashGrid");
+    const note = $("#stashNote");
+    if (!grid) return;
+    // Revoke the previous batch of object URLs so thumbnails don't leak memory.
+    stashUrls.forEach((u) => URL.revokeObjectURL(u));
+    stashUrls = [];
+    if (!window.Photos || !Photos.supported) {
+      grid.innerHTML = '<p class="stash-empty">This phone can’t save photos in the app, sorry.</p>';
+      if (note) note.textContent = "";
+      return;
+    }
+    const items = await Photos.all();
+    if (!items.length) {
+      grid.innerHTML = '<p class="stash-empty">No photos saved yet — tap “Add photos”.</p>';
+      if (note) note.textContent = "";
+      return;
+    }
+    grid.innerHTML = items.map((it) => {
+      const url = URL.createObjectURL(it.blob);
+      stashUrls.push(url);
+      return `<div class="stash-thumb"><img src="${url}" alt="" />` +
+        `<button class="stash-x" data-stash-remove="${it.id}" aria-label="Remove photo">✕</button></div>`;
+    }).join("");
+    if (note) note.textContent = `${items.length} photo${items.length === 1 ? "" : "s"} saved — every post can grab these at random.`;
   }
 
   function randomFiles(n) {
@@ -1006,6 +1084,7 @@
 
   /* ---------- SETTINGS / MENU ---------- */
   function openSettings() {
+    renderStash();
     renderLocations();
     renderMenu();
     renderHashtags();

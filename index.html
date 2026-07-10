@@ -22,6 +22,7 @@
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
           <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
           <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
+          <p class="app-version" id="appVersion">v0.01</p>
         </div>
       </section>
 
@@ -399,6 +400,16 @@
             <button class="btn btn-secondary" data-action="add-location">Add</button>
           </div>
 
+          <p class="lead" style="margin-top: 28px;">📸 My chicken photos</p>
+          <p class="hint">Add your food photos once — they're saved on this phone, so every post can grab random ones. No internet needed. Tap ✕ to remove a photo.</p>
+          <div id="stashGrid" class="stash-grid"></div>
+          <input id="stashInput" type="file" accept="image/*" multiple hidden />
+          <div class="row">
+            <button class="btn btn-secondary" data-action="stash-add">📸 Add photos</button>
+            <button class="btn btn-ghost btn-sm" data-action="stash-clear">Clear all</button>
+          </div>
+          <p id="stashNote" class="hint"></p>
+
           <p class="lead" style="margin-top: 28px;">🍗 Best sellers &amp; sauces</p>
           <p class="hint">Used to fill food captions (picked at random). Leave empty to skip food captions.</p>
           <div id="menuList" class="menu-list"></div>
@@ -498,6 +509,7 @@
     <script src="js/config.js"></script>
     <script src="js/greetings.js"></script>
     <script src="js/store.js"></script>
+    <script src="js/photos.js"></script>
     <script src="js/hooks.js"></script>
     <script src="js/imaging.js"></script>
     <script src="js/editor.js"></script>
