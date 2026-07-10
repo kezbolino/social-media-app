@@ -1557,10 +1557,15 @@
       }
       if (!picked) break; // out of fresh captions — stop with what we have
       usedHookIds.push(picked.hook.id);
-      const canvas = Imaging.renderSingle(img, null);
+      // Burn the caption onto the photo (brand-blue panel, white text). We keep
+      // the captioned image as the post's source so it stays baked in when shared.
+      const canvas = Imaging.renderSingle(img, picked.filledText);
+      const dataUrl = Imaging.toDataURL(canvas);
+      let composite = img;
+      try { composite = await Imaging.loadImageFromUrl(dataUrl); } catch (e) { /* fall back to raw */ }
       out.push({
-        img,
-        dataUrl: Imaging.toDataURL(canvas),
+        img: composite,
+        dataUrl,
         filledText: picked.filledText,
         hook: picked.hook,
         hashtags: "\n\n" + buildHashtagBlock(genLocation),
@@ -1584,8 +1589,8 @@
       const card = document.createElement("div");
       card.className = "swipe-card depth-" + depth;
       card.innerHTML =
-        `<img src="${g.dataUrl}" alt="Generated post" draggable="false" />` +
-        `<div class="swipe-cap">${escapeAttr(g.filledText + (g.hashtags || ""))}</div>` +
+        `<img src="${g.dataUrl}" alt="Generated post with caption" draggable="false" />` +
+        `<div class="swipe-cap">${escapeAttr((g.hashtags || "").trim())}</div>` +
         `<span class="swipe-badge keep">KEEP</span>` +
         `<span class="swipe-badge nope">NOPE</span>`;
       deck.appendChild(card);
