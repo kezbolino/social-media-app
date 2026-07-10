@@ -44,6 +44,13 @@ static server.
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-10: Generate captions are now **solid, tilted "sticker" labels** (was a
+  feathered bottom banner). New `drawCaptionSticker` in imaging.js draws a solid
+  rounded-rect label with a slight rotation (`opts.angle`) and varying font
+  (`opts.sizeScale`); `drawCaptionPanel` routes to it when `opts.sticker`. The old
+  gradient/scrim banner stays for manual single/collage posts. `CAPTION_STYLES`
+  became 5 solid looks; `buildGeneratedPosts` adds per-card angle/size jitter so
+  even same-style cards differ. Version → v0.06.
 - 2026-07-10: Caption looks now **vary across a batch** instead of always blue/white.
   `drawCaptionPanel` (imaging.js) is parametrised — `fill` (gradient|solid|scrim|none),
   `fillRGB`, `color`, `accent`, `shadow` — and `renderSingle(img, caption, styleOpts)`

@@ -1476,13 +1476,15 @@
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // On-brand caption looks, rotated across a batch so the deck isn't samey.
-  // Passed to Imaging.renderSingle → drawCaptionPanel (see imaging.js).
+  // Drawn as solid, slightly-tilted sticker labels (see drawCaptionSticker in
+  // imaging.js). `angle`/`sizeScale` are base values; each card jitters them so
+  // even two cards of the same style differ.
   const CAPTION_STYLES = [
-    { fill: "gradient", fillRGB: [10, 77, 161], color: "#ffffff", accent: "#f58b1f" }, // brand blue, white text
-    { fill: "solid", fillRGB: [245, 139, 31], color: "#1a1208", accent: null },        // orange block, dark text
-    { fill: "solid", fillRGB: [255, 250, 242], color: "#0a4da1", accent: "#f58b1f", shadow: false }, // cream, blue text
-    { fill: "gradient", fillRGB: [21, 35, 49], color: "#ffffff", accent: "#f58b1f" },  // charcoal, white text
-    { fill: "scrim", color: "#ffffff", accent: null },                                 // minimal — soft dark scrim
+    { fillRGB: [10, 77, 161], color: "#ffffff", accent: "#f58b1f", angle: -4, sizeScale: 1.0 },  // brand blue
+    { fillRGB: [245, 139, 31], color: "#1a1208", accent: null, angle: 5, sizeScale: 1.15 },      // orange block
+    { fillRGB: [255, 250, 242], color: "#0a4da1", accent: "#f58b1f", angle: -3, sizeScale: 0.9 }, // cream, blue text
+    { fillRGB: [21, 35, 49], color: "#ffffff", accent: "#f58b1f", angle: 3, sizeScale: 1.1 },    // charcoal
+    { fillRGB: [17, 24, 39], color: "#f58b1f", accent: null, angle: -5, sizeScale: 1.0 },        // near-black, orange text
   ];
 
   function openGenerate(dateStr) {
@@ -1568,9 +1570,16 @@
       }
       if (!picked) break; // out of fresh captions — stop with what we have
       usedHookIds.push(picked.hook.id);
-      // Burn the caption onto the photo in a rotating on-brand style. We keep
-      // the captioned image as the post's source so it stays baked in when shared.
-      const style = styleOrder[out.length % styleOrder.length];
+      // Burn the caption onto the photo as a solid, tilted sticker in a rotating
+      // on-brand style (with per-card angle/size jitter). We keep the captioned
+      // image as the post's source so it stays baked in when shared.
+      const base = styleOrder[out.length % styleOrder.length];
+      const style = {
+        ...base,
+        sticker: true,
+        angle: (base.angle || 0) + (Math.random() * 3 - 1.5),
+        sizeScale: (base.sizeScale || 1) * (0.95 + Math.random() * 0.12),
+      };
       const canvas = Imaging.renderSingle(img, picked.filledText, style);
       const dataUrl = Imaging.toDataURL(canvas);
       let composite = img;
