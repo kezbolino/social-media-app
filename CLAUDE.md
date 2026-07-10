@@ -40,6 +40,24 @@ static server.
   screen in index.html (currently `v0.02`). Bump it on every shipped change.
 
 ## Notable changes
+- 2026-07-10: Generate posts → Tinder-style swipe deck (js/app.js, index.html, css):
+  - `buildGeneratedPosts` now makes **up to 10** distinct posts (was 3), decoding a
+    few stash photos once and reusing them across varied captions. Each item is
+    `{ img, dataUrl, filledText, hook, hashtags }` with the **hashtag block baked in**
+    (`buildHashtagBlock(loc)` gained a location arg so it works before a `post` exists).
+  - Generate screen replaced the card list with a swipe deck: `#genDeck` renders up
+    to 3 stacked `.swipe-card`s; the top card is drag-swipeable (`attachDrag`) —
+    right = keep, left = bin — with KEEP/NOPE badges and a springy `flyOff`.
+    `♥`/`✕` buttons (`gen-like`/`gen-nope`) do the same and are the reduced-motion /
+    a11y path (drag isn't attached when `prefers-reduced-motion`). `#genProgress`
+    shows "n / total". Loading uses the `loading` mascot; empty/None states use
+    `relaxing`/`confused`/`sad` mascots. Panels toggled via `genShow(which)`.
+  - Binned captions go in a session `binnedHookIds` set so "New batch" won't resurface
+    them. Keepers pile into `keepers`; `showKeepers()` renders a tray where each has
+    **Post** (`postKeeper` → `buildReview` → review/share) and **Customise**
+    (`customiseKeeper` → caption editor). `seedPostFromGen` builds the live `post`
+    for both. `buildReview` now resets the review back-arrow to `caption` (keeper Post
+    overrides it to `generate`).
 - 2026-07-10: Mascot moods — the Chuckling Wings chicken as dynamic feedback:
   - `assets/mascot/` — 12 transparent PNG poses sliced from the owner's 1024×1024
     sprite sheet (a 4×3 grid). Names match what each shows: `idle`, `loading`

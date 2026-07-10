@@ -145,6 +145,12 @@
       const back = e.target.closest("[data-back]");
       if (back) return handleBack(back.dataset.back);
 
+      const kPost = e.target.closest("[data-keeper-post]");
+      if (kPost) return postKeeper(+kPost.dataset.keeperPost);
+
+      const kEdit = e.target.closest("[data-keeper-edit]");
+      if (kEdit) return customiseKeeper(+kEdit.dataset.keeperEdit);
+
       const stashRemove = e.target.closest("[data-stash-remove]");
       if (stashRemove) return removeStashPhoto(stashRemove.dataset.stashRemove);
 
@@ -236,6 +242,8 @@
       case "stash-add": $("#stashInput").click(); break;
       case "stash-clear": clearStash(); break;
       case "gen-regenerate": runGenerate(); break;
+      case "gen-like": flyOff("right"); break;
+      case "gen-nope": flyOff("left"); break;
       case "notify-test": notifyTest(); break;
       case "hashtags": toggleHashtags(); break;
       case "add-hashtag": addHashtagItem(); break;
@@ -895,11 +903,11 @@
     if (btn) btn.textContent = post.hashtagBlock ? "🗑 Remove hashtags" : "#️⃣ Add hashtags";
   }
 
-  function buildHashtagBlock() {
+  function buildHashtagBlock(loc = post.location) {
     const chosen = shuffleArr(Store.getHashtags()).slice(0, 12);
     // Auto-tag the pitch location, if we know it.
-    if (post.location) {
-      const locTag = "#" + post.location.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (loc) {
+      const locTag = "#" + loc.toLowerCase().replace(/[^a-z0-9]/g, "");
       if (locTag.length > 1 && !chosen.some((t) => t.toLowerCase() === locTag)) chosen.unshift(locTag);
     }
     const brand = "#chucklingwings";
@@ -957,6 +965,9 @@
 
   /* ---------- REVIEW + SHARE ---------- */
   async function buildReview() {
+    // Default the back arrow to the caption screen; keeper "Post" overrides after.
+    const rvBack = document.querySelector('[data-screen="review"] .back');
+    if (rvBack) rvBack.dataset.back = "caption";
     post.captionText = $("#captionText").value;
     await Imaging.ensureFonts();
 
@@ -1451,10 +1462,18 @@
   }
 
   /* ---------- GENERATE POSTS ---------- */
-  let genList = []; // [{ img, dataUrl, filledText, hook }]
+  // Each item: { img, dataUrl, filledText, hook, hashtags }
+  let genDeck = [];        // the whole generated batch
+  let deckCursor = 0;      // index of the current top card
+  let keepers = [];        // items swiped right
+  const binnedHookIds = new Set(); // captions binned this session — don't resurface
+  let genBusy = false;
   let genLocation = "";
   let genDay = "";
   let genDateLabel = "";
+  const GEN_TARGET = 10;   // how many posts a batch aims for
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function openGenerate(dateStr) {
     const key = dateStr || Notify.todayStr();
@@ -1468,71 +1487,193 @@
     runGenerate();
   }
 
+  // Show exactly one of the generate panels.
+  function genShow(which) {
+    $("#genLoading").hidden = which !== "loading";
+    $("#genDeckWrap").hidden = which !== "deck";
+    $("#genKeepers").hidden = which !== "keepers";
+    $("#genEmpty").hidden = which !== "empty";
+  }
+
   async function runGenerate() {
-    $("#genInfo").textContent = `3 ready-made posts for ${genDateLabel}.`;
-    const empty = $("#genEmpty");
+    if (genBusy) return;
+    keepers = [];
+    deckCursor = 0;
+    const info = $("#genInfo");
     if (!photoPool.length) {
-      $("#genCards").innerHTML = "";
-      mascotEmpty(empty, "relaxing", "Load a photo folder to generate posts from your pictures.");
+      info.textContent = "";
+      $("#genEmpty").innerHTML =
+        (window.Mascot ? Mascot.html("relaxing", { size: "lg", className: "mascot-center" }) : "") +
+        '<p class="hint">Add some chicken photos first — Settings → 📸 My chicken photos — then come back for a fresh batch.</p>';
+      genShow("empty");
       return;
     }
-    empty.hidden = true;
-    empty.classList.remove("mascot-empty");
-    $("#genCards").innerHTML =
-      '<div class="gen-loading">' +
-      (window.Mascot ? Mascot.html("loading", { anim: "bob", size: "lg" }) : "") +
-      '<p class="hint">Cooking up posts…</p></div>';
-    genList = await buildGeneratedPosts();
-    renderGenCards();
+    genBusy = true;
+    info.textContent = "";
+    $("#genLoading").innerHTML =
+      (window.Mascot ? Mascot.html("loading", { anim: "bob", size: "lg", className: "mascot-center" }) : "") +
+      '<p class="hint" style="text-align:center">Cooking up posts…</p>';
+    genShow("loading");
+    genDeck = await buildGeneratedPosts();
+    genBusy = false;
+    if (!genDeck.length) {
+      info.textContent = "";
+      $("#genEmpty").innerHTML =
+        (window.Mascot ? Mascot.html("confused", { size: "lg", className: "mascot-center" }) : "") +
+        '<p class="hint">Couldn\'t whip any up — add a few more photos or captions in Settings and try again.</p>';
+      genShow("empty");
+      return;
+    }
+    info.textContent = `${genDeck.length} fresh posts for ${genDateLabel}. Swipe to sort.`;
+    genShow("deck");
+    renderDeck();
   }
 
   async function buildGeneratedPosts() {
     await Imaging.ensureFonts();
     const ctx = { location: genLocation, day: genDay, menuItems: Store.getMenuItems() };
-    const files = randomFiles(Math.min(3, photoPool.length));
     const tags = ["location", "other", "brand"];
     const usedHookIds = [];
     const out = [];
-    for (let i = 0; i < files.length; i++) {
-      let img;
-      try { img = await Imaging.loadImageFromFile(files[i]); }
-      catch (e) { continue; }
-      // Try a few tags to get a varied, filled, non-repeating hook.
+    // Decode a handful of distinct photos once (decoding is the slow bit), then
+    // reuse them across the batch — the caption is what makes each card different.
+    const imgs = [];
+    for (const f of shuffleArr(photoPool).slice(0, GEN_TARGET)) {
+      try { imgs.push(await Imaging.loadImageFromFile(f)); } catch (e) { /* skip a bad file */ }
+    }
+    if (!imgs.length) return out;
+    let guard = 0;
+    while (out.length < GEN_TARGET && guard < GEN_TARGET * 4) {
+      guard++;
+      const img = imgs[out.length % imgs.length];
       let picked = null;
       for (const tag of shuffleArr(tags)) {
         const r = Hooks.choose(tag, ctx, usedHookIds[usedHookIds.length - 1]);
-        if (r && !usedHookIds.includes(r.hook.id)) { picked = r; break; }
+        if (r && !usedHookIds.includes(r.hook.id) && !binnedHookIds.has(r.hook.id)) { picked = r; break; }
       }
-      if (!picked) picked = Hooks.choose("brand", ctx) || Hooks.choose("location", ctx);
-      if (!picked) continue;
+      if (!picked) {
+        const r = Hooks.choose("brand", ctx) || Hooks.choose("location", ctx);
+        if (r && !usedHookIds.includes(r.hook.id) && !binnedHookIds.has(r.hook.id)) picked = r;
+      }
+      if (!picked) break; // out of fresh captions — stop with what we have
       usedHookIds.push(picked.hook.id);
       const canvas = Imaging.renderSingle(img, null);
-      out.push({ img, dataUrl: Imaging.toDataURL(canvas), filledText: picked.filledText, hook: picked.hook });
+      out.push({
+        img,
+        dataUrl: Imaging.toDataURL(canvas),
+        filledText: picked.filledText,
+        hook: picked.hook,
+        hashtags: "\n\n" + buildHashtagBlock(genLocation),
+      });
     }
     return out;
   }
 
-  function renderGenCards() {
-    const wrap = $("#genCards");
-    if (!genList.length) {
-      wrap.innerHTML = '<p class="hint">Couldn\'t generate any — check your photo folder and hooks.</p>';
-      return;
-    }
-    wrap.innerHTML = "";
-    genList.forEach((g, i) => {
-      const card = document.createElement("button");
-      card.className = "gen-card";
+  /* ---- swipe deck ---- */
+  function renderDeck() {
+    const deck = $("#genDeck");
+    deck.innerHTML = "";
+    const total = genDeck.length;
+    if (deckCursor >= total) return showKeepers();
+    $("#genProgress").textContent = `${deckCursor + 1} / ${total}`;
+    // Render up to three stacked cards; appended last = on top.
+    const end = Math.min(total, deckCursor + 3);
+    for (let i = end - 1; i >= deckCursor; i--) {
+      const g = genDeck[i];
+      const depth = i - deckCursor;
+      const card = document.createElement("div");
+      card.className = "swipe-card depth-" + depth;
       card.innerHTML =
-        `<img src="${g.dataUrl}" alt="Generated post ${i + 1}" />` +
-        `<span class="gen-caption">${escapeAttr(g.filledText)}</span>`;
-      card.addEventListener("click", () => useGeneratedPost(i));
-      wrap.appendChild(card);
-    });
+        `<img src="${g.dataUrl}" alt="Generated post" draggable="false" />` +
+        `<div class="swipe-cap">${escapeAttr(g.filledText + (g.hashtags || ""))}</div>` +
+        `<span class="swipe-badge keep">KEEP</span>` +
+        `<span class="swipe-badge nope">NOPE</span>`;
+      deck.appendChild(card);
+      if (depth === 0) attachDrag(card);
+    }
   }
 
-  function useGeneratedPost(i) {
-    const g = genList[i];
+  function attachDrag(card) {
+    if (reduceMotion) return; // buttons are the swipe replacement under reduced motion
+    let startX = 0, startY = 0, dx = 0, dy = 0, dragging = false;
+    const keepB = card.querySelector(".swipe-badge.keep");
+    const nopeB = card.querySelector(".swipe-badge.nope");
+    card.addEventListener("pointerdown", (e) => {
+      dragging = true; startX = e.clientX; startY = e.clientY; dx = dy = 0;
+      card.style.transition = "none";
+      try { card.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    card.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      dx = e.clientX - startX; dy = e.clientY - startY;
+      card.style.transform = `translate(${dx}px, ${dy * 0.4}px) rotate(${dx * 0.05}deg)`;
+      const t = Math.min(1, Math.abs(dx) / 100);
+      keepB.style.opacity = dx > 0 ? t : 0;
+      nopeB.style.opacity = dx < 0 ? t : 0;
+    });
+    const release = () => {
+      if (!dragging) return;
+      dragging = false;
+      card.style.transition = "";
+      if (dx > 90) return flyOff("right");
+      if (dx < -90) return flyOff("left");
+      card.style.transform = "";
+      keepB.style.opacity = 0; nopeB.style.opacity = 0;
+    };
+    card.addEventListener("pointerup", release);
+    card.addEventListener("pointercancel", release);
+  }
+
+  function flyOff(dir) {
+    const top = $("#genDeck").querySelector(".swipe-card.depth-0");
+    if (!top || reduceMotion) return decideCard(dir);
+    top.style.transition = "transform .3s var(--spring), opacity .3s ease";
+    const x = dir === "right" ? window.innerWidth : -window.innerWidth;
+    top.style.transform = `translate(${x}px, 40px) rotate(${dir === "right" ? 18 : -18}deg)`;
+    top.style.opacity = "0";
+    setTimeout(() => decideCard(dir), 250);
+  }
+
+  function decideCard(dir) {
+    const g = genDeck[deckCursor];
     if (!g) return;
+    if (dir === "right") { keepers.push(g); if (window.FX) FX.buzz(6); }
+    else { binnedHookIds.add(g.hook.id); }
+    deckCursor++;
+    renderDeck();
+  }
+
+  function showKeepers() {
+    genShow("keepers");
+    $("#genInfo").textContent = "";
+    const wrap = $("#genKeepers");
+    if (!keepers.length) {
+      wrap.innerHTML =
+        (window.Mascot ? Mascot.html("sad", { size: "lg", className: "mascot-center" }) : "") +
+        '<p class="hint" style="text-align:center">None kept this round — no worries.</p>' +
+        '<button class="btn btn-accent" data-action="gen-regenerate">🔀 New batch</button>';
+      return;
+    }
+    let html = `<p class="lead">You kept ${keepers.length} 🎉</p>` +
+      `<p class="hint">Post one now, or tweak it first.</p><div class="keeper-list">`;
+    keepers.forEach((g, i) => {
+      const cap = (g.filledText || "").split("\n")[0];
+      html +=
+        `<div class="keeper">` +
+        `<img src="${g.dataUrl}" alt="Kept post" />` +
+        `<div class="keeper-body"><p class="keeper-cap">${escapeAttr(cap)}</p>` +
+        `<div class="keeper-actions">` +
+        `<button class="btn btn-primary btn-sm" data-keeper-post="${i}">📤 Post</button>` +
+        `<button class="btn btn-secondary btn-sm" data-keeper-edit="${i}">✏️ Customise</button>` +
+        `</div></div></div>`;
+    });
+    html += `</div><button class="btn btn-accent" data-action="gen-regenerate" style="margin-top:14px">🔀 New batch</button>`;
+    wrap.innerHTML = html;
+    if (window.FX) FX.confetti({ quiet: true });
+  }
+
+  // Seed the live `post` from a generated item (shared by Post & Customise).
+  function seedPostFromGen(g) {
     post = freshPost();
     post.type = "single";
     post.singleImage = g.img;
@@ -1540,15 +1681,30 @@
     post.location = genLocation;
     post.day = genDay;
     post.caption = { hook: g.hook, filledText: g.filledText, item: null };
-    post.captionText = g.filledText;
-    post.hashtagBlock = "";
-    applyHashtags();
+    post.captionText = g.filledText + (g.hashtags || "");
+    post.hashtagBlock = g.hashtags || "";
+  }
+
+  function customiseKeeper(i) {
+    const g = keepers[i];
+    if (!g) return;
+    seedPostFromGen(g);
     $("#captionText").value = post.captionText;
     updateHashtagBtnLabel();
     const back = document.querySelector('[data-screen="caption"] .back');
     if (back) back.dataset.back = "generate";
     renderCaptionPreview();
     show("caption");
+  }
+
+  async function postKeeper(i) {
+    const g = keepers[i];
+    if (!g) return;
+    seedPostFromGen(g);
+    $("#captionText").value = post.captionText; // buildReview reads the textarea
+    await buildReview();
+    const rb = document.querySelector('[data-screen="review"] .back');
+    if (rb) rb.dataset.back = "generate";
   }
 
   function shuffleArr(a) {
