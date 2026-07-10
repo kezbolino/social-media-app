@@ -37,7 +37,11 @@ static server.
   `if (window.X)` guard needs the module to also do `window.X = X` (see the tail
   of `js/photos.js`, and `window.FX = …` in `js/fx.js`).
 - App version string lives in one place: `#appVersion` at the bottom of the home
-  screen in index.html (currently `v0.02`). Bump it on every shipped change.
+  screen in index.html (currently `v0.03`).
+  - ⭐ **RULE (do this automatically, never ask):** every shipped feature or
+    enhancement MUST bump `#appVersion` in the *same* change, before committing.
+    Increment the patch (v0.03 → v0.04) for a normal feature/enhancement. The owner
+    should never have to ask for a version bump — it just happens.
 
 ## Notable changes
 - 2026-07-10: Generate posts → Tinder-style swipe deck (js/app.js, index.html, css):
