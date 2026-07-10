@@ -198,8 +198,99 @@ const Imaging = (() => {
   // Draw the whole caption in a semi-transparent brand panel across the bottom.
   // The text is word-wrapped and the font shrinks until every line fits inside
   // a panel no taller than ~half the image, so the full caption always shows.
+  // Rounded-rect path helper (native where available, arc fallback otherwise).
+  function roundRectPath(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // A caption drawn as a solid, slightly-tilted "sticker" label (no feathering).
+  // Size varies with opts.sizeScale and tilt with opts.angle (degrees). Used by
+  // the Generate swipe deck for varied, punchy posts.
+  function drawCaptionSticker(ctx, text, W, H, opts) {
+    if (!text) return;
+    const color = opts.color || "#ffffff";
+    const bg = opts.fillRGB ? `rgb(${opts.fillRGB.join(",")})` : "#0a4da1";
+    const accent = opts.accent || null;
+    const angle = ((opts.angle || 0) * Math.PI) / 180;
+    const scale = opts.sizeScale || 1;
+    const dropShadow = opts.shadow !== false;
+
+    const padX = Math.round(W * 0.045);
+    const padY = Math.round(W * 0.032);
+    const maxBoxW = W * 0.84;
+    const maxTextW = maxBoxW - padX * 2;
+    const maxFont = Math.round(W * 0.078 * scale);
+    const minFont = Math.round(W * 0.042 * scale);
+    const lineRatio = 1.16;
+
+    const wrap = (fs) => {
+      ctx.font = `800 ${fs}px ${FONT_FAMILY}`;
+      const lines = [];
+      let line = "";
+      for (const word of text.split(/\s+/)) {
+        const trial = line ? line + " " + word : word;
+        if (ctx.measureText(trial).width <= maxTextW || !line) line = trial;
+        else { lines.push(line); line = word; }
+      }
+      if (line) lines.push(line);
+      return lines;
+    };
+
+    let fontSize = maxFont;
+    let lines = wrap(fontSize);
+    for (; fontSize > minFont; fontSize -= 2) {
+      lines = wrap(fontSize);
+      if (lines.length <= 3) break;
+    }
+    if (lines.length > 3) lines = lines.slice(0, 3);
+
+    const lineH = fontSize * lineRatio;
+    const textW = Math.max(...lines.map((l) => ctx.measureText(l).width));
+    const boxW = Math.min(maxBoxW, textW + padX * 2);
+    const boxH = lines.length * lineH + padY * 2;
+    const cx = W / 2;
+    const cy = H - boxH / 2 - Math.round(H * 0.07);
+    const r = Math.round(W * 0.022);
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    if (dropShadow) {
+      ctx.shadowColor = "rgba(0,0,0,0.32)";
+      ctx.shadowBlur = Math.round(W * 0.022);
+      ctx.shadowOffsetY = Math.round(W * 0.007);
+    }
+    roundRectPath(ctx, -boxW / 2, -boxH / 2, boxW, boxH, r);
+    ctx.fillStyle = bg;
+    ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+    if (accent) {
+      const aH = Math.max(6, Math.round(W * 0.012));
+      ctx.fillStyle = accent;
+      ctx.fillRect(-boxW / 2 + r, -boxH / 2, boxW - r * 2, aH);
+    }
+    ctx.font = `800 ${fontSize}px ${FONT_FAMILY}`;
+    ctx.fillStyle = color;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const startY = -((lines.length - 1) * lineH) / 2 + (accent ? Math.round(W * 0.008) : 0);
+    lines.forEach((l, i) => ctx.fillText(l, 0, startY + i * lineH));
+    ctx.restore();
+  }
+
   function drawCaptionPanel(ctx, text, W, H, opts = {}) {
     if (!text) return;
+    if (opts.sticker) return drawCaptionSticker(ctx, text, W, H, opts);
     const weight = opts.weight || 800;
     const padX = Math.round(W * 0.06);
     const padY = Math.round(H * 0.04);
