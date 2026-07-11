@@ -1487,11 +1487,11 @@
   // imaging.js). `angle`/`sizeScale` are base values; each card jitters them so
   // even two cards of the same style differ.
   const CAPTION_STYLES = [
-    { fillRGB: [10, 77, 161], color: "#ffffff", accent: "#f58b1f", angle: -4, sizeScale: 1.0 },  // brand blue
-    { fillRGB: [245, 139, 31], color: "#1a1208", accent: null, angle: 5, sizeScale: 1.15 },      // orange block
-    { fillRGB: [255, 250, 242], color: "#0a4da1", accent: "#f58b1f", angle: -3, sizeScale: 0.9 }, // cream, blue text
-    { fillRGB: [21, 35, 49], color: "#ffffff", accent: "#f58b1f", angle: 3, sizeScale: 1.1 },    // charcoal
-    { fillRGB: [17, 24, 39], color: "#f58b1f", accent: null, angle: -5, sizeScale: 1.0 },        // near-black, orange text
+    { fillRGB: [10, 77, 161], color: "#ffffff", accent: null, angle: -4, sizeScale: 1.0 },  // brand blue
+    { fillRGB: [245, 139, 31], color: "#1a1208", accent: null, angle: 5, sizeScale: 1.15 }, // orange block
+    { fillRGB: [255, 250, 242], color: "#0a4da1", accent: null, angle: -3, sizeScale: 0.9 }, // cream, blue text
+    { fillRGB: [21, 35, 49], color: "#ffffff", accent: null, angle: 3, sizeScale: 1.1 },    // charcoal
+    { fillRGB: [17, 24, 39], color: "#f58b1f", accent: null, angle: -5, sizeScale: 1.0 },   // near-black, orange text
   ];
 
   function openGenerate(dateStr) {
