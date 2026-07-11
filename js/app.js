@@ -1578,9 +1578,15 @@
       }
       if (!picked) break; // out of fresh captions — stop with what we have
       usedHookIds.push(picked.hook.id);
-      // Burn the caption onto the photo as a solid, tilted sticker in a rotating
-      // on-brand style (with per-card angle/size jitter). We keep the captioned
-      // image as the post's source so it stays baked in when shared.
+      // The image gets a SHORT overlay line (locked pair from the hook's
+      // `overlays` in streetfood_hooks.json) while the full caption + hashtags
+      // go underneath — same joke, two parts, so the post reads as one thought.
+      const ovs = picked.hook.overlays;
+      const overlayRaw = ovs && ovs.length ? ovs[Math.floor(Math.random() * ovs.length)] : picked.filledText;
+      const overlayText = Hooks.fillText(overlayRaw, { location: ctx.location, day: ctx.day, item: picked.item });
+      // Burn it on as a solid, tilted sticker in a rotating on-brand style
+      // (per-card angle/size jitter). The captioned image is kept as the post's
+      // source so the sticker stays baked in when shared.
       const base = styleOrder[out.length % styleOrder.length];
       const style = {
         ...base,
@@ -1588,13 +1594,14 @@
         angle: (base.angle || 0) + (Math.random() * 3 - 1.5),
         sizeScale: (base.sizeScale || 1) * (0.95 + Math.random() * 0.12),
       };
-      const canvas = Imaging.renderSingle(img, picked.filledText, style);
+      const canvas = Imaging.renderSingle(img, overlayText, style);
       const dataUrl = Imaging.toDataURL(canvas);
       let composite = img;
       try { composite = await Imaging.loadImageFromUrl(dataUrl); } catch (e) { /* fall back to raw */ }
       out.push({
         img: composite,
         dataUrl,
+        overlayText,
         filledText: picked.filledText,
         hook: picked.hook,
         hashtags: "\n\n" + buildHashtagBlock(genLocation),
@@ -1619,7 +1626,7 @@
       card.className = "swipe-card depth-" + depth;
       card.innerHTML =
         `<img src="${g.dataUrl}" alt="Generated post with caption" draggable="false" />` +
-        `<div class="swipe-cap">${escapeAttr((g.hashtags || "").trim())}</div>` +
+        `<div class="swipe-cap">${escapeAttr(g.filledText + " " + (g.hashtags || "").trim())}</div>` +
         `<span class="swipe-badge keep">KEEP</span>` +
         `<span class="swipe-badge nope">NOPE</span>`;
       deck.appendChild(card);

@@ -2,7 +2,7 @@
  * This embedded copy lets the app run by simply opening index.html
  * (no server needed). It is loaded before the app scripts. */
 window.HOOK_LIBRARY = {
-  "_readme": "Hook library for the street food social-post app. The app picks a hook by tag (from the quiz answer), fills in any {variables}, and tracks 'used' IDs to avoid recent repeats. Add more hooks any time - just give each a unique id.",
+  "_readme": "Hook library for the street food social-post app. The app picks a hook by tag (from the quiz answer), fills in any {variables}, and tracks 'used' IDs to avoid recent repeats. Add more hooks any time - just give each a unique id. Each hook can carry 'overlays': short punchy lines burned onto the image as a sticker; the hook 'text' becomes the caption underneath. Written as locked pairs - the overlay tees up the caption without repeating it.",
   "variables": {
     "location": "Where the van is pitched, e.g. 'Brick Lane' or 'Camden Market'",
     "day": "The day they're there until, e.g. 'Sunday'",
@@ -16,147 +16,1912 @@ window.HOOK_LIBRARY = {
     "weather": "Live weather-matched lines (sun, cloud, rain, cold, hot)"
   },
   "hooks": [
-    { "id": "loc_001", "tags": ["location"], "text": "Right then, we've parked up at {location}. Come and get fed.", "uses": ["location"] },
-    { "id": "loc_002", "tags": ["location"], "text": "We're at {location} today. Your lunch problem? Sorted.", "uses": ["location"] },
-    { "id": "loc_003", "tags": ["location"], "text": "Spotted: us, at {location}. Bring your appetite.", "uses": ["location"] },
-    { "id": "loc_004", "tags": ["location"], "text": "{location}, we have landed. The smell will find you before the sign does.", "uses": ["location"] },
-    { "id": "loc_005", "tags": ["location"], "text": "Set up and serving at {location}. No excuses now.", "uses": ["location"] },
-    { "id": "loc_006", "tags": ["location"], "text": "We're at {location} today - follow your nose, it knows the way.", "uses": ["location"] },
-    { "id": "loc_007", "tags": ["location"], "text": "Good news: we're at {location}. Bad news: you're going to want seconds.", "uses": ["location"] },
-    { "id": "loc_008", "tags": ["location"], "text": "Find us at {location} today. We'll be the ones with the queue.", "uses": ["location"] },
-    { "id": "loc_009", "tags": ["location"], "text": "Pitched up at {location}. Come say hello (and order).", "uses": ["location"] },
-    { "id": "loc_010", "tags": ["location"], "text": "Lunch sorted: {location}, us, you, no regrets.", "uses": ["location"] },
-    { "id": "loc_011", "tags": ["location"], "text": "We're at {location} til {day}. Plenty of time to make this a habit.", "uses": ["location", "day"] },
-    { "id": "loc_012", "tags": ["location"], "text": "Here at {location} til {day}. After that, you'll have to chase us.", "uses": ["location", "day"] },
-    { "id": "loc_013", "tags": ["location"], "text": "{location} til {day} only. Tick tock.", "uses": ["location", "day"] },
-    { "id": "loc_014", "tags": ["location"], "text": "We're parked at {location} right through til {day}. You've got no excuse.", "uses": ["location", "day"] },
-    { "id": "loc_015", "tags": ["location"], "text": "Catch us at {location} til {day} - then we vanish like your willpower near the chips.", "uses": ["location", "day"] },
-    { "id": "loc_016", "tags": ["location"], "text": "Same great food, new postcode. We're at {location} today.", "uses": ["location"] },
-    { "id": "loc_017", "tags": ["location"], "text": "Roll up, roll up - we're trading at {location} today.", "uses": ["location"] },
-    { "id": "loc_018", "tags": ["location"], "text": "Your nose isn't lying. That's us, at {location}.", "uses": ["location"] },
-
-    { "id": "lst_001", "tags": ["other"], "text": "Last day at {location}! Get in before we pack up.", "uses": ["location"] },
-    { "id": "lst_002", "tags": ["other"], "text": "It's now or never - final day at {location} today.", "uses": ["location"] },
-    { "id": "lst_003", "tags": ["other"], "text": "We're gone after today. {location}, come and say a proper goodbye.", "uses": ["location"] },
-    { "id": "lst_004", "tags": ["other"], "text": "{day} is your last shot at {location}. Don't make it weird, just come.", "uses": ["location", "day"] },
-    { "id": "lst_005", "tags": ["other"], "text": "Blink and you'll miss us - last day at {location}.", "uses": ["location"] },
-
-    { "id": "wth_001", "tags": ["other"], "text": "It's chucking it down and we're still here at {location}. Hot food, come hide.", "uses": ["location"] },
-    { "id": "wth_002", "tags": ["other"], "text": "Grey skies, hot food. We're at {location} sorting your mood out.", "uses": ["location"] },
-    { "id": "wth_003", "tags": ["other"], "text": "Rain? Perfect weather for something hot from {location}. We're here.", "uses": ["location"] },
-    { "id": "wth_004", "tags": ["other"], "text": "Sun's out at {location}! Come grab something before we melt.", "uses": ["location"] },
-    { "id": "wth_005", "tags": ["other"], "text": "Bit nippy out? We've got the cure at {location}.", "uses": ["location"] },
-    { "id": "wth_006", "tags": ["other"], "text": "Don't let a bit of British weather stop you. We're at {location}, dry and ready.", "uses": ["location"] },
-    { "id": "wth_007", "tags": ["other"], "text": "Soggy commute? Treat yourself. We're at {location}.", "uses": ["location"] },
-
-    { "id": "tim_001", "tags": ["other"], "text": "It's {day}. You've earned this. Come find us at {location}.", "uses": ["location", "day"] },
-    { "id": "tim_002", "tags": ["other"], "text": "Friday feeling? We bottle it and serve it hot at {location}.", "uses": ["location"] },
-    { "id": "tim_003", "tags": ["other"], "text": "Weekend plans sorted: us, {location}, your face full of food.", "uses": ["location"] },
-    { "id": "tim_004", "tags": ["other"], "text": "Midweek slump? {location}, today, we fix that.", "uses": ["location"] },
-    { "id": "tim_005", "tags": ["other"], "text": "Monday's rough. Lunch doesn't have to be. We're at {location}.", "uses": ["location"] },
-
-    { "id": "fmo_001", "tags": ["other"], "text": "The queue's building at {location}. You coming or what?", "uses": ["location"] },
-    { "id": "fmo_002", "tags": ["other"], "text": "Everyone else figured out we're at {location}. Catch up.", "uses": ["location"] },
-    { "id": "fmo_003", "tags": ["other"], "text": "While you're reading this, someone's eating what you wanted. {location}. Go.", "uses": ["location"] },
-    { "id": "fmo_004", "tags": ["other"], "text": "Selling fast at {location} today. Don't say we didn't warn you.", "uses": ["location"] },
-
-    { "id": "brd_001", "tags": ["brand"], "text": "Still thinking about us? That's normal. We'd think about us too.", "uses": [] },
-    { "id": "brd_002", "tags": ["brand"], "text": "Your sad desk sandwich called. It's giving up. Come find us instead.", "uses": [] },
-    { "id": "brd_003", "tags": ["brand"], "text": "Life's too short for bad lunches. You know where we are.", "uses": [] },
-    { "id": "brd_004", "tags": ["brand"], "text": "Meal-deal energy is no way to live. Upgrade your lunch.", "uses": [] },
-    { "id": "brd_005", "tags": ["brand"], "text": "We don't do boring. Neither should your lunch break.", "uses": [] },
-    { "id": "brd_006", "tags": ["brand"], "text": "That little voice telling you to treat yourself? Listen to it.", "uses": [] },
-    { "id": "brd_007", "tags": ["brand"], "text": "If you can read this, you're hungry. We can help with that.", "uses": [] },
-    { "id": "brd_008", "tags": ["brand"], "text": "Made fresh, served hot, gone fast. That's the whole pitch.", "uses": [] },
-    { "id": "brd_009", "tags": ["brand"], "text": "No microwave. No shortcuts. No regrets.", "uses": [] },
-    { "id": "brd_010", "tags": ["brand"], "text": "Some people meal-prep. Some people find us. Be the second kind.", "uses": [] },
-
-    { "id": "fud_001", "tags": ["brand"], "text": "Fresh batch of {item} coming out the pan. You snooze, you lose.", "uses": ["item"] },
-    { "id": "fud_002", "tags": ["location"], "text": "{item}. Hot. Now. At {location}. Move.", "uses": ["item", "location"] },
-    { "id": "fud_003", "tags": ["brand"], "text": "We made too much {item}. Help us out, yeah?", "uses": ["item"] },
-    { "id": "fud_004", "tags": ["location"], "text": "The {item} is going fast at {location}. Just saying.", "uses": ["item", "location"] },
-    { "id": "fud_005", "tags": ["brand"], "text": "Reminder: you deserve {item} today. We're just saying.", "uses": ["item"] },
-
-    { "id": "lon_001", "tags": ["location", "london"], "text": "Get your plates of meat down to {location} - lunch is sorted.", "uses": ["location"] },
-    { "id": "lon_002", "tags": ["location", "london"], "text": "Proper Hank Marvin? We're at {location}. Do something about it.", "uses": ["location"] },
-    { "id": "lon_003", "tags": ["location", "london"], "text": "Come have a butcher's at what we're serving at {location} today.", "uses": ["location"] },
-    { "id": "lon_004", "tags": ["location", "london"], "text": "Put the dog and bone down and get yourself to {location}.", "uses": ["location"] },
-    { "id": "lon_005", "tags": ["location", "london"], "text": "Use your loaf - skip the meal deal, we're at {location}.", "uses": ["location"] },
-    { "id": "lon_006", "tags": ["other", "london"], "text": "Currant bun's out! We're at {location}, come make the most of it.", "uses": ["location"] },
-    { "id": "lon_007", "tags": ["location", "london"], "text": "Would you Adam and Eve it - we're back at {location}. Lucky you.", "uses": ["location"] },
-    { "id": "lon_008", "tags": ["other", "london"], "text": "Forget the Northern line misery. {location}, hot food, sorted.", "uses": ["location"] },
-    { "id": "lon_009", "tags": ["brand", "london"], "text": "The meal deal's telling porkies. Real food's at {location}.", "uses": ["location"] },
-    { "id": "lon_010", "tags": ["brand", "london"], "text": "Sack off Pret. We're at {location} and we actually mean it.", "uses": ["location"] },
-    { "id": "lon_011", "tags": ["location", "london"], "text": "Oyster card topped up? Good. Now get to {location}.", "uses": ["location"] },
-    { "id": "lon_012", "tags": ["location", "london"], "text": "Mind the gap... in your stomach. We're at {location} today.", "uses": ["location"] },
-    { "id": "lon_013", "tags": ["brand", "london"], "text": "We're London's worst-kept secret. {location}, today.", "uses": ["location"] },
-    { "id": "lon_014", "tags": ["other", "london"], "text": "Raining again? Welcome to London. Hot food's at {location}, come dry off.", "uses": ["location"] },
-    { "id": "lon_015", "tags": ["location", "london"], "text": "Lovely jubbly - we're back at {location} today.", "uses": ["location"] },
-    { "id": "lon_016", "tags": ["location", "london"], "text": "We're at {location} til {day}, so come and 'ave it.", "uses": ["location", "day"] },
-    { "id": "lon_017", "tags": ["brand", "london"], "text": "Skip the Tesco meal deal, you absolute diamond. Come find us.", "uses": [] },
-    { "id": "lon_018", "tags": ["brand", "london"], "text": "Even the pigeons know where the good food is. Do you? {location}.", "uses": ["location"] },
-    { "id": "gf_001", "tags": ["brand"], "text": "Every single thing on our menu is gluten free. Batter, chicken, chips, sauces, the lot. Eat the whole thing, no worry.", "uses": [] },
-    { "id": "gf_002", "tags": ["brand"], "text": "Coeliac? Gluten dodger? You can order the ENTIRE menu. All of it. No 'sorry, not that one'.", "uses": [] },
-    { "id": "gf_003", "tags": ["brand"], "text": "100% gluten free, 0% compromise. Wings that don't taste 'free from' anything.", "uses": [] },
-    { "id": "gf_004", "tags": ["brand"], "text": "The whole van is gluten free, so order literally anything. Yes, even the batter. Especially the batter.", "uses": [] },
-    { "id": "gf_005", "tags": ["brand"], "text": "Proper chicken shop energy, fully gluten free. Every wing, every chip, every sauce. Safe and smashing.", "uses": [] },
-    { "id": "gf_006", "tags": ["brand"], "text": "Street food you can actually trust. Gluten free top to bottom, no asterisks.", "uses": [] },
-    { "id": "gf_007", "tags": ["brand"], "text": "Imagine a menu where you can have anything on it. That's us. All gluten free, all yours.", "uses": [] },
-    { "id": "gf_008", "tags": ["brand"], "text": "Gluten free never tasted like this. Crispy batter, proper sauce, zero gluten. Come see.", "uses": [] },
-    { "id": "loc_020", "tags": ["location"], "text": "We're at {location} today and the whole menu's gluten free. Come get properly fed.", "uses": ["location"] },
-    { "id": "loc_021", "tags": ["location"], "text": "{location} - parked up, fryers on, everything gluten free. See you in the queue.", "uses": ["location"] },
-    { "id": "loc_022", "tags": ["location"], "text": "Find us at {location}. Gluten free wings, proper chips, no meal-deal sadness.", "uses": ["location"] },
-    { "id": "loc_023", "tags": ["location"], "text": "Pitched at {location} til {day}. Fully gluten free, dangerously good. Plenty of time to get hooked.", "uses": ["location", "day"] },
-    { "id": "gv_001", "tags": ["location"], "location": "Greenwich", "text": "Greenwich today. Tourist or local, doesn't matter - the wings are gluten free and unreal. Come find us.", "uses": [] },
-    { "id": "gv_002", "tags": ["location"], "location": "Greenwich", "text": "Doing the Meridian and the ships? Refuel with us. Gluten free street food, no tourist-trap nonsense.", "uses": [] },
-    { "id": "gv_003", "tags": ["location"], "location": "Greenwich", "text": "Locals of Greenwich already know. First-timers, welcome. All gluten free, all banging.", "uses": [] },
-    { "id": "gv_004", "tags": ["location"], "location": "Greenwich", "text": "Greenwich Park earned you a proper feed. We're right here - gluten free wings that hit.", "uses": [] },
-    { "id": "cp_001", "tags": ["location"], "location": "Crystal Palace", "text": "Crystal Palace! Yes, we're near the dinosaurs. No, they're not gluten free - but our whole menu is.", "uses": [] },
-    { "id": "cp_002", "tags": ["location"], "location": "Crystal Palace", "text": "CP locals, your gluten free wing fix is parked up. Wave at the dinosaurs on your way over.", "uses": [] },
-    { "id": "cp_003", "tags": ["location"], "location": "Crystal Palace", "text": "Only in Crystal Palace: Victorian dinosaurs AND 100% gluten free wings. What a place.", "uses": [] },
-    { "id": "cp_004", "tags": ["location"], "location": "Crystal Palace", "text": "Crystal Palace crew, we're back. Everything gluten free. Bring the kids, bring the dog, bring your appetite.", "uses": [] },
-    { "id": "lh_001", "tags": ["location"], "location": "Leadenhall Market", "text": "Leadenhall Market - City lunch sorted. Gluten free wings that beat any sad desk salad. Beat the rush.", "uses": [] },
-    { "id": "lh_002", "tags": ["location"], "location": "Leadenhall Market", "text": "Working the City? Leadenhall, lunchtime, us. Fully gluten free, properly quick.", "uses": [] },
-    { "id": "lh_003", "tags": ["location"], "location": "Leadenhall Market", "text": "Suits of Leadenhall - real food that happens to be 100% gluten free. Grab it before the 1pm crush.", "uses": [] },
-    { "id": "lh_004", "tags": ["location"], "location": "Leadenhall Market", "text": "Leadenhall lunch run. Gluten free, fast, miles better than a meal deal. You've earned it.", "uses": [] },
-    { "id": "lh_005", "tags": ["location"], "location": "Leadenhall Market", "text": "City teams - we cater office feeds too. Whole floor, all gluten free. Ask at the van.", "uses": [] },
-    { "id": "evt_001", "tags": ["events"], "text": "Getting married? We cater weddings - proper gluten free street food your guests will actually remember.", "uses": [] },
-    { "id": "evt_002", "tags": ["events"], "text": "Private party, birthday, big do? We bring the food (and the van). 100% gluten free, 100% sorted.", "uses": [] },
-    { "id": "evt_003", "tags": ["events"], "text": "Corporate event or office feed? We do those. Gluten free street food that gets the team to actually show up.", "uses": [] },
-    { "id": "evt_004", "tags": ["events"], "text": "Weddings, birthdays, work dos - if you're feeding a crowd, we've got you. All gluten free, no boring buffet.", "uses": [] },
-    { "id": "evt_005", "tags": ["events"], "text": "Skip the rubber chicken and sad veg. Book us for the wedding - gluten free wings, happy guests, zero drama.", "uses": [] },
-    { "id": "evt_006", "tags": ["events"], "text": "Christmas do? Summer party? We cater it. Everything gluten free, everyone fed, nobody left out.", "uses": [] },
-    { "id": "evt_007", "tags": ["events"], "text": "Fully gluten free catering for weddings and private events - because your coeliac auntie deserves to eat too.", "uses": [] },
-    { "id": "evt_008", "tags": ["events"], "text": "DM us for event catering. Weddings, corporate, private parties - gluten free street food that steals the show.", "uses": [] },
-
-    { "id": "wx_sun_01", "tags": ["weather"], "weather": "sun", "text": "Sun's out, wings out. Come find us before the queue does.", "uses": [] },
-    { "id": "wx_sun_02", "tags": ["weather"], "weather": "sun", "text": "Proper sunny one at {location} today. Gluten free wings and a cold drink - sorted.", "uses": ["location"] },
-    { "id": "wx_sun_03", "tags": ["weather"], "weather": "sun", "text": "Blue skies and gluten free wings. Name a better combo, we'll wait.", "uses": [] },
-    { "id": "wx_sun_04", "tags": ["weather"], "weather": "sun", "text": "Sun's got the park busy - we've got the food. Swing by {location}.", "uses": ["location"] },
-    { "id": "wx_sun_05", "tags": ["weather"], "weather": "sun", "text": "Too nice to cook. Let us do it - gluten free and unreal.", "uses": [] },
-
-    { "id": "wx_cld_01", "tags": ["weather"], "weather": "cloud", "text": "Grey skies? Our wings are the pop of colour your day needs.", "uses": [] },
-    { "id": "wx_cld_02", "tags": ["weather"], "weather": "cloud", "text": "Bit of a grey one at {location}. Hot, gluten free, sorts your mood right out.", "uses": ["location"] },
-    { "id": "wx_cld_03", "tags": ["weather"], "weather": "cloud", "text": "Moody sky, cheerful food. Come get fed.", "uses": [] },
-    { "id": "wx_cld_04", "tags": ["weather"], "weather": "cloud", "text": "Overcast at {location} - perfect excuse for something hot and gluten free.", "uses": ["location"] },
-    { "id": "wx_cld_05", "tags": ["weather"], "weather": "cloud", "text": "No sun? No bother. We bring the warm glow (it's the fryer).", "uses": [] },
-
-    { "id": "wx_rain_01", "tags": ["weather"], "weather": "rain", "text": "It's chucking it down - duck in for hot, gluten free wings. We're not going anywhere.", "uses": [] },
-    { "id": "wx_rain_02", "tags": ["weather"], "weather": "rain", "text": "Rain at {location}? Perfect wing weather. Hot food, dry spot, come hide.", "uses": ["location"] },
-    { "id": "wx_rain_03", "tags": ["weather"], "weather": "rain", "text": "British summer doing its thing. Warm gluten free wings say it's fine, actually.", "uses": [] },
-    { "id": "wx_rain_04", "tags": ["weather"], "weather": "rain", "text": "Soggy one at {location}. Treat yourself - you've earned the wings.", "uses": ["location"] },
-    { "id": "wx_rain_05", "tags": ["weather"], "weather": "rain", "text": "Don't let a bit of rain win. Hot, gluten free, worth the dash.", "uses": [] },
-
-    { "id": "wx_cold_01", "tags": ["weather"], "weather": "cold", "text": "Freezing out - warm up with gluten free wings straight off the heat.", "uses": [] },
-    { "id": "wx_cold_02", "tags": ["weather"], "weather": "cold", "text": "Nippy at {location}? We're the cure. Hot food, gluten free, come thaw out.", "uses": ["location"] },
-    { "id": "wx_cold_03", "tags": ["weather"], "weather": "cold", "text": "Cold hands, warm wings. That's the deal. Come get some.", "uses": [] },
-    { "id": "wx_cold_04", "tags": ["weather"], "weather": "cold", "text": "Brass monkeys at {location}. Hot gluten free wings sort that right out.", "uses": ["location"] },
-    { "id": "wx_cold_05", "tags": ["weather"], "weather": "cold", "text": "Baltic out there. We've got the hot, gluten free antidote.", "uses": [] },
-
-    { "id": "wx_hot_01", "tags": ["weather"], "weather": "hot", "text": "Scorcher today - grab gluten free wings and a cold one, sit in the sun.", "uses": [] },
-    { "id": "wx_hot_02", "tags": ["weather"], "weather": "hot", "text": "Roasting at {location}. Too hot to cook - let us. Gluten free and easy.", "uses": ["location"] },
-    { "id": "wx_hot_03", "tags": ["weather"], "weather": "hot", "text": "Heatwave says someone else should cook. That's us. Gluten free, sorted.", "uses": [] },
-    { "id": "wx_hot_04", "tags": ["weather"], "weather": "hot", "text": "Proper warm one at {location}. Wings, cold drink, no washing up. You're welcome.", "uses": ["location"] },
-    { "id": "wx_hot_05", "tags": ["weather"], "weather": "hot", "text": "Too hot to move? We'll bring the flavour, you bring the appetite.", "uses": [] }
+    {
+      "id": "loc_001",
+      "tags": [
+        "location"
+      ],
+      "text": "Right then, we've parked up at {location}. Come and get fed.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "PARKED UP. FRYERS ON.",
+        "{location}, TODAY",
+        "COME GET FED"
+      ]
+    },
+    {
+      "id": "loc_002",
+      "tags": [
+        "location"
+      ],
+      "text": "We're at {location} today. Your lunch problem? Sorted.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "LUNCH? SORTED.",
+        "{location} TODAY",
+        "PROBLEM SOLVED"
+      ]
+    },
+    {
+      "id": "loc_003",
+      "tags": [
+        "location"
+      ],
+      "text": "Spotted: us, at {location}. Bring your appetite.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "👀 SEEN US YET?",
+        "GUESS WHO",
+        "{location} 📍"
+      ]
+    },
+    {
+      "id": "loc_004",
+      "tags": [
+        "location"
+      ],
+      "text": "{location}, we have landed. The smell will find you before the sign does.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "TOUCHDOWN 🛬",
+        "SNIFF SNIFF…",
+        "{location}, TODAY"
+      ]
+    },
+    {
+      "id": "loc_005",
+      "tags": [
+        "location"
+      ],
+      "text": "Set up and serving at {location}. No excuses now.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "OPEN & FIRING 🔥",
+        "READY WHEN YOU ARE",
+        "{location} · NOW"
+      ]
+    },
+    {
+      "id": "loc_006",
+      "tags": [
+        "location"
+      ],
+      "text": "We're at {location} today - follow your nose, it knows the way.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "YOUR NOSE KNOWS",
+        "{location} TODAY",
+        "THIS WAY FOR WINGS"
+      ]
+    },
+    {
+      "id": "loc_007",
+      "tags": [
+        "location"
+      ],
+      "text": "Good news: we're at {location}. Bad news: you're going to want seconds.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "GOOD NEWS / BAD NEWS",
+        "SECONDS INCOMING",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "loc_008",
+      "tags": [
+        "location"
+      ],
+      "text": "Find us at {location} today. We'll be the ones with the queue.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "FOLLOW THE CROWD",
+        "YOU'LL SPOT US EASY",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "loc_009",
+      "tags": [
+        "location"
+      ],
+      "text": "Pitched up at {location}. Come say hello (and order).",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "WE'RE IN POSITION 🐔",
+        "DON'T BE SHY",
+        "{location} 📍"
+      ]
+    },
+    {
+      "id": "loc_010",
+      "tags": [
+        "location"
+      ],
+      "text": "Lunch sorted: {location}, us, you, no regrets.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "THE PLAN IS SIMPLE",
+        "TODAY'S TO-DO LIST:",
+        "{location} + YOU"
+      ]
+    },
+    {
+      "id": "loc_011",
+      "tags": [
+        "location"
+      ],
+      "text": "We're at {location} til {day}. Plenty of time to make this a habit.",
+      "uses": [
+        "location",
+        "day"
+      ],
+      "overlays": [
+        "HERE TIL {day}",
+        "{location} ALL WEEK?  TIL {day}.",
+        "MAKE IT A HABIT"
+      ]
+    },
+    {
+      "id": "loc_012",
+      "tags": [
+        "location"
+      ],
+      "text": "Here at {location} til {day}. After that, you'll have to chase us.",
+      "uses": [
+        "location",
+        "day"
+      ],
+      "overlays": [
+        "TIL {day} ONLY",
+        "CATCH US AT {location}",
+        "THEN WE'RE GONE"
+      ]
+    },
+    {
+      "id": "loc_013",
+      "tags": [
+        "location"
+      ],
+      "text": "{location} til {day} only. Tick tock.",
+      "uses": [
+        "location",
+        "day"
+      ],
+      "overlays": [
+        "CLOCK'S RUNNING ⏰",
+        "{location} TIL {day}",
+        "BE QUICK"
+      ]
+    },
+    {
+      "id": "loc_014",
+      "tags": [
+        "location"
+      ],
+      "text": "We're parked at {location} right through til {day}. You've got no excuse.",
+      "uses": [
+        "location",
+        "day"
+      ],
+      "overlays": [
+        "NO EXCUSES",
+        "{location} TIL {day}",
+        "WE'LL WAIT"
+      ]
+    },
+    {
+      "id": "loc_015",
+      "tags": [
+        "location"
+      ],
+      "text": "Catch us at {location} til {day} - then we vanish like your willpower near the chips.",
+      "uses": [
+        "location",
+        "day"
+      ],
+      "overlays": [
+        "GONE BY {day}",
+        "BLINK & WE'RE OFF",
+        "{location}, BE QUICK"
+      ]
+    },
+    {
+      "id": "loc_016",
+      "tags": [
+        "location"
+      ],
+      "text": "Same great food, new postcode. We're at {location} today.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "WE MOVED! 📍",
+        "GUESS WHERE WE ARE",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "loc_017",
+      "tags": [
+        "location"
+      ],
+      "text": "Roll up, roll up - we're trading at {location} today.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "STEP RIGHT UP 🎪",
+        "THE VAN IS OPEN",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "loc_018",
+      "tags": [
+        "location"
+      ],
+      "text": "Your nose isn't lying. That's us, at {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "THAT SMELL? US.",
+        "TRUST THE SNIFF",
+        "{location} 🔥"
+      ]
+    },
+    {
+      "id": "lst_001",
+      "tags": [
+        "other"
+      ],
+      "text": "Last day at {location}! Get in before we pack up.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "FINAL CALL 📢",
+        "TODAY. THEN GONE.",
+        "{location} ⚠️"
+      ]
+    },
+    {
+      "id": "lst_002",
+      "tags": [
+        "other"
+      ],
+      "text": "It's now or never - final day at {location} today.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "LAST ORDERS ⚠️",
+        "TOMORROW = TOO LATE",
+        "{location}, TODAY ONLY"
+      ]
+    },
+    {
+      "id": "lst_003",
+      "tags": [
+        "other"
+      ],
+      "text": "We're gone after today. {location}, come and say a proper goodbye.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "ONE MORE DAY 😢",
+        "LAST CHANCE, {location}",
+        "DON'T MISS US"
+      ]
+    },
+    {
+      "id": "lst_004",
+      "tags": [
+        "other"
+      ],
+      "text": "{day} is your last shot at {location}. Don't make it weird, just come.",
+      "uses": [
+        "location",
+        "day"
+      ],
+      "overlays": [
+        "ENDS {day} ⚠️",
+        "FINAL DAYS AT {location}",
+        "NO PRESSURE. (PRESSURE.)"
+      ]
+    },
+    {
+      "id": "lst_005",
+      "tags": [
+        "other"
+      ],
+      "text": "Blink and you'll miss us - last day at {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "POOF. GONE TOMORROW.",
+        "CATCH US WHILE YOU CAN",
+        "{location} · FINAL DAY"
+      ]
+    },
+    {
+      "id": "wth_001",
+      "tags": [
+        "other"
+      ],
+      "text": "It's chucking it down and we're still here at {location}. Hot food, come hide.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "WET OUT. WARM HERE.",
+        "SHELTER + WINGS 🌧️",
+        "{location} · STILL OPEN"
+      ]
+    },
+    {
+      "id": "wth_002",
+      "tags": [
+        "other"
+      ],
+      "text": "Grey skies, hot food. We're at {location} sorting your mood out.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "CLOUDY WITH A CHANCE OF WINGS",
+        "THERAPY, BUT CRISPY",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "wth_003",
+      "tags": [
+        "other"
+      ],
+      "text": "Rain? Perfect weather for something hot from {location}. We're here.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "LET IT POUR ☔",
+        "MADE FOR DAYS LIKE THIS",
+        "{location} · HOT & READY"
+      ]
+    },
+    {
+      "id": "wth_004",
+      "tags": [
+        "other"
+      ],
+      "text": "Sun's out at {location}! Come grab something before we melt.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "WHAT A DAY ☀️",
+        "GET IT WHILE IT'S BRIGHT",
+        "{location} RIGHT NOW"
+      ]
+    },
+    {
+      "id": "wth_005",
+      "tags": [
+        "other"
+      ],
+      "text": "Bit nippy out? We've got the cure at {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "BIT NIPPY? CURED.",
+        "THE CURE IS HOT WINGS",
+        "WARM UP HERE"
+      ]
+    },
+    {
+      "id": "wth_006",
+      "tags": [
+        "other"
+      ],
+      "text": "Don't let a bit of British weather stop you. We're at {location}, dry and ready.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "DRY & READY",
+        "BRITISH WEATHER 0 - 1 US",
+        "WE'RE NOT SCARED OF RAIN"
+      ]
+    },
+    {
+      "id": "wth_007",
+      "tags": [
+        "other"
+      ],
+      "text": "Soggy commute? Treat yourself. We're at {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "BAD JOURNEY? GOOD LUNCH.",
+        "YOU MADE IT. REWARD TIME.",
+        "{location} 🏆"
+      ]
+    },
+    {
+      "id": "tim_001",
+      "tags": [
+        "other"
+      ],
+      "text": "It's {day}. You've earned this. Come find us at {location}.",
+      "uses": [
+        "location",
+        "day"
+      ],
+      "overlays": [
+        "IT'S {day}, INNIT",
+        "GO ON, YOU DESERVE IT",
+        "{day} TREAT 🍗"
+      ]
+    },
+    {
+      "id": "tim_002",
+      "tags": [
+        "other"
+      ],
+      "text": "Friday feeling? We bottle it and serve it hot at {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "TGIF 🎉",
+        "THE WEEKEND STARTS HERE",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "tim_003",
+      "tags": [
+        "other"
+      ],
+      "text": "Weekend plans sorted: us, {location}, your face full of food.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "SATURDAY MODE: ON",
+        "CANCEL YOUR OTHER PLANS",
+        "{location}, LET'S GO"
+      ]
+    },
+    {
+      "id": "tim_004",
+      "tags": [
+        "other"
+      ],
+      "text": "Midweek slump? {location}, today, we fix that.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "MIDWEEK SLUMP? FIXED.",
+        "WE FIX WEDNESDAYS",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "tim_005",
+      "tags": [
+        "other"
+      ],
+      "text": "Monday's rough. Lunch doesn't have to be. We're at {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "SURVIVING MONDAY?",
+        "WE'RE THE GOOD PART",
+        "HANG IN THERE 🍗"
+      ]
+    },
+    {
+      "id": "fmo_001",
+      "tags": [
+        "other"
+      ],
+      "text": "The queue's building at {location}. You coming or what?",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "OI. WHERE ARE YOU?",
+        "IT'S FILLING UP FAST 👀",
+        "{location} · NOW"
+      ]
+    },
+    {
+      "id": "fmo_002",
+      "tags": [
+        "other"
+      ],
+      "text": "Everyone else figured out we're at {location}. Catch up.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "YOU'RE THE LAST TO KNOW",
+        "WORD'S OUT 🗣️",
+        "{location} 📍"
+      ]
+    },
+    {
+      "id": "fmo_003",
+      "tags": [
+        "other"
+      ],
+      "text": "While you're reading this, someone's eating what you wanted. {location}. Go.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "SOMEONE'S EATING YOURS",
+        "GO. NOW.",
+        "{location} ⚡"
+      ]
+    },
+    {
+      "id": "fmo_004",
+      "tags": [
+        "other"
+      ],
+      "text": "Selling fast at {location} today. Don't say we didn't warn you.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "STOCKS RUNNING LOW ⚡",
+        "THIS IS YOUR WARNING",
+        "{location} · HURRY"
+      ]
+    },
+    {
+      "id": "brd_001",
+      "tags": [
+        "brand"
+      ],
+      "text": "Still thinking about us? That's normal. We'd think about us too.",
+      "uses": [],
+      "overlays": [
+        "IN YOUR HEAD RENT-FREE",
+        "CAN'T STOP, CAN YOU? 😌",
+        "WE GET IT."
+      ]
+    },
+    {
+      "id": "brd_002",
+      "tags": [
+        "brand"
+      ],
+      "text": "Your sad desk sandwich called. It's giving up. Come find us instead.",
+      "uses": [],
+      "overlays": [
+        "YOUR SANDWICH GAVE UP",
+        "SAD DESK LUNCH? NAH.",
+        "UPGRADE INCOMING"
+      ]
+    },
+    {
+      "id": "brd_003",
+      "tags": [
+        "brand"
+      ],
+      "text": "Life's too short for bad lunches. You know where we are.",
+      "uses": [],
+      "overlays": [
+        "EAT BETTER. TODAY.",
+        "A RULE TO LIVE BY:",
+        "NO MORE SAD LUNCHES"
+      ]
+    },
+    {
+      "id": "brd_004",
+      "tags": [
+        "brand"
+      ],
+      "text": "Meal-deal energy is no way to live. Upgrade your lunch.",
+      "uses": [],
+      "overlays": [
+        "YOU'RE BETTER THAN THIS",
+        "LEVEL UP 🍗",
+        "DITCH THE DEAL"
+      ]
+    },
+    {
+      "id": "brd_005",
+      "tags": [
+        "brand"
+      ],
+      "text": "We don't do boring. Neither should your lunch break.",
+      "uses": [],
+      "overlays": [
+        "LUNCH, BUT LOUD 📢",
+        "EXCITEMENT: SERVED HOT",
+        "BORING? NEVER MET HER."
+      ]
+    },
+    {
+      "id": "brd_006",
+      "tags": [
+        "brand"
+      ],
+      "text": "That little voice telling you to treat yourself? Listen to it.",
+      "uses": [],
+      "overlays": [
+        "GO ON THEN. 😏",
+        "YOU KNOW YOU WANT TO",
+        "SAY LESS."
+      ]
+    },
+    {
+      "id": "brd_007",
+      "tags": [
+        "brand"
+      ],
+      "text": "If you can read this, you're hungry. We can help with that.",
+      "uses": [],
+      "overlays": [
+        "IT'S A SIGN 🪧",
+        "YOUR STOMACH SENT US",
+        "DINNER HAS FOUND YOU"
+      ]
+    },
+    {
+      "id": "brd_008",
+      "tags": [
+        "brand"
+      ],
+      "text": "Made fresh, served hot, gone fast. That's the whole pitch.",
+      "uses": [],
+      "overlays": [
+        "SIMPLE AS. 🍗",
+        "NO GIMMICKS, JUST WINGS",
+        "READ IT AND DROOL"
+      ]
+    },
+    {
+      "id": "brd_009",
+      "tags": [
+        "brand"
+      ],
+      "text": "No microwave. No shortcuts. No regrets.",
+      "uses": [],
+      "overlays": [
+        "THE PROPER WAY",
+        "DONE RIGHT, EVERY TIME",
+        "FRESH OUT THE FRYER"
+      ]
+    },
+    {
+      "id": "brd_010",
+      "tags": [
+        "brand"
+      ],
+      "text": "Some people meal-prep. Some people find us. Be the second kind.",
+      "uses": [],
+      "overlays": [
+        "TWO KINDS OF PEOPLE",
+        "WHICH ONE ARE YOU?",
+        "CHOOSE WISELY 🍗"
+      ]
+    },
+    {
+      "id": "fud_001",
+      "tags": [
+        "brand"
+      ],
+      "text": "Fresh batch of {item} coming out the pan. You snooze, you lose.",
+      "uses": [
+        "item"
+      ],
+      "overlays": [
+        "🔥 STRAIGHT OUT THE PAN",
+        "{item} O'CLOCK",
+        "GET IN QUICK"
+      ]
+    },
+    {
+      "id": "fud_002",
+      "tags": [
+        "location"
+      ],
+      "text": "{item}. Hot. Now. At {location}. Move.",
+      "uses": [
+        "item",
+        "location"
+      ],
+      "overlays": [
+        "{item}. HOT. NOW.",
+        "MOVE. 🏃",
+        "{location} · RIGHT NOW"
+      ]
+    },
+    {
+      "id": "fud_003",
+      "tags": [
+        "brand"
+      ],
+      "text": "We made too much {item}. Help us out, yeah?",
+      "uses": [
+        "item"
+      ],
+      "overlays": [
+        "SLIGHT PROBLEM…",
+        "{item} OVERLOAD 🆘",
+        "BE A HERO"
+      ]
+    },
+    {
+      "id": "fud_004",
+      "tags": [
+        "location"
+      ],
+      "text": "The {item} is going fast at {location}. Just saying.",
+      "uses": [
+        "item",
+        "location"
+      ],
+      "overlays": [
+        "NO PRESSURE, BUT…",
+        "{item} COUNTDOWN ⚡",
+        "{location} · MOVE QUICK"
+      ]
+    },
+    {
+      "id": "fud_005",
+      "tags": [
+        "brand"
+      ],
+      "text": "Reminder: you deserve {item} today. We're just saying.",
+      "uses": [
+        "item"
+      ],
+      "overlays": [
+        "TREAT O'CLOCK 🕐",
+        "LITTLE REMINDER:",
+        "{item} = SELF CARE"
+      ]
+    },
+    {
+      "id": "lon_001",
+      "tags": [
+        "location",
+        "london"
+      ],
+      "text": "Get your plates of meat down to {location} - lunch is sorted.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "PLATES OF MEAT, MOVE!",
+        "GET A WIGGLE ON",
+        "{location} 📍"
+      ]
+    },
+    {
+      "id": "lon_002",
+      "tags": [
+        "location",
+        "london"
+      ],
+      "text": "Proper Hank Marvin? We're at {location}. Do something about it.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "STARVIN'? SAME.",
+        "FIX THAT RUMBLE",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "lon_003",
+      "tags": [
+        "location",
+        "london"
+      ],
+      "text": "Come have a butcher's at what we're serving at {location} today.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "TAKE A LOOK AT THIS 👀",
+        "FEAST YOUR EYES",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "lon_004",
+      "tags": [
+        "location",
+        "london"
+      ],
+      "text": "Put the dog and bone down and get yourself to {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "PUT THE PHONE DOWN",
+        "DOG & BONE DOWN. WINGS UP.",
+        "{location} NOW"
+      ]
+    },
+    {
+      "id": "lon_005",
+      "tags": [
+        "location",
+        "london"
+      ],
+      "text": "Use your loaf - skip the meal deal, we're at {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "BE SMART, BE FED 🧠",
+        "THE CLEVER CHOICE",
+        "{location} 📍"
+      ]
+    },
+    {
+      "id": "lon_006",
+      "tags": [
+        "other",
+        "london"
+      ],
+      "text": "Currant bun's out! We're at {location}, come make the most of it.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "SUNSHINE + WINGS ☀️",
+        "GET OUT HERE",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "lon_007",
+      "tags": [
+        "location",
+        "london"
+      ],
+      "text": "Would you Adam and Eve it - we're back at {location}. Lucky you.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "BELIEVE IT OR NOT…",
+        "THE RETURN 🎉",
+        "{location}, GUESS WHO"
+      ]
+    },
+    {
+      "id": "lon_008",
+      "tags": [
+        "other",
+        "london"
+      ],
+      "text": "Forget the Northern line misery. {location}, hot food, sorted.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "BETTER THAN THE TUBE",
+        "DELAYS? NOT HERE.",
+        "{location} · NO SIGNAL FAILURES"
+      ]
+    },
+    {
+      "id": "lon_009",
+      "tags": [
+        "brand",
+        "london"
+      ],
+      "text": "The meal deal's telling porkies. Real food's at {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "DON'T BELIEVE THE MEAL DEAL",
+        "PROPER SCRAN ONLY 🐷",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "lon_010",
+      "tags": [
+        "brand",
+        "london"
+      ],
+      "text": "Sack off Pret. We're at {location} and we actually mean it.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "PRET WHO? 😏",
+        "THE REAL LUNCH SPOT",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "lon_011",
+      "tags": [
+        "location",
+        "london"
+      ],
+      "text": "Oyster card topped up? Good. Now get to {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "OYSTER TOPPED UP?",
+        "GOOD. NOW COME HERE.",
+        "NEXT STOP: {location}"
+      ]
+    },
+    {
+      "id": "lon_012",
+      "tags": [
+        "location",
+        "london"
+      ],
+      "text": "Mind the gap... in your stomach. We're at {location} today.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "🚇 THIS IS YOUR STOP",
+        "ALIGHT HERE FOR WINGS",
+        "{location} STATION"
+      ]
+    },
+    {
+      "id": "lon_013",
+      "tags": [
+        "brand",
+        "london"
+      ],
+      "text": "We're London's worst-kept secret. {location}, today.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "SHHH… (TELL EVERYONE)",
+        "YOU DIDN'T HEAR IT FROM US",
+        "{location} 🤫"
+      ]
+    },
+    {
+      "id": "lon_014",
+      "tags": [
+        "other",
+        "london"
+      ],
+      "text": "Raining again? Welcome to London. Hot food's at {location}, come dry off.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "CLASSIC LONDON ☔",
+        "WE'VE GOT A ROOF & WINGS",
+        "{location} · STAY DRY"
+      ]
+    },
+    {
+      "id": "lon_015",
+      "tags": [
+        "location",
+        "london"
+      ],
+      "text": "Lovely jubbly - we're back at {location} today.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "GUESS WHO'S BACK 🎉",
+        "RETURN OF THE WINGS",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "lon_016",
+      "tags": [
+        "location",
+        "london"
+      ],
+      "text": "We're at {location} til {day}, so come and 'ave it.",
+      "uses": [
+        "location",
+        "day"
+      ],
+      "overlays": [
+        "YOU KNOW THE DRILL",
+        "{location} TIL {day}",
+        "GET INVOLVED"
+      ]
+    },
+    {
+      "id": "lon_017",
+      "tags": [
+        "brand",
+        "london"
+      ],
+      "text": "Skip the Tesco meal deal, you absolute diamond. Come find us.",
+      "uses": [],
+      "overlays": [
+        "OI, DIAMOND 💎",
+        "YOU'RE WORTH MORE THAN £3.50",
+        "PROPER LUNCH THIS WAY"
+      ]
+    },
+    {
+      "id": "lon_018",
+      "tags": [
+        "brand",
+        "london"
+      ],
+      "text": "Even the pigeons know where the good food is. Do you? {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "THE PIGEONS FIGURED IT OUT",
+        "SMARTER THAN A PIGEON? PROVE IT.",
+        "{location} 🐦"
+      ]
+    },
+    {
+      "id": "gf_001",
+      "tags": [
+        "brand"
+      ],
+      "text": "Every single thing on our menu is gluten free. Batter, chicken, chips, sauces, the lot. Eat the whole thing, no worry.",
+      "uses": [],
+      "overlays": [
+        "THE WHOLE MENU. GF.",
+        "BATTER. CHIPS. THE LOT.",
+        "NO WORRY. JUST WINGS."
+      ]
+    },
+    {
+      "id": "gf_002",
+      "tags": [
+        "brand"
+      ],
+      "text": "Coeliac? Gluten dodger? You can order the ENTIRE menu. All of it. No 'sorry, not that one'.",
+      "uses": [],
+      "overlays": [
+        "THE WHOLE MENU. YOURS.",
+        "EVERYTHING'S FAIR GAME",
+        "ZERO GLUTEN, FULL MENU"
+      ]
+    },
+    {
+      "id": "gf_003",
+      "tags": [
+        "brand"
+      ],
+      "text": "100% gluten free, 0% compromise. Wings that don't taste 'free from' anything.",
+      "uses": [],
+      "overlays": [
+        "100% GF · 0% COMPROMISE",
+        "DOESN'T TASTE 'FREE FROM'",
+        "PROPER WINGS"
+      ]
+    },
+    {
+      "id": "gf_004",
+      "tags": [
+        "brand"
+      ],
+      "text": "The whole van is gluten free, so order literally anything. Yes, even the batter. Especially the batter.",
+      "uses": [],
+      "overlays": [
+        "GO ON, ORDER ANYTHING",
+        "THE BATTER TOO. YES REALLY.",
+        "100% GF VAN"
+      ]
+    },
+    {
+      "id": "gf_005",
+      "tags": [
+        "brand"
+      ],
+      "text": "Proper chicken shop energy, fully gluten free. Every wing, every chip, every sauce. Safe and smashing.",
+      "uses": [],
+      "overlays": [
+        "SAFE & SMASHING 🍗",
+        "ALL THE ENERGY, NO GLUTEN",
+        "THE FULL LINE-UP, GF"
+      ]
+    },
+    {
+      "id": "gf_006",
+      "tags": [
+        "brand"
+      ],
+      "text": "Street food you can actually trust. Gluten free top to bottom, no asterisks.",
+      "uses": [],
+      "overlays": [
+        "NO SMALL PRINT.",
+        "TRUST EVERY BITE",
+        "GF, FULL STOP."
+      ]
+    },
+    {
+      "id": "gf_007",
+      "tags": [
+        "brand"
+      ],
+      "text": "Imagine a menu where you can have anything on it. That's us. All gluten free, all yours.",
+      "uses": [],
+      "overlays": [
+        "HAVE ANYTHING. LITERALLY.",
+        "THE WHOLE MENU'S YOURS",
+        "ALL GF, ALL YOURS"
+      ]
+    },
+    {
+      "id": "gf_008",
+      "tags": [
+        "brand"
+      ],
+      "text": "Gluten free never tasted like this. Crispy batter, proper sauce, zero gluten. Come see.",
+      "uses": [],
+      "overlays": [
+        "WAIT TIL YOU TASTE THIS",
+        "CRISPY ≠ GLUTEN",
+        "PROVE US WRONG 😏"
+      ]
+    },
+    {
+      "id": "loc_020",
+      "tags": [
+        "location"
+      ],
+      "text": "We're at {location} today and the whole menu's gluten free. Come get properly fed.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "EVERY. SINGLE. THING. GF.",
+        "ALL OF IT. SAFE.",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "loc_021",
+      "tags": [
+        "location"
+      ],
+      "text": "{location} - parked up, fryers on, everything gluten free. See you in the queue.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "WE'RE ON. IT'S ON.",
+        "OIL'S HOT, LET'S GO",
+        "{location} 📍"
+      ]
+    },
+    {
+      "id": "loc_022",
+      "tags": [
+        "location"
+      ],
+      "text": "Find us at {location}. Gluten free wings, proper chips, no meal-deal sadness.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "CHEER UP, IT'S WINGS",
+        "THE HAPPY OPTION",
+        "{location} TODAY"
+      ]
+    },
+    {
+      "id": "loc_023",
+      "tags": [
+        "location"
+      ],
+      "text": "Pitched at {location} til {day}. Fully gluten free, dangerously good. Plenty of time to get hooked.",
+      "uses": [
+        "location",
+        "day"
+      ],
+      "overlays": [
+        "ALL WEEK? NEARLY.",
+        "TIL {day} 📍",
+        "YOUR NEW HABIT STARTS NOW"
+      ]
+    },
+    {
+      "id": "gv_001",
+      "tags": [
+        "location"
+      ],
+      "location": "Greenwich",
+      "text": "Greenwich today. Tourist or local, doesn't matter - the wings are gluten free and unreal. Come find us.",
+      "uses": [],
+      "overlays": [
+        "⚓ WINGS BY THE RIVER",
+        "EVERYONE IS WELCOME",
+        "SE10'S FINEST"
+      ]
+    },
+    {
+      "id": "gv_002",
+      "tags": [
+        "location"
+      ],
+      "location": "Greenwich",
+      "text": "Doing the Meridian and the ships? Refuel with us. Gluten free street food, no tourist-trap nonsense.",
+      "uses": [],
+      "overlays": [
+        "DONE THE SIGHTS? EAT.",
+        "REFUEL HERE ⚓",
+        "PROPER PIT STOP"
+      ]
+    },
+    {
+      "id": "gv_003",
+      "tags": [
+        "location"
+      ],
+      "location": "Greenwich",
+      "text": "Locals of Greenwich already know. First-timers, welcome. All gluten free, all banging.",
+      "uses": [],
+      "overlays": [
+        "THE LOCALS' SECRET 🤫",
+        "NOW YOU KNOW TOO",
+        "GREENWICH'S FINEST"
+      ]
+    },
+    {
+      "id": "gv_004",
+      "tags": [
+        "location"
+      ],
+      "location": "Greenwich",
+      "text": "Greenwich Park earned you a proper feed. We're right here - gluten free wings that hit.",
+      "uses": [],
+      "overlays": [
+        "WALKED THE PARK? EAT.",
+        "REWARD YOURSELF 🏆",
+        "RIGHT THIS WAY"
+      ]
+    },
+    {
+      "id": "cp_001",
+      "tags": [
+        "location"
+      ],
+      "location": "Crystal Palace",
+      "text": "Crystal Palace! Yes, we're near the dinosaurs. No, they're not gluten free - but our whole menu is.",
+      "uses": [],
+      "overlays": [
+        "WINGS & DINOSAURS 🦕",
+        "JURASSIC SNACK",
+        "SOUTH LONDON'S FINEST"
+      ]
+    },
+    {
+      "id": "cp_002",
+      "tags": [
+        "location"
+      ],
+      "location": "Crystal Palace",
+      "text": "CP locals, your gluten free wing fix is parked up. Wave at the dinosaurs on your way over.",
+      "uses": [],
+      "overlays": [
+        "CP, WE'VE LANDED 🦖",
+        "YOUR FIX IS IN",
+        "SE19 SORTED"
+      ]
+    },
+    {
+      "id": "cp_003",
+      "tags": [
+        "location"
+      ],
+      "location": "Crystal Palace",
+      "text": "Only in Crystal Palace: Victorian dinosaurs AND 100% gluten free wings. What a place.",
+      "uses": [],
+      "overlays": [
+        "DINOS + WINGS 🦕",
+        "A LONDON ORIGINAL",
+        "CRYSTAL PALACE SPECIAL"
+      ]
+    },
+    {
+      "id": "cp_004",
+      "tags": [
+        "location"
+      ],
+      "location": "Crystal Palace",
+      "text": "Crystal Palace crew, we're back. Everything gluten free. Bring the kids, bring the dog, bring your appetite.",
+      "uses": [],
+      "overlays": [
+        "THE RETURN 🎉",
+        "ROUND UP THE FAMILY",
+        "CP, WE MISSED YOU"
+      ]
+    },
+    {
+      "id": "lh_001",
+      "tags": [
+        "location"
+      ],
+      "location": "Leadenhall Market",
+      "text": "Leadenhall Market - City lunch sorted. Gluten free wings that beat any sad desk salad. Beat the rush.",
+      "uses": [],
+      "overlays": [
+        "ESCAPE THE DESK 🏃",
+        "PROPER FOOD, SQUARE MILE",
+        "LEADENHALL TODAY"
+      ]
+    },
+    {
+      "id": "lh_002",
+      "tags": [
+        "location"
+      ],
+      "location": "Leadenhall Market",
+      "text": "Working the City? Leadenhall, lunchtime, us. Fully gluten free, properly quick.",
+      "uses": [],
+      "overlays": [
+        "CITY WORKERS, ASSEMBLE",
+        "IN & OUT IN MINUTES ⚡",
+        "THE MARKET RUN 🏃"
+      ]
+    },
+    {
+      "id": "lh_003",
+      "tags": [
+        "location"
+      ],
+      "location": "Leadenhall Market",
+      "text": "Suits of Leadenhall - real food that happens to be 100% gluten free. Grab it before the 1pm crush.",
+      "uses": [],
+      "overlays": [
+        "OI, SUITS 👔",
+        "LOOSEN THE TIE, GRAB WINGS",
+        "LEADENHALL LUNCH"
+      ]
+    },
+    {
+      "id": "lh_004",
+      "tags": [
+        "location"
+      ],
+      "location": "Leadenhall Market",
+      "text": "Leadenhall lunch run. Gluten free, fast, miles better than a meal deal. You've earned it.",
+      "uses": [],
+      "overlays": [
+        "THE 12:30 SPRINT 🏃",
+        "WORTH LEAVING THE OFFICE FOR",
+        "BEAT THE QUEUE ⏰"
+      ]
+    },
+    {
+      "id": "lh_005",
+      "tags": [
+        "location"
+      ],
+      "location": "Leadenhall Market",
+      "text": "City teams - we cater office feeds too. Whole floor, all gluten free. Ask at the van.",
+      "uses": [],
+      "overlays": [
+        "FEED THE WHOLE OFFICE",
+        "LUNCH MEETINGS, UPGRADED",
+        "WE DO BIG ORDERS 🏢"
+      ]
+    },
+    {
+      "id": "evt_001",
+      "tags": [
+        "events"
+      ],
+      "text": "Getting married? We cater weddings - proper gluten free street food your guests will actually remember.",
+      "uses": [],
+      "overlays": [
+        "💍 SAY 'I DO' TO WINGS",
+        "WEDDING FOOD, DONE PROPER",
+        "BOOK THE VAN"
+      ]
+    },
+    {
+      "id": "evt_002",
+      "tags": [
+        "events"
+      ],
+      "text": "Private party, birthday, big do? We bring the food (and the van). 100% gluten free, 100% sorted.",
+      "uses": [],
+      "overlays": [
+        "BIG DO? SORTED.",
+        "WE BRING THE VAN 🚐",
+        "PARTY FOOD, HANDLED"
+      ]
+    },
+    {
+      "id": "evt_003",
+      "tags": [
+        "events"
+      ],
+      "text": "Corporate event or office feed? We do those. Gluten free street food that gets the team to actually show up.",
+      "uses": [],
+      "overlays": [
+        "OFFICE FEED? DONE.",
+        "THE TEAM WILL SHOW UP",
+        "WE CATER WORK DOS"
+      ]
+    },
+    {
+      "id": "evt_004",
+      "tags": [
+        "events"
+      ],
+      "text": "Weddings, birthdays, work dos - if you're feeding a crowd, we've got you. All gluten free, no boring buffet.",
+      "uses": [],
+      "overlays": [
+        "BIG PARTY? BIG FLAVOUR.",
+        "CROWDS ARE OUR THING",
+        "EVENTS: HANDLED 🎉"
+      ]
+    },
+    {
+      "id": "evt_005",
+      "tags": [
+        "events"
+      ],
+      "text": "Skip the rubber chicken and sad veg. Book us for the wedding - gluten free wings, happy guests, zero drama.",
+      "uses": [],
+      "overlays": [
+        "WEDDING FOOD THEY'LL REMEMBER",
+        "NOT YOUR AVERAGE CATERER 💍",
+        "MAKE THE BIG DAY TASTY"
+      ]
+    },
+    {
+      "id": "evt_006",
+      "tags": [
+        "events"
+      ],
+      "text": "Christmas do? Summer party? We cater it. Everything gluten free, everyone fed, nobody left out.",
+      "uses": [],
+      "overlays": [
+        "PARTY SEASON = US 🎄",
+        "WE BRING THE FOOD",
+        "OFFICE DO, SORTED"
+      ]
+    },
+    {
+      "id": "evt_007",
+      "tags": [
+        "events"
+      ],
+      "text": "Fully gluten free catering for weddings and private events - because your coeliac auntie deserves to eat too.",
+      "uses": [],
+      "overlays": [
+        "YOUR COELIAC AUNTIE EATS TOO",
+        "FULLY GF CATERING",
+        "EVERYONE'S INVITED"
+      ]
+    },
+    {
+      "id": "evt_008",
+      "tags": [
+        "events"
+      ],
+      "text": "DM us for event catering. Weddings, corporate, private parties - gluten free street food that steals the show.",
+      "uses": [],
+      "overlays": [
+        "SLIDE IN 📩",
+        "LET'S TALK YOUR EVENT",
+        "BOOKINGS OPEN"
+      ]
+    },
+    {
+      "id": "wx_sun_01",
+      "tags": [
+        "weather"
+      ],
+      "weather": "sun",
+      "text": "Sun's out, wings out. Come find us before the queue does.",
+      "uses": [],
+      "overlays": [
+        "VITAMIN D + VITAMIN WING",
+        "GOLDEN HOUR, GOLDEN BATTER",
+        "GET OUT HERE ☀️"
+      ]
+    },
+    {
+      "id": "wx_sun_02",
+      "tags": [
+        "weather"
+      ],
+      "weather": "sun",
+      "text": "Proper sunny one at {location} today. Gluten free wings and a cold drink - sorted.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "BEER GARDEN WEATHER 🍺",
+        "SUNSHINE MENU: ON",
+        "{location} ☀️"
+      ]
+    },
+    {
+      "id": "wx_sun_03",
+      "tags": [
+        "weather"
+      ],
+      "weather": "sun",
+      "text": "Blue skies and gluten free wings. Name a better combo, we'll wait.",
+      "uses": [],
+      "overlays": [
+        "THE PERFECT PAIRING ☀️",
+        "SKY: BLUE. WINGS: GOLD.",
+        "MATCH MADE OUTSIDE"
+      ]
+    },
+    {
+      "id": "wx_sun_04",
+      "tags": [
+        "weather"
+      ],
+      "weather": "sun",
+      "text": "Sun's got the park busy - we've got the food. Swing by {location}.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "PICNIC UPGRADE 🧺",
+        "DON'T PACK SANDWICHES",
+        "{location} ☀️"
+      ]
+    },
+    {
+      "id": "wx_sun_05",
+      "tags": [
+        "weather"
+      ],
+      "weather": "sun",
+      "text": "Too nice to cook. Let us do it - gluten free and unreal.",
+      "uses": [],
+      "overlays": [
+        "KITCHEN: CLOSED. OURS: OPEN.",
+        "SAVE THE WASHING UP",
+        "DINNER: HANDLED ☀️"
+      ]
+    },
+    {
+      "id": "wx_cld_01",
+      "tags": [
+        "weather"
+      ],
+      "weather": "cloud",
+      "text": "Grey skies? Our wings are the pop of colour your day needs.",
+      "uses": [],
+      "overlays": [
+        "GREY SKIES? POP OF COLOUR.",
+        "WE'RE THE BRIGHT BIT",
+        "CHEER UP, IT'S WINGS"
+      ]
+    },
+    {
+      "id": "wx_cld_02",
+      "tags": [
+        "weather"
+      ],
+      "weather": "cloud",
+      "text": "Bit of a grey one at {location}. Hot, gluten free, sorts your mood right out.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "GREY UP TOP, GOLD DOWN HERE",
+        "INSTANT MOOD FIX",
+        "{location} ⛅"
+      ]
+    },
+    {
+      "id": "wx_cld_03",
+      "tags": [
+        "weather"
+      ],
+      "weather": "cloud",
+      "text": "Moody sky, cheerful food. Come get fed.",
+      "uses": [],
+      "overlays": [
+        "THE SKY'S SULKING. DON'T.",
+        "BRIGHT SIDE: WINGS ⛅",
+        "CHEER'S THIS WAY"
+      ]
+    },
+    {
+      "id": "wx_cld_04",
+      "tags": [
+        "weather"
+      ],
+      "weather": "cloud",
+      "text": "Overcast at {location} - perfect excuse for something hot and gluten free.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "BLAME THE WEATHER 😏",
+        "CLOUDS SAY: COMFORT FOOD",
+        "{location} ⛅"
+      ]
+    },
+    {
+      "id": "wx_cld_05",
+      "tags": [
+        "weather"
+      ],
+      "weather": "cloud",
+      "text": "No sun? No bother. We bring the warm glow (it's the fryer).",
+      "uses": [],
+      "overlays": [
+        "MISSING THE SUN?",
+        "WE'VE GOT A GLOW ON 🔥",
+        "WARMTH: SERVED DAILY"
+      ]
+    },
+    {
+      "id": "wx_rain_01",
+      "tags": [
+        "weather"
+      ],
+      "weather": "rain",
+      "text": "It's chucking it down - duck in for hot, gluten free wings. We're not going anywhere.",
+      "uses": [],
+      "overlays": [
+        "RAINCHECK? NAH. WINGS.",
+        "UMBRELLA OPTIONAL ☔",
+        "DIVE IN HERE"
+      ]
+    },
+    {
+      "id": "wx_rain_02",
+      "tags": [
+        "weather"
+      ],
+      "weather": "rain",
+      "text": "Rain at {location}? Perfect wing weather. Hot food, dry spot, come hide.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "MADE FOR RAINY DAYS ☔",
+        "SHELTER + SCRAN",
+        "{location} · UNDER COVER"
+      ]
+    },
+    {
+      "id": "wx_rain_03",
+      "tags": [
+        "weather"
+      ],
+      "weather": "rain",
+      "text": "British summer doing its thing. Warm gluten free wings say it's fine, actually.",
+      "uses": [],
+      "overlays": [
+        "JULY, APPARENTLY ☔",
+        "SUMMER? WE'VE GOT A FIX.",
+        "RAIN CAN'T STOP WINGS"
+      ]
+    },
+    {
+      "id": "wx_rain_04",
+      "tags": [
+        "weather"
+      ],
+      "weather": "rain",
+      "text": "Soggy one at {location}. Treat yourself - you've earned the wings.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "DRENCHED? DESERVING.",
+        "PUDDLE-JUMPER'S REWARD 🏆",
+        "{location} ☔"
+      ]
+    },
+    {
+      "id": "wx_rain_05",
+      "tags": [
+        "weather"
+      ],
+      "weather": "rain",
+      "text": "Don't let a bit of rain win. Hot, gluten free, worth the dash.",
+      "uses": [],
+      "overlays": [
+        "RAIN 0 - 1 YOU",
+        "MAKE THE RUN 🏃☔",
+        "BRAVE IT. WORTH IT."
+      ]
+    },
+    {
+      "id": "wx_cold_01",
+      "tags": [
+        "weather"
+      ],
+      "weather": "cold",
+      "text": "Freezing out - warm up with gluten free wings straight off the heat.",
+      "uses": [],
+      "overlays": [
+        "ANTIFREEZE, EDIBLE ❄️",
+        "CENTRAL HEATING IN A BOX",
+        "DEFROST HERE"
+      ]
+    },
+    {
+      "id": "wx_cold_02",
+      "tags": [
+        "weather"
+      ],
+      "weather": "cold",
+      "text": "Nippy at {location}? We're the cure. Hot food, gluten free, come thaw out.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "FEELING IT TODAY? ❄️",
+        "INSTANT WARM-UP INSIDE",
+        "{location} 🔥"
+      ]
+    },
+    {
+      "id": "wx_cold_03",
+      "tags": [
+        "weather"
+      ],
+      "weather": "cold",
+      "text": "Cold hands, warm wings. That's the deal. Come get some.",
+      "uses": [],
+      "overlays": [
+        "POCKET YOUR HANDS ❄️",
+        "WE'LL SORT THE REST",
+        "HEAT: INCOMING 🔥"
+      ]
+    },
+    {
+      "id": "wx_cold_04",
+      "tags": [
+        "weather"
+      ],
+      "weather": "cold",
+      "text": "Brass monkeys at {location}. Hot gluten free wings sort that right out.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "BRASS MONKEYS OUT THERE",
+        "WINGS SORT THAT OUT ❄️",
+        "{location} · WARM UP"
+      ]
+    },
+    {
+      "id": "wx_cold_05",
+      "tags": [
+        "weather"
+      ],
+      "weather": "cold",
+      "text": "Baltic out there. We've got the hot, gluten free antidote.",
+      "uses": [],
+      "overlays": [
+        "PROPER FREEZING 🥶",
+        "YOUR HOT FIX IS HERE",
+        "COME DEFROST"
+      ]
+    },
+    {
+      "id": "wx_hot_01",
+      "tags": [
+        "weather"
+      ],
+      "weather": "hot",
+      "text": "Scorcher today - grab gluten free wings and a cold one, sit in the sun.",
+      "uses": [],
+      "overlays": [
+        "HOT DAY, HOTTER WINGS 🔥",
+        "SUMMER SERVED CRISPY",
+        "COLD DRINKS TOO 🥤"
+      ]
+    },
+    {
+      "id": "wx_hot_02",
+      "tags": [
+        "weather"
+      ],
+      "weather": "hot",
+      "text": "Roasting at {location}. Too hot to cook - let us. Gluten free and easy.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "WE'LL SWEAT, YOU EAT ☀️",
+        "YOUR OVEN STAYS OFF",
+        "{location} · EASY LUNCH"
+      ]
+    },
+    {
+      "id": "wx_hot_03",
+      "tags": [
+        "weather"
+      ],
+      "weather": "hot",
+      "text": "Heatwave says someone else should cook. That's us. Gluten free, sorted.",
+      "uses": [],
+      "overlays": [
+        "HEATWAVE RULES:",
+        "SOMEONE ELSE COOKS. US.",
+        "SORTED ☀️"
+      ]
+    },
+    {
+      "id": "wx_hot_04",
+      "tags": [
+        "weather"
+      ],
+      "weather": "hot",
+      "text": "Proper warm one at {location}. Wings, cold drink, no washing up. You're welcome.",
+      "uses": [
+        "location"
+      ],
+      "overlays": [
+        "ZERO EFFORT DINNER 😌",
+        "WE DO THE HOT WORK",
+        "{location} ☀️"
+      ]
+    },
+    {
+      "id": "wx_hot_05",
+      "tags": [
+        "weather"
+      ],
+      "weather": "hot",
+      "text": "Too hot to move? We'll bring the flavour, you bring the appetite.",
+      "uses": [],
+      "overlays": [
+        "MELTING? US TOO. EAT ANYWAY.",
+        "MINIMAL EFFORT, MAX FLAVOUR",
+        "COME AS YOU ARE ☀️"
+      ]
+    }
   ]
 };

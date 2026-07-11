@@ -227,7 +227,7 @@ const Imaging = (() => {
     const padY = Math.round(W * 0.032);
     const maxBoxW = W * 0.84;
     const maxTextW = maxBoxW - padX * 2;
-    const maxFont = Math.round(W * 0.078 * scale);
+    const maxFont = Math.round(W * 0.095 * scale);
     const minFont = Math.round(W * 0.042 * scale);
     const lineRatio = 1.16;
 
