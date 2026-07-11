@@ -756,6 +756,7 @@ html, body {
 .swipe-btn.like { color: var(--orange); border-color: var(--orange); }
 .swipe-btn.nope { color: var(--error); border-color: var(--error); }
 .gen-deck-hint { text-align: center; margin: 2px 0 8px; }
+.gen-pool-note { text-align: center; margin: 8px 0 0; font-size: 0.82rem; }
 
 /* keepers tray */
 #genKeepers .lead { margin-bottom: 2px; }
