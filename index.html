@@ -24,7 +24,7 @@
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
           <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
           <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
-          <p class="app-version" id="appVersion">v0.09</p>
+          <p class="app-version" id="appVersion">v0.10</p>
         </div>
       </section>
 
@@ -468,6 +468,13 @@
           <button class="btn btn-secondary" data-action="add-userhook">Add caption</button>
           <p id="userHookError" class="hint"></p>
 
+          <p class="lead" style="margin-top: 28px;">🔊 Sounds</p>
+          <p class="hint">Little taps, wins and swipe sounds as you use the app. Turn them off if you'd rather keep it quiet.</p>
+          <label class="switch-row">
+            <span>Play sounds</span>
+            <input type="checkbox" id="soundEnabled" />
+          </label>
+
           <p class="lead" style="margin-top: 28px;">🔔 Post reminders</p>
           <p class="hint">Get a nudge to post on the days you're working (set those in the Work calendar).</p>
           <label class="switch-row">
@@ -541,6 +548,7 @@
     <script src="js/weather.js"></script>
     <script src="js/fx.js"></script>
     <script src="js/mascot.js"></script>
+    <script src="js/sound.js"></script>
     <script src="js/app.js"></script>
     <script>
       // Offline support + installability (needs https or localhost; a plain

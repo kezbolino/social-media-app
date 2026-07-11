@@ -44,6 +44,34 @@ static server.
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-11: **UI sound layer** (`js/sound.js`, loaded before app.js; exposes
+  `window.Sound`). Plays a 19-clip pack in `assets/sounds/` (`tap-1..3`,
+  `small-win-1..3`, `big-win`, `error`, `swipe-keep/nope-1..2`, `nav-switch`,
+  `back`, `slot-fill`, `toggle`, `panel-open`, `gen-start`, `empty-state`).
+  - **These clips are locally-synthesised WAVs** (pure-Python additive synth of
+    marimba/kalimba/wood-block/bell tones — script in the session scratchpad,
+    not the repo), a placeholder for the ElevenLabs Sound-Effects pack. The
+    real takes come from `tools/sound-pack-generator/generate.mjs` on the
+    `claude/eleven-labs-sound-pack-3pnsru` branch once `api.elevenlabs.io` is
+    allow-listed in the environment's network settings (egress is blocked in
+    session; the generator can't run here). Swap same-named files into
+    `assets/sounds/` to upgrade — no code change needed. WAV not MP3 because
+    there's no ffmpeg/lame here; `Audio` plays WAV everywhere incl. `file://`.
+  - `Sound` uses HTML5 `Audio` (not fetch+WebAudio) so it works off `file://`;
+    caches one base `Audio` per clip and clones per play for overlap; mute is
+    persisted (`sfp.soundMuted`) and independent of reduced-motion. A
+    **capture-phase** delegated click listener maps controls → sounds (buttons
+    →`tap`, `[data-back]`→`back`, `.navbtn`→`nav-switch`, switch-rows→`toggle`,
+    add-* actions→`small-win`, `gen-regenerate`→`gen-start`); it ignores
+    synthetic clicks (`e.isTrusted`) so programmatic `input.click()` file-picker
+    opens stay silent. `gen-like`/`gen-nope` are excluded there and sounded in
+    `decideCard` instead, so drag-swipes and the ♥/✕ buttons both fire
+    `swipe-keep`/`swipe-nope`. `markPostShared`→`big-win`; validation failures
+    →`error`. Groups (`tap`, `small-win`, `swipe-keep/nope`) pick a random
+    variant per play. Settings has a "🔊 Sounds" mute toggle (`#soundEnabled`).
+  - Verified headless (Chromium, 390×844): module loads, all clips decode over
+    `file://`, clicks fire the right sounds, mute silences them, no console
+    errors, no horizontal overflow. Version → v0.10.
 - 2026-07-11: Dropped the orange accent line from the generate caption stickers
   (`CAPTION_STYLES` in app.js — all `accent` now null). The `accent` support in
   `drawCaptionSticker`/`drawCaptionPanel` stays for the manual/collage banner.
