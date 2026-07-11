@@ -44,6 +44,30 @@ static server.
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-11: **Mascot art swapped PNG → SVG** (owner-supplied vector poses).
+  `assets/mascot/*.png` (12 sprite-sheet slices) removed; replaced with **15
+  crisp vector poses** in `assets/mascot/*.svg`: `main, run, thinking, excited,
+  sleep, happy, laughing, surprised, wink, sad, jump, wave, angry, dance, walk`
+  (Adobe Illustrator exports, flat `<path>` sets, brand palette — `#F98904`
+  orange / `#FDCE0A` yellow / `#EB4527` red / `#2E2D2B` outline). `js/mascot.js`
+  now serves `.svg` and keeps back-compat via an **ALIAS map** so the app's
+  semantic state names still resolve: idle→main, loading→run, celebrate→excited,
+  sleeping→sleep, relaxing→happy, singing→laughing, confused→surprised,
+  thumbsup→wink, waving→wave (thinking/excited/sad match a pose 1:1). Unknown
+  states fall back to `main`. `#homeMascot` → `wave.svg`, `#celebrateMascot` →
+  `excited.svg` (index.html). The 3 extra poses (`angry`, `dance`, `walk`) are
+  now available too.
+  - **Animation is pure CSS** (no Lottie/Rive — those need a runtime/binary
+    editor and would break the no-build, offline-first, file:// model; and a
+    from-scratch Lottie would throw away this art). SVG animates smoothly via
+    CSS transforms on the `<img>`. NB the SVG parts aren't grouped/id'd, so only
+    **whole-image** transforms are possible (no isolated wing/leg rigging).
+    Added a `mascot-breathe` keyframe (grounded squash-stretch) alongside the
+    existing bob/float/sway/spin/pop; all gated under `prefers-reduced-motion`.
+  - Verified headless (Chromium, 390×844): home shows `wave.svg` (loaded),
+    every alias resolves to the right file, bogus state → `main`, Generate
+    empty-state renders `happy.svg`, no console errors, no horizontal overflow.
+    Version → v0.11. (Motion polish per Fable's review may follow.)
 - 2026-07-11: **UI sound layer** (`js/sound.js`, loaded before app.js; exposes
   `window.Sound`). Plays a 19-clip pack in `assets/sounds/` (`tap-1..3`,
   `small-win-1..3`, `big-win`, `error`, `swipe-keep/nope-1..2`, `nav-switch`,
