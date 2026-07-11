@@ -406,8 +406,9 @@
   }
 
   function refreshPoolUi() {
-    const has = photoPool.length > 0;
-    const label = has ? `📁 ${photoPool.length} photos loaded — tap shuffle for random picks` : "";
+    const n = photoPool.length;
+    const has = n > 0;
+    const label = has ? `📁 ${n} photos loaded — tap shuffle for random picks` : "";
     [["#singleShuffle", "#singlePoolNote"], ["#collageShuffle", "#collagePoolNote"]].forEach(
       ([btnSel, noteSel]) => {
         const btn = $(btnSel);
@@ -416,6 +417,12 @@
         if (note) { note.hidden = !has; note.textContent = label; }
       }
     );
+    const genNote = $("#genPoolNote");
+    if (genNote) {
+      genNote.textContent = has
+        ? `📸 ${n} photo${n === 1 ? "" : "s"} loaded`
+        : "No photos loaded — add some in Settings → 📸 My chicken photos";
+    }
   }
 
   /* ---------- SAVED PHOTO STASH (persistent chicken photos) ---------- */
@@ -1509,6 +1516,7 @@
 
   async function runGenerate() {
     if (genBusy) return;
+    refreshPoolUi(); // keep the "N photos loaded" note current
     keepers = [];
     deckCursor = 0;
     const info = $("#genInfo");

@@ -44,6 +44,10 @@ static server.
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-10: Generate screen shows a **"📸 N photos loaded"** note (`#genPoolNote`,
+  updated in `refreshPoolUi`, refreshed on `runGenerate`) so the trader can see how
+  many photos are in the pool. The "📁 Photo folder" button stays (one-off session
+  pick); the saved stash is still the persistent source. Version → v0.07.
 - 2026-07-10: Generate captions are now **solid, tilted "sticker" labels** (was a
   feathered bottom banner). New `drawCaptionSticker` in imaging.js draws a solid
   rounded-rect label with a slight rotation (`opts.angle`) and varying font
