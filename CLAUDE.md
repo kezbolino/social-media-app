@@ -44,6 +44,29 @@ static server.
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-11: **Mascot motion pass** (CSS animations, authored by the Fable
+  model). Replaced the placeholder motions with a physics-minded v2 set in
+  `css/styles.css`, all whole-image transforms (SVG parts aren't grouped) with
+  grounded pivots + gesture-then-rest timing:
+  - `mascot-wave` (home hero) — two quick tilt-pulses toward the raised wing +
+    a tiny hop, then a ~2.4s rest (not a constant metronome sway). Positive
+    rotate leans toward the raised wing (viewer's right in `wave.svg`).
+  - `mascot-jog` (Generate loading, `run` pose) — fast 0.62s cadence, launch
+    decelerates / fall accelerates, contact-squash + forward lean.
+  - `mascot-win` (`#celebrateMascot`) — 0.85s burst-from-below w/ overshoot →
+    land-squash → rebound → settle, then hands off to infinite `mascot-breathe`
+    so the win stays alive under the confetti. **Also removed the `FX.pop(cm)`
+    call in `markPostShared`** — it fought `mascot-win` (two scale anims); the
+    class now owns the entrance.
+  - `mascot-breathe` — volume-preserving squash/stretch (reads as breathing).
+  - `mascot-snooze` (sleep) / `mascot-mope` (sad) — `mascotEmpty()` in app.js
+    now picks anim by mood (`{sleeping:"snooze", sad:"mope"}[state]||"float"`)
+    instead of always floating.
+  - All five new classes added to the `prefers-reduced-motion` disable list.
+  - Verified headless (Chromium 390×844, `file://`): wave animates (7 distinct
+    transforms/1.3s) and is frozen under reduced-motion (1 transform), win
+    mascot runs win+breathe, no console errors, no horizontal overflow.
+    Version → v0.12.
 - 2026-07-11: **Mascot art swapped PNG → SVG** (owner-supplied vector poses).
   `assets/mascot/*.png` (12 sprite-sheet slices) removed; replaced with **15
   crisp vector poses** in `assets/mascot/*.svg`: `main, run, thinking, excited,

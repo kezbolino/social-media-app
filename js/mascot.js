@@ -80,7 +80,7 @@ const Mascot = (() => {
   // Build the class list from options: { anim, size, className }.
   function classes(opts = {}) {
     const cls = ["mascot"];
-    if (opts.anim) cls.push("mascot-" + opts.anim); // bob | float | sway | spin | pop | breathe
+    if (opts.anim) cls.push("mascot-" + opts.anim); // bob|float|sway|spin|pop | wave|breathe|jog|win|snooze|mope
     if (opts.size) cls.push("mascot-" + opts.size); // sm | lg
     if (opts.className) cls.push(opts.className);
     return cls.join(" ");

@@ -88,7 +88,9 @@
     if (!el) return;
     el.classList.add("mascot-empty");
     el.innerHTML = "";
-    if (window.Mascot) el.appendChild(Mascot.el(state, { anim: "float", size: "lg" }));
+    // Match the motion to the mood: sleepers snooze, sad droops, rest floats.
+    const anim = { sleeping: "snooze", sad: "mope" }[state] || "float";
+    if (window.Mascot) el.appendChild(Mascot.el(state, { anim, size: "lg" }));
     const span = document.createElement("span");
     span.className = "mascot-empty-msg";
     span.textContent = text;
@@ -1023,7 +1025,7 @@
     if (window.Sound) Sound.play("big-win"); // 🔊 the fanfare
     if (window.FX) FX.confetti(); // 🎉 the win
     const cm = $("#celebrateMascot"); // the mascot joins the party
-    if (cm) { cm.hidden = false; if (window.FX) FX.pop(cm); }
+    if (cm) cm.hidden = false; // its own .mascot-win handles the pop+settle
     if (post.caption) Store.recordHookUse(post.caption.hook.id);
     Store.savePost({
       id: post.id,
@@ -1538,7 +1540,7 @@
     genBusy = true;
     info.textContent = "";
     $("#genLoading").innerHTML =
-      (window.Mascot ? Mascot.html("loading", { anim: "bob", size: "lg", className: "mascot-center" }) : "") +
+      (window.Mascot ? Mascot.html("loading", { anim: "jog", size: "lg", className: "mascot-center" }) : "") +
       '<p class="hint" style="text-align:center">Cooking up posts…</p>';
     genShow("loading");
     genDeck = await buildGeneratedPosts();
