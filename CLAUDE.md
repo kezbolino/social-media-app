@@ -37,13 +37,20 @@ static server.
   `if (window.X)` guard needs the module to also do `window.X = X` (see the tail
   of `js/photos.js`, and `window.FX = …` in `js/fx.js`).
 - App version string lives in one place: `#appVersion` at the bottom of the home
-  screen in index.html (currently `v0.08`).
+  screen in index.html (currently `v0.09`).
   - ⭐ **RULE (do this automatically, never ask):** every shipped feature or
     enhancement MUST bump `#appVersion` in the *same* change, before committing.
     Increment the patch (v0.03 → v0.04) for a normal feature/enhancement. The owner
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-11: Dropped the orange accent line from the generate caption stickers
+  (`CAPTION_STYLES` in app.js — all `accent` now null). The `accent` support in
+  `drawCaptionSticker`/`drawCaptionPanel` stays for the manual/collage banner.
+  Also scrubbed all "final/last day" wording — the pitches are recurring, so the
+  5 `lst_*` hooks (captions + overlays) were rewritten as today-focused urgency
+  (no finality). Audited: 0 finality phrases, 0 verbatim overlay/caption repeats
+  across all 130 hooks. Version → v0.09.
 - 2026-07-11: Image text and caption are now a **locked pair, not duplicates**.
   Every hook in `data/streetfood_hooks.json` gained `overlays`: 2-3 short punchy
   lines (mix of {location}-shouts and pure hype, may use {location}/{day}/{item})

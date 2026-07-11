@@ -296,14 +296,14 @@ window.HOOK_LIBRARY = {
       "tags": [
         "other"
       ],
-      "text": "Last day at {location}! Get in before we pack up.",
+      "text": "Here at {location} today - get in before we sell out.",
       "uses": [
         "location"
       ],
       "overlays": [
-        "FINAL CALL 📢",
-        "TODAY. THEN GONE.",
-        "{location} ⚠️"
+        "GET IN TODAY",
+        "{location} · TRADING NOW",
+        "WHILE STOCKS LAST"
       ]
     },
     {
@@ -311,14 +311,14 @@ window.HOOK_LIBRARY = {
       "tags": [
         "other"
       ],
-      "text": "It's now or never - final day at {location} today.",
+      "text": "We are at {location} today. Hot food while it lasts.",
       "uses": [
         "location"
       ],
       "overlays": [
-        "LAST ORDERS ⚠️",
-        "TOMORROW = TOO LATE",
-        "{location}, TODAY ONLY"
+        "TODAY IS THE DAY",
+        "{location} 📍",
+        "DON'T MISS OUT"
       ]
     },
     {
@@ -326,14 +326,14 @@ window.HOOK_LIBRARY = {
       "tags": [
         "other"
       ],
-      "text": "We're gone after today. {location}, come and say a proper goodbye.",
+      "text": "We are at {location} today - swing by while we are about.",
       "uses": [
         "location"
       ],
       "overlays": [
-        "ONE MORE DAY 😢",
-        "LAST CHANCE, {location}",
-        "DON'T MISS US"
+        "WE ARE ABOUT TODAY",
+        "{location} 📍",
+        "COME SAY HI"
       ]
     },
     {
@@ -341,15 +341,15 @@ window.HOOK_LIBRARY = {
       "tags": [
         "other"
       ],
-      "text": "{day} is your last shot at {location}. Don't make it weird, just come.",
+      "text": "We are at {location} til {day}. Do not make it weird, just come.",
       "uses": [
         "location",
         "day"
       ],
       "overlays": [
-        "ENDS {day} ⚠️",
-        "FINAL DAYS AT {location}",
-        "NO PRESSURE. (PRESSURE.)"
+        "HERE TIL {day}",
+        "{location} 📍",
+        "NO EXCUSES NOW"
       ]
     },
     {
@@ -357,14 +357,14 @@ window.HOOK_LIBRARY = {
       "tags": [
         "other"
       ],
-      "text": "Blink and you'll miss us - last day at {location}.",
+      "text": "We are at {location} today - do not sleep on it.",
       "uses": [
         "location"
       ],
       "overlays": [
-        "POOF. GONE TOMORROW.",
-        "CATCH US WHILE YOU CAN",
-        "{location} · FINAL DAY"
+        "DON'T SLEEP ON IT",
+        "{location} · TODAY",
+        "WE ARE HERE NOW"
       ]
     },
     {
@@ -764,9 +764,9 @@ window.HOOK_LIBRARY = {
         "location"
       ],
       "overlays": [
-        "{item}. HOT. NOW.",
-        "MOVE. 🏃",
-        "{location} · RIGHT NOW"
+        "OI. LUNCH. 🍗",
+        "STOP SCROLLING",
+        "{location} · GO GO GO"
       ]
     },
     {
