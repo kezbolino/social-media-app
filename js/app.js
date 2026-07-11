@@ -1614,6 +1614,11 @@
         filledText: picked.filledText,
         hook: picked.hook,
         hashtags: "\n\n" + buildHashtagBlock(genLocation),
+        // Kept for Customise: the clean photo + the sticker spec that was
+        // baked on, so the editor can re-create the sticker as a movable
+        // overlay instead of double-baking on the composite.
+        baseImg: img,
+        sticker: { text: overlayText, style },
       });
     }
     return out;
@@ -1736,16 +1741,45 @@
     post.hashtagBlock = g.hashtags || "";
   }
 
+  // Customise a keeper: open the photo editor on the CLEAN photo with the
+  // baked sticker recreated as a movable text overlay — drag / pinch / rotate
+  // repositions the whole sticker (box + text + tilt) as one unit, and the
+  // editor's export re-bakes it wherever it lands. Next → caption → review.
   function customiseKeeper(i) {
     const g = keepers[i];
     if (!g) return;
     seedPostFromGen(g);
-    $("#captionText").value = post.captionText;
-    updateHashtagBtnLabel();
-    const back = document.querySelector('[data-screen="caption"] .back');
-    if (back) back.dataset.back = "generate";
-    renderCaptionPreview();
-    show("caption");
+    post.singleImage = g.baseImg || g.img; // clean photo — no double-baked sticker
+    const st = (g.sticker && g.sticker.style) || {};
+    post.editState = {
+      overlays: [{
+        id: "gsticker1",
+        text: (g.sticker && g.sticker.text) || g.overlayText || "",
+        style: "strong", color: st.color || "#ffffff",
+        align: "center", highlight: "none",
+        cx: 0.5, cy: 0.82, // roughly where the bake put it (bottom-centre)
+        size: 9.5 * (st.sizeScale || 1), // sticker maxFont W*0.095 as % of width
+        rot: Math.round(st.angle || 0),
+        sticker: {
+          bg: st.fillRGB ? `rgb(${st.fillRGB.join(",")})` : "#0a4da1",
+          color: st.color || "#ffffff",
+          accent: st.accent || null,
+          shadow: st.shadow !== false,
+        },
+      }],
+    };
+    post.fromHistory = true; // editor Next → seeded caption (skip the quiz)
+    // goToSeededCaption re-applies a fresh hashtag block on top of captionText,
+    // so hold the bare line here (seedPostFromGen included g.hashtags).
+    post.captionText = g.filledText;
+    post.hashtagBlock = "";
+    setEditorChrome("generate", "Move the text");
+    show("editor"); // show first so the editor can measure its real width
+    Editor.open(post.singleImage, post.editState, {
+      hookProvider: makeHookProvider(),
+      startTab: "text",
+      selectFirst: true,
+    });
   }
 
   async function postKeeper(i) {

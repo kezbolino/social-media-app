@@ -44,6 +44,34 @@ static server.
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-11: **Movable sticker text on generated posts.** Keeper "Customise"
+  (`customiseKeeper` in app.js) now opens the photo EDITOR (was: caption screen)
+  on the clean un-baked photo, with the burned-in sticker recreated as a movable
+  text overlay — drag / pinch-scale / rotate / size & rotate sliders all move
+  the WHOLE sticker (solid rounded box + text + tilt) as one unit; the editor's
+  `getResult()` re-bakes it wherever it lands, so the moved sticker is what gets
+  shared (review uses `post.baseImage` via `composePostImage`).
+  - `js/editor.js`: overlays gained an optional `sticker` field
+    `{bg,color,accent,shadow}`. `drawTextOverlay` routes such overlays to a new
+    `drawStickerOverlay` that faithfully ports `Imaging.drawCaptionSticker`'s
+    look (W-relative pads/radius/shadow, wrap to ≤3 lines within 0.84·W, accent
+    bar) but honours `cx/cy/rot/size` — `ov.size` is the target font (% of W),
+    shrinking proportionally only if needed to keep ≤3 lines, so preview and
+    export render identically. Sets `ov._box` for hit-testing and draws the
+    dashed selection rect, so all existing drag/pinch/slider/delete machinery
+    just works. Colour swatches/eyedropper/colour-picker set `ov.sticker.color`
+    when a sticker overlay is selected. `Editor.open` gained back-compatible
+    `opts.startTab` + `opts.selectFirst` so Customise lands on the Text tab with
+    the sticker pre-selected.
+  - `js/app.js`: `buildGeneratedPosts` items now also carry `baseImg` (the raw
+    decoded photo) and `sticker: {text, style}` (the spec that was baked), so
+    Customise doesn't double-bake. `customiseKeeper` maps that into
+    `post.editState.overlays[0]` (cy 0.82 ≈ the baked bottom spot, size
+    `9.5·sizeScale` ≈ maxFont W·0.095), sets `post.fromHistory = true` so editor
+    Next → seeded caption → review (no quiz), and seeds `captionText` with the
+    BARE line (`goToSeededCaption` re-applies a fresh hashtag block — keeping
+    `g.hashtags` on it would double-append). Caption Back → editor → generate.
+    Version → v0.13.
 - 2026-07-11: **Mascot motion pass** (CSS animations, authored by the Fable
   model). Replaced the placeholder motions with a physics-minded v2 set in
   `css/styles.css`, all whole-image transforms (SVG parts aren't grouped) with

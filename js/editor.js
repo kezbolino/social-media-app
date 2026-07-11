@@ -129,7 +129,7 @@ const Editor = (() => {
       }
       if (e.target.closest("[data-more]")) {
         const ov = selectedOverlay();
-        if (ov && els.colorInput) { els.colorInput.value = toHex6(ov.color); els.colorInput.click(); }
+        if (ov && els.colorInput) { els.colorInput.value = toHex6(overlayColor(ov)); els.colorInput.click(); }
         return;
       }
       const b = e.target.closest("[data-swatch]");
@@ -155,6 +155,9 @@ const Editor = (() => {
   // Open the editor on an image, optionally restoring a previous edit state.
   // opts.mode === "text" gives a text-only editor (no crop/filter) used for
   // adding captions onto an already-composed collage.
+  // opts.startTab lands on a specific tab (e.g. "text") and opts.selectFirst
+  // pre-selects the first overlay so it's immediately grabbable — used when
+  // Customise opens a generated post with its sticker as a movable overlay.
   function open(image, state, opts) {
     opts = opts || {};
     modeText = opts.mode === "text";
@@ -180,13 +183,14 @@ const Editor = (() => {
     els.zoom.value = zoom;
     syncAspectButtons();
     syncAdjustInputs();
-    showTab(modeText ? "text" : "filters");
+    showTab(opts.startTab || (modeText ? "text" : "filters"));
     layout();
     if (state && state.offset) { offX = state.offset.x; offY = state.offset.y; }
     else centreImage();
     clampOffsets();
     buildFilterThumbs();
     selectFilter(filterKey, true);
+    if (opts.selectFirst && overlays.length) selId = overlays[0].id;
     syncTextPanel();
     render();
   }
@@ -516,6 +520,11 @@ const Editor = (() => {
     return overlays.find((o) => o.id === selId) || null;
   }
 
+  // The colour an overlay's swatches should reflect (sticker text vs normal).
+  function overlayColor(ov) {
+    return ov.sticker ? (ov.sticker.color || "#ffffff") : ov.color;
+  }
+
   function onTextAction(action) {
     if (action === "add") return addOverlay("");
     if (action === "hook") return cycleHook();
@@ -585,6 +594,8 @@ const Editor = (() => {
       ov.style = value;
       const st = TEXT_STYLES[value];
       if (st.highlightDefault && ov.highlight === "none") ov.highlight = st.highlightDefault;
+    } else if (prop === "color" && ov.sticker) {
+      ov.sticker.color = value; // sticker overlays: swatches recolour the text
     } else {
       ov[prop] = value;
     }
@@ -604,7 +615,7 @@ const Editor = (() => {
     els.txtStyles.querySelectorAll("[data-style]").forEach((b) =>
       b.classList.toggle("selected", b.dataset.style === ov.style));
     els.txtSwatches.querySelectorAll("[data-swatch]").forEach((b) =>
-      b.classList.toggle("selected", b.dataset.swatch.toLowerCase() === ov.color.toLowerCase()));
+      b.classList.toggle("selected", b.dataset.swatch.toLowerCase() === overlayColor(ov).toLowerCase()));
     els.txtAlign.textContent = ov.align === "center" ? "↔ Centre" : ov.align === "left" ? "⇤ Left" : "⇥ Right";
     els.txtHighlight.textContent = ov.highlight === "none" ? "▢ No fill" : ov.highlight === "solid" ? "▣ Colour fill" : "▨ Shade";
   }
@@ -641,7 +652,100 @@ const Editor = (() => {
     return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? "#111111" : "#ffffff";
   }
 
+  // A generated-post "sticker" as a movable overlay: the whole solid rounded
+  // box + text + tilt moves/scales/rotates as ONE unit. Faithfully mirrors
+  // Imaging.drawCaptionSticker (pads, wrap, ≤3 lines, accent bar, drop shadow),
+  // but positioned by the overlay's cx/cy/rot and sized by ov.size — every
+  // metric derives from W so preview and export render identically.
+  function drawStickerOverlay(ctx, ov, W, H, selected, track) {
+    const raw = ov.text || "";
+    if (!raw.trim() && !selected) { if (track) ov._box = null; return; }
+    const s = ov.sticker;
+    const bg = s.bg || "#0a4da1";
+    const color = s.color || "#ffffff";
+    const accent = s.accent || null;
+    const dropShadow = s.shadow !== false;
+
+    const padX = Math.round(W * 0.045);
+    const padY = Math.round(W * 0.032);
+    const maxBoxW = W * 0.84;
+    const maxTextW = maxBoxW - padX * 2;
+    const maxFont = Math.max(4, (ov.size / 100) * W);
+    const minFont = maxFont * 0.44; // same shrink range as the baked sticker
+    const lineRatio = 1.16;
+    const family = "Poppins, Arial, sans-serif";
+
+    const wrap = (fs) => {
+      ctx.font = `800 ${fs}px ${family}`;
+      const lines = [];
+      let line = "";
+      for (const word of raw.trim().split(/\s+/)) {
+        const trial = line ? line + " " + word : word;
+        if (ctx.measureText(trial).width <= maxTextW || !line) line = trial;
+        else { lines.push(line); line = word; }
+      }
+      if (line) lines.push(line);
+      return lines;
+    };
+
+    // ov.size is the target font; shrink (proportionally, so preview and
+    // export agree) only as far as needed to keep the sticker ≤ 3 lines.
+    const step = Math.max(1, W * 0.006);
+    let fontSize = maxFont;
+    let lines = wrap(fontSize);
+    while (lines.length > 3 && fontSize - step > minFont) {
+      fontSize -= step;
+      lines = wrap(fontSize);
+    }
+    if (lines.length > 3) lines = lines.slice(0, 3);
+
+    const lineH = fontSize * lineRatio;
+    const textW = Math.max(1, ...lines.map((l) => ctx.measureText(l || " ").width));
+    const boxW = Math.min(maxBoxW, textW + padX * 2);
+    const boxH = lines.length * lineH + padY * 2;
+    const r = Math.round(W * 0.022);
+
+    ctx.save();
+    ctx.translate(ov.cx * W, ov.cy * H);
+    if (ov.rot) ctx.rotate((ov.rot * Math.PI) / 180);
+    if (dropShadow) {
+      ctx.shadowColor = "rgba(0,0,0,0.32)";
+      ctx.shadowBlur = Math.round(W * 0.022);
+      ctx.shadowOffsetY = Math.round(W * 0.007);
+    }
+    roundRect(ctx, -boxW / 2, -boxH / 2, boxW, boxH, r);
+    ctx.fillStyle = bg;
+    ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+    if (accent) {
+      const aH = Math.max(6, Math.round(W * 0.012));
+      ctx.fillStyle = accent;
+      ctx.fillRect(-boxW / 2 + r, -boxH / 2, boxW - r * 2, aH);
+    }
+    ctx.font = `800 ${fontSize}px ${family}`;
+    ctx.fillStyle = color;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const startY = -((lines.length - 1) * lineH) / 2 + (accent ? Math.round(W * 0.008) : 0);
+    lines.forEach((l, i) => ctx.fillText(l || " ", 0, startY + i * lineH));
+
+    if (selected) {
+      ctx.setLineDash([6, 5]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      ctx.strokeRect(-boxW / 2 - 4, -boxH / 2 - 4, boxW + 8, boxH + 8);
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+
+    // Axis-aligned hit box in frame space, same contract as normal overlays.
+    if (track) ov._box = { cx: ov.cx * W, cy: ov.cy * H, w: boxW, h: boxH };
+  }
+
   function drawTextOverlay(ctx, ov, W, H, selected, track) {
+    if (ov.sticker) return drawStickerOverlay(ctx, ov, W, H, selected, track);
     const st = TEXT_STYLES[ov.style] || TEXT_STYLES.classic;
     const fontPx = (ov.size / 100) * W;
     const raw = ov.text || "";
