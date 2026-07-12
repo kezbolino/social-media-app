@@ -44,6 +44,17 @@ static server.
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-12: **Sound layer scaled back to sparing use.** The full delegated
+  click-sound system (tap/nav-switch/toggle/back/small-win on nearly every
+  button) was overkill, so `js/sound.js` now only exposes `play()` for two
+  triggers, both still called explicitly from `js/app.js`: `big-win` when a
+  post is shared (`markPostShared`) and `swipe-keep`/`swipe-nope` on Generate
+  swipe decisions (`decideCard`). Removed: the capture-phase delegated click
+  listener, `ACTION_SOUND`/`ACTION_SILENT`/`pickForEvent`, the `tap`/
+  `small-win` groups, the settings toggle-preview ping, and the two `error`
+  dings (queue-add with no date, caption details with no match) — those now
+  just wiggle (`FX.wiggle`) with no sound. Mute toggle (`#soundEnabled`)
+  behavior unchanged. Version → v0.13.
 - 2026-07-11: **Mascot motion pass** (CSS animations, authored by the Fable
   model). Replaced the placeholder motions with a physics-minded v2 set in
   `css/styles.css`, all whole-image transforms (SVG parts aren't grouped) with

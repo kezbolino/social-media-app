@@ -214,7 +214,7 @@
     $("#notifyEnabled").addEventListener("change", onNotifyToggle);
     $("#soundEnabled").addEventListener("change", (e) => {
       const on = e.target.checked;
-      if (window.Sound) { Sound.setMuted(!on); if (on) Sound.play("toggle"); }
+      if (window.Sound) Sound.setMuted(!on);
     });
     $("#notifyTime").addEventListener("change", (e) => {
       const n = Store.getNotify();
@@ -824,7 +824,6 @@
     err.textContent = vars.includes("location") && !post.location
       ? "Add a location to get a caption for this kind of post."
       : "No caption fits those details — try a different answer or add a location.";
-    if (window.Sound) Sound.play("error");
     if (window.FX) FX.wiggle(err); // a friendly "oi, look here" shimmy
   }
 
@@ -1886,7 +1885,6 @@
     const err = $("#queueError");
     if (!date) {
       err.textContent = "Pick a day first.";
-      if (window.Sound) Sound.play("error");
       if (window.FX) FX.wiggle(err);
       return;
     }
