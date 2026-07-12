@@ -773,6 +773,14 @@ html, body {
 }
 .keeper-actions { display: flex; gap: 8px; }
 .keeper-actions .btn { flex: 1; }
+.keeper-queue { display: flex; gap: 8px; margin-top: 8px; }
+.keeper-date {
+  flex: 1; min-width: 0; padding: 8px 10px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--text);
+  font-family: inherit; font-size: 0.85rem;
+}
+.keeper-date:focus { outline: none; border-color: var(--blue); }
+.keeper-queue .btn { flex: 0 0 auto; }
 
 /* ---- Weather mode ---- */
 .weather-note {
@@ -863,6 +871,7 @@ html, body {
   margin-bottom: 10px;
 }
 .queue-item.is-due { border-left-color: #2b8a3e; }
+.queue-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; flex: 0 0 auto; border: 1px solid var(--line); }
 .queue-body { flex: 1; min-width: 0; }
 .queue-when { font-weight: 700; color: var(--blue); font-size: 0.95rem; }
 .queue-when .queue-loc { color: var(--orange-press); font-weight: 600; }

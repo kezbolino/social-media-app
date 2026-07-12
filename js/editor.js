@@ -16,6 +16,7 @@ const Editor = (() => {
     "1:1": { ratio: 1, export: [1080, 1080], label: "Square" },
     "4:5": { ratio: 0.8, export: [1080, 1350], label: "Portrait" },
     "1.91:1": { ratio: 1.91, export: [1080, 566], label: "Landscape" },
+    "9:16": { ratio: 9 / 16, export: [1080, 1920], label: "Story" },
   };
 
   // Named presets. Each is a CSS filter string applied while drawing.

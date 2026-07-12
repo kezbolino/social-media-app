@@ -449,6 +449,20 @@ const Imaging = (() => {
     return canvas.toDataURL("image/png");
   }
 
+  // Convert a data URL (e.g. from toDataURL) into a Blob — for storage that
+  // wants raw bytes (IndexedDB) rather than a ~33%-larger base64 string
+  // (localStorage). Manual atob decode, not fetch(), so it works the same on
+  // every engine including older mobile WebViews with no dependency on
+  // fetch() supporting the data: scheme.
+  function dataUrlToBlob(dataUrl) {
+    const [header, base64] = dataUrl.split(",");
+    const mime = /data:(.*?);base64/.exec(header)[1];
+    const bin = atob(base64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+
   return {
     ensureFonts,
     loadImageFromFile,
@@ -459,5 +473,6 @@ const Imaging = (() => {
     drawCaptionPanel,
     toBlob,
     toDataURL,
+    dataUrlToBlob,
   };
 })();

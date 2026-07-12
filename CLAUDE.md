@@ -43,7 +43,84 @@ static server.
     Increment the patch (v0.03 → v0.04) for a normal feature/enhancement. The owner
     should never have to ask for a version bump — it just happens.
 
+## Roadmap ideas (from a competitor review, 2026-07-12)
+A pass benchmarking this app against Buffer/Later/Planoly/Meta Business Suite/
+Canva and the 2026 food-truck marketing playbook (short-form video + Google
+Business Profile) turned up gaps + a prioritized backlog. **Built so far:**
+Story export (9:16), "Queue for later" (see Notable changes below). **Not yet
+built, roughly in priority order:**
+- Quick wins: backup/restore (export/import all local data + stash as one
+  file), recurring workdays ("every Friday = Greenwich"), hashtag sets per
+  location, tag stash photos by dish (fixes Generate photo/caption mismatch),
+  static best-time-to-post nudge.
+- Medium: basic video/Reels sharing (pick a clip → caption → share sheet, no
+  editing), visual history + grid preview (the composite image is already a
+  blob at share time, just isn't saved), post insights via the Meta Graph API
+  (credentials already stored), carousel parity (per-frame edit + direct
+  publish), open-when-due auto-publish for due queue items, weather-aware
+  nudges (the pieces — weather buckets, weather-pinned hooks, reminders — all
+  exist but aren't linked), a Google Business Profile helper workflow.
+- Bigger bets: a Capacitor wrap (the code already anticipates this in
+  `notify.js`/`share.js` comments — unlocks real background reminders/
+  scheduling), real branded collage overlays (the overlay-PNG system in
+  `renderCollage` exists and is unused — all 4 templates ship `overlay: null`),
+  optional online-only AI caption assist (off by default — cuts against the
+  app's offline/human-voice design, so low priority), a menu/price board
+  generator reusing the imaging pipeline.
+- Deliberately NOT recommended: team features, cloud sync, true background
+  auto-publish, multi-account management — all need a server or a native wrap
+  disproportionate to a single trader's app.
+
 ## Notable changes
+- 2026-07-12: **Story export + "Queue for later"**, the first two items off a
+  competitor-benchmarking pass (Buffer/Later/Planoly/Meta Business Suite/food-
+  truck marketing playbooks) that also produced a longer backlog — see "Ideas
+  not yet built" below.
+  - **Story mode**: `Editor.ASPECTS` (js/editor.js) gained `"9:16"` (1080×1920,
+    label "Story"), with a matching `📱 Story` chip in `#editorAspect`
+    (index.html). No new rendering path needed — the editor's crop/filter/text
+    tools and `getResult()` already worked off `ASPECTS[aspectKey]`, so Story is
+    just another aspect choice. Fixed a latent side-effect this exposed: the
+    review/caption preview boxes (`.preview-wrap`) are hardcoded `aspect-ratio:
+    1/1` in CSS, which let a tall Story export shrink to a sliver inside a
+    square box. New `fitPreviewBox(imgEl, w, h)` in app.js sets the wrap's own
+    `aspect-ratio` inline to match the actual composed image; called from both
+    `renderCaptionPreview` and `buildReview`. Benefits Landscape (1.91:1) too,
+    which had the same pre-existing letterboxing issue.
+  - **Queue for later**: each keeper card in the Generate tray (`showKeepers`)
+    now has a date input + `🗓 Queue for later` button alongside Post/Customise.
+    Unlike the plain `queueAdd` flow (date/location/text note only), this saves
+    the fully composed image (caption already baked on, same bytes `Post` would
+    use) so the queue item is a ready post, not just a reminder.
+  - New `js/drafts.js` — an IndexedDB blob store (`wingman-drafts` DB, same
+    pattern as `js/photos.js`) for these saved images, since localStorage can't
+    hold blobs and a base64 data URL would bloat it ~33% for no reason. Loaded
+    in index.html right after `js/photos.js`.
+  - New `Imaging.dataUrlToBlob()` (js/imaging.js) — manual atob decode (not
+    `fetch()`) so a generated card's `dataUrl` can become IndexedDB-storable
+    bytes without depending on `fetch()` supporting the `data:` scheme on every
+    engine.
+  - Queue items (`Store.getQueue()`) gained optional fields: `hashtags`,
+    `hookId`, `draftId` (the Drafts record's key). `renderQueue` (app.js) is now
+    async: it resolves each item's draft blob to an object-URL thumbnail
+    (`.queue-thumb`), revoking the previous batch on every re-render (same
+    `queueUrls` pattern as the existing `stashUrls` for the photo stash). A
+    queued item with an image shows a `📤 Post` button instead of `Make`; the
+    calendar day panel (`renderCalDaySchedule`) shows "📸 ready to post" next to
+    it.
+  - `makeFromQueue` branches on `item.draftId`: a plain note-only item still
+    goes through the full photo/caption flow as before; a queued-for-later
+    keeper calls the new `postFromDraft`, which loads the saved blob straight
+    into `post.singleImage` and jumps to Review (falls back to the notes-only
+    flow if the draft ever went missing, e.g. cleared storage).
+  - Deleting a queue item (`data-q-del`) now also calls `Drafts.remove()` on
+    its `draftId` so no orphaned blobs accumulate in IndexedDB.
+  - Verified headless (Chromium, 390×844, `file://`): Story chip resizes the
+    editor canvas to the correct 9:16 ratio; a full Generate → swipe-keep →
+    Queue for later → Queue screen (thumbnail renders) → Post → Review round
+    trip carries the right image/caption/hashtags through; deleting the queue
+    item removes the draft blob too (verified via `Drafts.get`); no console
+    errors. Version → v0.15.
 - 2026-07-12: The keeper tray's **📤 Post** button (`postKeeper` in app.js) now
   plays `swipe-keep` too — same chime as swiping right on the deck, since
   posting a keeper is the same "keep it" gesture one step later. Version →

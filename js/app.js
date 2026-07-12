@@ -153,6 +153,12 @@
       const kEdit = e.target.closest("[data-keeper-edit]");
       if (kEdit) return customiseKeeper(+kEdit.dataset.keeperEdit);
 
+      const kQueue = e.target.closest("[data-keeper-queue]");
+      if (kQueue) {
+        const dateInput = kQueue.closest(".keeper-queue").querySelector(".keeper-date");
+        return queueKeeper(+kQueue.dataset.keeperQueue, dateInput ? dateInput.value : "", kQueue);
+      }
+
       const stashRemove = e.target.closest("[data-stash-remove]");
       if (stashRemove) return removeStashPhoto(stashRemove.dataset.stashRemove);
 
@@ -169,7 +175,12 @@
       if (qMake) return makeFromQueue(Store.getQueue().find((x) => x.id === qMake.dataset.qMake));
 
       const qDel = e.target.closest("[data-q-del]");
-      if (qDel) { Store.removeQueueItem(qDel.dataset.qDel); return renderQueue(); }
+      if (qDel) {
+        const it = Store.getQueue().find((x) => x.id === qDel.dataset.qDel);
+        if (it && it.draftId && window.Drafts) Drafts.remove(it.draftId);
+        Store.removeQueueItem(qDel.dataset.qDel);
+        return renderQueue();
+      }
 
       const loc = e.target.closest("[data-loc]");
       if (loc) return pickChip("location", loc.dataset.loc);
@@ -827,6 +838,14 @@
     if (window.FX) FX.wiggle(err); // a friendly "oi, look here" shimmy
   }
 
+  // The preview boxes default to a square via CSS; a non-square export (e.g.
+  // a 9:16 Story) would otherwise get letterboxed tiny inside that square.
+  // Set the box's own ratio to match the actual image so it fills properly.
+  function fitPreviewBox(imgEl, w, h) {
+    const wrap = imgEl && imgEl.closest(".preview-wrap");
+    if (wrap && w && h) wrap.style.aspectRatio = w + " / " + h;
+  }
+
   // Compose the post image (with the location/day text overlaid) for the
   // live preview on the caption screen.
   async function renderCaptionPreview() {
@@ -834,7 +853,7 @@
     try {
       await Imaging.ensureFonts();
       const canvas = await composePostImage();
-      if (canvas) img.src = Imaging.toDataURL(canvas);
+      if (canvas) { img.src = Imaging.toDataURL(canvas); fitPreviewBox(img, canvas.width, canvas.height); }
       else img.removeAttribute("src");
     } catch (e) {
       /* preview is best-effort */
@@ -996,6 +1015,7 @@
       }
       post.finalBlob = post.finalBlobs[0];
       $("#reviewImage").src = Imaging.toDataURL(coverCanvas);
+      fitPreviewBox($("#reviewImage"), coverCanvas.width, coverCanvas.height);
       badge.hidden = false;
       badge.textContent = `1 / ${post.finalBlobs.length}`;
     } else {
@@ -1003,6 +1023,7 @@
       post.finalBlob = await Imaging.toBlob(canvas);
       post.finalBlobs = [post.finalBlob];
       $("#reviewImage").src = Imaging.toDataURL(canvas);
+      fitPreviewBox($("#reviewImage"), canvas.width, canvas.height);
       badge.hidden = true;
     }
     post.status = "approved";
@@ -1429,7 +1450,8 @@
     for (const q of queued) {
       const loc = q.location ? ` · ${escapeAttr(q.location)}` : "";
       const cap = q.caption ? `<div class="cal-sched-cap">${escapeAttr(q.caption)}</div>` : "";
-      html += `<div class="cal-sched-item"><div class="cal-sched-when">🗓 Queued${loc}</div>${cap}</div>`;
+      const ready = q.draftId ? " · 📸 ready to post" : "";
+      html += `<div class="cal-sched-item"><div class="cal-sched-when">🗓 Queued${loc}${ready}</div>${cap}</div>`;
     }
     for (const p of posted) {
       const loc = p.location ? ` · ${escapeAttr(p.location)}` : "";
@@ -1704,8 +1726,10 @@
         '<button class="btn btn-accent" data-action="gen-regenerate">🔀 New batch</button>';
       return;
     }
+    const today = Notify.todayStr();
+    const tomorrow = Notify.todayStr(new Date(Date.now() + 86400000));
     let html = `<p class="lead">You kept ${keepers.length} 🎉</p>` +
-      `<p class="hint">Post one now, or tweak it first.</p><div class="keeper-list">`;
+      `<p class="hint">Post one now, tweak it, or queue it for a day at the pitch.</p><div class="keeper-list">`;
     keepers.forEach((g, i) => {
       const cap = (g.filledText || "").split("\n")[0];
       html +=
@@ -1715,6 +1739,10 @@
         `<div class="keeper-actions">` +
         `<button class="btn btn-primary btn-sm" data-keeper-post="${i}">📤 Post</button>` +
         `<button class="btn btn-secondary btn-sm" data-keeper-edit="${i}">✏️ Customise</button>` +
+        `</div>` +
+        `<div class="keeper-queue">` +
+        `<input type="date" class="keeper-date" min="${today}" value="${tomorrow}" aria-label="Queue for date" />` +
+        `<button class="btn btn-secondary btn-sm" data-keeper-queue="${i}">🗓 Queue for later</button>` +
         `</div></div></div>`;
     });
     html += `</div><button class="btn btn-accent" data-action="gen-regenerate" style="margin-top:14px">🔀 New batch</button>`;
@@ -1756,6 +1784,38 @@
     await buildReview();
     const rb = document.querySelector('[data-screen="review"] .back');
     if (rb) rb.dataset.back = "generate";
+  }
+
+  // Park a keeper on the calendar for a future day — unlike the notes-only
+  // queue-add flow (queueAdd), this saves the fully composed image (caption
+  // already baked on, same as Post) as a Blob in Drafts so "Make" on the
+  // queue/calendar can hand back a ready-to-share post, not just a reminder.
+  async function queueKeeper(i, dateStr, btn) {
+    const g = keepers[i];
+    const row = btn && btn.closest(".keeper-queue");
+    if (!g || !dateStr) {
+      if (window.FX && row) FX.wiggle(row);
+      return;
+    }
+    let draftId = null;
+    if (window.Drafts && Drafts.supported) {
+      draftId = "d_" + Date.now() + "_" + Math.random().toString(36).slice(2, 9);
+      const ok = await Drafts.save({ id: draftId, blob: Imaging.dataUrlToBlob(g.dataUrl), type: "image/png" });
+      if (!ok) draftId = null;
+    }
+    Store.addQueueItem({
+      id: "q_" + Date.now(),
+      date: dateStr,
+      location: genLocation || "",
+      caption: g.filledText,
+      hashtags: g.hashtags || "",
+      hookId: g.hook.id,
+      draftId,
+      created: new Date().toISOString(),
+      done: false,
+    });
+    if (btn) { btn.disabled = true; btn.textContent = "✓ Queued"; }
+    if (window.FX && btn) FX.sparkle(btn, { count: 10 });
   }
 
   function shuffleArr(a) {
@@ -1855,30 +1915,44 @@
     show("queue");
   }
 
-  function renderQueue() {
+  let queueUrls = []; // object URLs for queue thumbnails, revoked on re-render
+
+  async function renderQueue() {
     const today = Notify.todayStr();
     const items = Store.getQueue().slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
     const list = $("#queueList");
     const empty = $("#queueEmpty");
+    queueUrls.forEach((u) => URL.revokeObjectURL(u));
+    queueUrls = [];
     list.innerHTML = "";
     if (!items.length) {
       mascotEmpty(empty, "sleeping", "Nothing queued yet — add one below.");
       return;
     }
     empty.hidden = true;
-    items.forEach((it) => {
+    for (const it of items) {
       const row = document.createElement("div");
       const due = it.date && it.date <= today;
       row.className = "queue-item" + (due ? " is-due" : "");
       const loc = it.location ? ` · <span class="queue-loc">${escapeAttr(it.location)}</span>` : "";
       const cap = it.caption ? `<div class="queue-cap">${escapeAttr(it.caption)}</div>` : "";
+      let thumb = "";
+      if (it.draftId && window.Drafts) {
+        const rec = await Drafts.get(it.draftId);
+        if (rec && rec.blob) {
+          const url = URL.createObjectURL(rec.blob);
+          queueUrls.push(url);
+          thumb = `<img class="queue-thumb" src="${url}" alt="Queued post" />`;
+        }
+      }
       row.innerHTML =
+        thumb +
         `<div class="queue-body"><div class="queue-when">${fmtQueueDate(it.date)}${due ? " · today" : ""}${loc}</div>${cap}</div>` +
         `<div class="queue-actions">` +
-        `<button class="btn btn-primary btn-sm" data-q-make="${it.id}">Make</button>` +
+        `<button class="btn btn-primary btn-sm" data-q-make="${it.id}">${it.draftId ? "📤 Post" : "Make"}</button>` +
         `<button class="queue-x" data-q-del="${it.id}" aria-label="Remove">✕</button></div>`;
       list.appendChild(row);
-    });
+    }
   }
 
   function queueAdd(btn) {
@@ -1903,10 +1977,13 @@
     if (window.FX && btn) FX.sparkle(btn, { count: 14 }); // little reward puff
   }
 
-  // Turn a queued item into a live post: seed location/day (+ its note as the
-  // caption, if any) and jump to the photo step.
-  function makeFromQueue(item) {
+  // Turn a queued item into a live post. A plain note-only item still goes
+  // through the full photo/caption flow; a keeper queued with "Queue for
+  // later" already has a composed image saved in Drafts, so it jumps
+  // straight to review instead — the whole point of queuing it that way.
+  async function makeFromQueue(item) {
     if (!item) return;
+    if (item.draftId) return postFromDraft(item);
     post = freshPost();
     post.fromHistory = true;
     post.location = item.location || "";
@@ -1915,6 +1992,40 @@
     post.captionText = item.caption || "";
     post.caption = null;
     startSingle();
+  }
+
+  async function postFromDraft(item) {
+    const rec = window.Drafts && (await Drafts.get(item.draftId));
+    if (!rec || !rec.blob) {
+      // The draft vanished (cleared storage, etc.) — fall back to the
+      // notes-only flow so the queue item still isn't a dead end.
+      post = freshPost();
+      post.fromHistory = true;
+      post.location = item.location || "";
+      post.tag = item.location ? "location" : "brand";
+      post.day = weekdayName(item.date);
+      post.captionText = item.caption || "";
+      post.caption = null;
+      startSingle();
+      return;
+    }
+    const url = URL.createObjectURL(rec.blob);
+    let img;
+    try { img = await Imaging.loadImageFromUrl(url); } finally { URL.revokeObjectURL(url); }
+    post = freshPost();
+    post.type = "single";
+    post.singleImage = img;
+    post.fromHistory = true;
+    post.tag = item.location ? "location" : "brand";
+    post.location = item.location || "";
+    post.day = weekdayName(item.date);
+    post.caption = item.hookId ? { hook: { id: item.hookId }, filledText: item.caption, item: null } : null;
+    post.captionText = (item.caption || "") + (item.hashtags || "");
+    post.hashtagBlock = item.hashtags || "";
+    $("#captionText").value = post.captionText;
+    await buildReview();
+    const rb = document.querySelector('[data-screen="review"] .back');
+    if (rb) rb.dataset.back = "queue";
   }
 
   /* ---------- QUICK ACTIONS (review) ---------- */
