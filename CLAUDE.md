@@ -84,6 +84,57 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-12: **Repositionable Generate sticker + premium swipe reveal.**
+  - **Movable sticker (Customise)**: previously `buildGeneratedPosts` baked the
+    overlay line into the card image immediately (`renderSingle`), so by the
+    time you liked a post the text was just pixels — unmovable. Now each card
+    also keeps `rawImg` (the photo *without* the sticker) and its per-card
+    jittered `style`. **Post** is byte-identical to before (shares the default
+    bake, `g.dataUrl`/`g.img`); **✏️ Customise** now opens the photo in the
+    editor's text-only mode with the sticker as a *movable overlay* so it can
+    be dragged off the subject, then continues to the caption screen.
+  - **One source of truth for the sticker look**: `drawCaptionSticker` was
+    refactored into `Imaging.paintSticker(ctx, W, H, opts)` — position-
+    parameterised (`opts.cx/cy` as fractions; defaults to the classic bottom-
+    centre) and returns `{cx, cy, boxW, boxH}`. Both the baked-on sticker and
+    the editor's draggable one render through it, so they're pixel-identical
+    (no drift, unlike reusing the editor's generic text style — which draws one
+    pill *per line* and force-recolours text). `drawCaptionSticker` is now a
+    thin wrapper over it.
+  - **Editor sticker overlay**: `editor.js` gained a `kind:"sticker"` overlay
+    branch (`drawStickerOverlay`) that delegates rendering to
+    `Imaging.paintSticker`; `size` drives the sticker scale (÷9 so the editor's
+    default text size 9 = scale 1.0), `rot` the tilt, `cx/cy` the centre — so
+    the existing drag/pinch/size/rotate machinery works on it for free. A
+    `sticker-mode` class hides the style/colour/align/highlight controls (the
+    brand look is fixed); text/size/rotate stay. `Editor.open` gained a
+    `selectFirst` opt to pre-select the seeded sticker.
+  - **Double-hashtag trap avoided** (Fable flagged this): the customise flow
+    uses a new `post.fromGenerate` flag, NOT `fromHistory` — `editorNext`
+    branches on it straight to the caption screen *without* re-running
+    `applyHashtags` (which would append a second hashtag block, since
+    `seedPostFromGen` already set caption+hashtags). Caption back-target is
+    `editor` so the sticker can be re-dragged. Older keepers with no
+    `rawImg`/`style` (e.g. a restored session) fall back to the old caption-
+    only customise path (`customiseKeeperCaption`).
+  - **Premium swipe reveal**: the swipe deck used to fully rebuild on every
+    decision (`renderDeck` → `innerHTML=""`), so the next card *snapped* in at
+    full size. New `advanceDeck` instead REUSES the card elements and promotes
+    them up one depth class — because each card keeps its identity, the depth
+    change animates its `transform`, so the new top card scales up from the
+    stacked size into place. Uses a new `--ease-premium`
+    (`cubic-bezier(0.22,1,0.36,1)`) confident decelerate rather than the
+    bouncier default `--spring`. `renderDeck` still does the full build for the
+    first render / "New batch"; `buildSwipeCard` is the shared card factory.
+    Skipped under reduced motion.
+  - Verified headless (Chromium, 390×844, `file://`): Generate → keep →
+    Customise opens the editor in sticker-mode with the sticker selected at the
+    default position; dragging it then continuing yields a caption with exactly
+    ONE hashtag block and a working Review; Post still uses the default bake;
+    the swipe reveal reuses+promotes the same card element with the premium
+    inline transition; a full keep/nope run through all 10 cards reaches the
+    keepers tray; reduced-motion buttons-only path still advances. No console
+    errors. Version → v0.19.
 - 2026-07-12: **Fixed the "back button white-screens the app" bug.** Root
   cause: the app is a pure client-side screen-switcher (`show(screen)` just
   toggles `.is-active`) that never touched the History API, so it never

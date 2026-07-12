@@ -38,6 +38,7 @@
       captionText: "",
       hashtagBlock: "", // the appended hashtag block, if any
       fromHistory: false, // seeded from a past post / queue item (skip the quiz)
+      fromGenerate: false, // customising a Generate keeper (sticker already placed in editor)
       status: "draft",
       finalBlob: null, // the (first) exported image
       finalBlobs: null, // all exported images (carousel); single => [finalBlob]
@@ -408,6 +409,18 @@
       post.baseImage = await Imaging.loadImageFromUrl(r.dataUrl);
     } catch (e) {
       post.baseImage = null; // fall back if anything fails
+    }
+    // Customising a Generate keeper: caption + hashtags are already set (by
+    // seedPostFromGen), so go straight to the caption screen WITHOUT re-running
+    // applyHashtags (which would append a second hashtag block). Back returns to
+    // the editor so the sticker can be re-dragged.
+    if (post.fromGenerate) {
+      $("#captionText").value = post.captionText;
+      updateHashtagBtnLabel();
+      const back = document.querySelector('[data-screen="caption"] .back');
+      if (back) back.dataset.back = "editor";
+      renderCaptionPreview();
+      return show("caption");
     }
     // Seeded from a past post / queue item: the line is already chosen, so skip
     // the quiz and drop straight onto the caption screen (still shuffleable).
@@ -1696,6 +1709,8 @@
       try { composite = await Imaging.loadImageFromUrl(dataUrl); } catch (e) { /* fall back to raw */ }
       out.push({
         img: composite,
+        rawImg: img, // the photo WITHOUT the sticker (for repositioning in Customise)
+        style,       // the per-card jittered sticker style (to re-seed the overlay)
         dataUrl,
         overlayText,
         filledText: picked.filledText,
@@ -1707,6 +1722,18 @@
   }
 
   /* ---- swipe deck ---- */
+  function buildSwipeCard(g, depth) {
+    const card = document.createElement("div");
+    card.className = "swipe-card depth-" + depth;
+    card.innerHTML =
+      `<img src="${g.dataUrl}" alt="Generated post with caption" draggable="false" />` +
+      `<div class="swipe-cap">${escapeAttr(g.filledText + " " + (g.hashtags || "").trim())}</div>` +
+      `<span class="swipe-badge keep">KEEP</span>` +
+      `<span class="swipe-badge nope">NOPE</span>`;
+    return card;
+  }
+
+  // Full (re)build — used on the first render and "New batch".
   function renderDeck() {
     const deck = $("#genDeck");
     deck.innerHTML = "";
@@ -1716,18 +1743,36 @@
     // Render up to three stacked cards; appended last = on top.
     const end = Math.min(total, deckCursor + 3);
     for (let i = end - 1; i >= deckCursor; i--) {
-      const g = genDeck[i];
-      const depth = i - deckCursor;
-      const card = document.createElement("div");
-      card.className = "swipe-card depth-" + depth;
-      card.innerHTML =
-        `<img src="${g.dataUrl}" alt="Generated post with caption" draggable="false" />` +
-        `<div class="swipe-cap">${escapeAttr(g.filledText + " " + (g.hashtags || "").trim())}</div>` +
-        `<span class="swipe-badge keep">KEEP</span>` +
-        `<span class="swipe-badge nope">NOPE</span>`;
+      const card = buildSwipeCard(genDeck[i], i - deckCursor);
       deck.appendChild(card);
-      if (depth === 0) attachDrag(card);
+      if (i - deckCursor === 0) attachDrag(card);
     }
+  }
+
+  // After a swipe decision: instead of tearing the deck down and rebuilding it
+  // (which snaps the next card in at full size), reuse the existing card
+  // elements and PROMOTE them up one level. Because each promoted card keeps
+  // its identity, changing its depth class animates its transform — so the new
+  // top card scales up from the stacked size into place with premium easing.
+  function advanceDeck() {
+    const deck = $("#genDeck");
+    const total = genDeck.length;
+    const gone = deck.querySelector(".swipe-card.depth-0");
+    const d1 = deck.querySelector(".swipe-card.depth-1");
+    const d2 = deck.querySelector(".swipe-card.depth-2");
+    if (gone) gone.remove();
+    if (deckCursor >= total) return showKeepers();
+    $("#genProgress").textContent = `${deckCursor + 1} / ${total}`;
+    if (!d1) return renderDeck(); // fewer than 2 were showing — safe rebuild
+    if (d2) d2.className = "swipe-card depth-1";
+    d1.className = "swipe-card depth-0";
+    // Premium scale-up reveal (skipped under reduced motion — the class-driven
+    // transform change would otherwise use the bouncier default spring).
+    if (!reduceMotion) d1.style.transition = "transform 0.5s var(--ease-premium)";
+    attachDrag(d1);
+    // Bring a fresh card in at the back (first child = furthest back) if any left.
+    const backIndex = deckCursor + 2;
+    if (backIndex < total) deck.insertBefore(buildSwipeCard(genDeck[backIndex], 2), deck.firstChild);
   }
 
   function attachDrag(card) {
@@ -1778,7 +1823,7 @@
     if (dir === "right") { keepers.push(g); if (window.FX) FX.buzz(6); }
     else { binnedHookIds.add(g.hook.id); }
     deckCursor++;
-    renderDeck();
+    advanceDeck();
   }
 
   function showKeepers() {
@@ -1829,9 +1874,42 @@
     post.hashtagBlock = g.hashtags || "";
   }
 
-  function customiseKeeper(i) {
+  // Customise a kept post: open the photo in the editor's text-only mode with
+  // the sticker as a MOVABLE overlay (not baked on), so the owner can drag it
+  // off the subject before sharing. Falls back to the plain caption screen for
+  // older keepers that predate rawImg/style (e.g. a restored session).
+  async function customiseKeeper(i) {
     const g = keepers[i];
     if (!g) return;
+    if (!g.rawImg || !g.style) return customiseKeeperCaption(g);
+    seedPostFromGen(g);
+    post.fromGenerate = true;
+    await Imaging.ensureFonts();
+    // Background = the raw photo composed to the export square, NO sticker.
+    const bgCanvas = Imaging.renderSingle(g.rawImg, null);
+    let bg;
+    try { bg = await Imaging.loadImageFromUrl(bgCanvas.toDataURL("image/png")); }
+    catch (e) { return customiseKeeperCaption(g); }
+    // Seed the sticker overlay at the EXACT default bake position by measuring
+    // it once off-screen, so it opens where the kept card showed it.
+    const mctx = document.createElement("canvas").getContext("2d");
+    const pos = Imaging.paintSticker(mctx, 1080, 1080, {
+      text: g.overlayText, fillRGB: g.style.fillRGB, color: g.style.color,
+      angle: g.style.angle, scale: g.style.sizeScale,
+    });
+    const seed = {
+      id: "ov_sticker", kind: "sticker", text: g.overlayText,
+      fillRGB: g.style.fillRGB, color: g.style.color,
+      cx: pos ? pos.cx : 0.5, cy: pos ? pos.cy : 0.82,
+      size: 9 * (g.style.sizeScale || 1), rot: g.style.angle || 0,
+    };
+    setEditorChrome("generate", "Move your text");
+    show("editor"); // show first so the editor can measure its real width
+    Editor.open(bg, { overlays: [seed] }, { mode: "text", hookProvider: makeHookProvider(), selectFirst: true });
+  }
+
+  // The old customise path — straight to the caption screen (no repositioning).
+  function customiseKeeperCaption(g) {
     seedPostFromGen(g);
     $("#captionText").value = post.captionText;
     updateHashtagBtnLabel();

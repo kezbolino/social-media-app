@@ -211,16 +211,23 @@ const Imaging = (() => {
     ctx.closePath();
   }
 
-  // A caption drawn as a solid, slightly-tilted "sticker" label (no feathering).
-  // Size varies with opts.sizeScale and tilt with opts.angle (degrees). Used by
-  // the Generate swipe deck for varied, punchy posts.
-  function drawCaptionSticker(ctx, text, W, H, opts) {
-    if (!text) return;
+  // Paint a solid, slightly-tilted "sticker" label — the single source of truth
+  // for how Generate stickers look, so the editor's draggable version and the
+  // baked-on version stay pixel-identical.
+  //   opts: { text, fillRGB:[r,g,b], color, accent?, angle(deg), scale,
+  //           cx?, cy?, shadow? }
+  // cx/cy are the sticker CENTRE as fractions of W/H. When omitted, the sticker
+  // sits centred near the bottom (the classic Generate position). Returns the
+  // geometry it used — { cx, cy } (normalised) and { boxW, boxH } (pixels) — so
+  // callers (the editor) can seed a matching draggable overlay + hit box.
+  function paintSticker(ctx, W, H, opts) {
+    const text = opts.text;
+    if (!text) return null;
     const color = opts.color || "#ffffff";
     const bg = opts.fillRGB ? `rgb(${opts.fillRGB.join(",")})` : "#0a4da1";
     const accent = opts.accent || null;
     const angle = ((opts.angle || 0) * Math.PI) / 180;
-    const scale = opts.sizeScale || 1;
+    const scale = opts.scale != null ? opts.scale : (opts.sizeScale || 1);
     const dropShadow = opts.shadow !== false;
 
     const padX = Math.round(W * 0.045);
@@ -256,8 +263,9 @@ const Imaging = (() => {
     const textW = Math.max(...lines.map((l) => ctx.measureText(l).width));
     const boxW = Math.min(maxBoxW, textW + padX * 2);
     const boxH = lines.length * lineH + padY * 2;
-    const cx = W / 2;
-    const cy = H - boxH / 2 - Math.round(H * 0.07);
+    // Default position: centred near the bottom; otherwise honour cx/cy.
+    const cx = opts.cx != null ? opts.cx * W : W / 2;
+    const cy = opts.cy != null ? opts.cy * H : H - boxH / 2 - Math.round(H * 0.07);
     const r = Math.round(W * 0.022);
 
     ctx.save();
@@ -286,6 +294,14 @@ const Imaging = (() => {
     const startY = -((lines.length - 1) * lineH) / 2 + (accent ? Math.round(W * 0.008) : 0);
     lines.forEach((l, i) => ctx.fillText(l, 0, startY + i * lineH));
     ctx.restore();
+
+    return { cx: cx / W, cy: cy / H, boxW, boxH };
+  }
+
+  // A caption drawn as a solid, slightly-tilted "sticker" label (no feathering).
+  // Thin wrapper over paintSticker (keeps the old signature its callers use).
+  function drawCaptionSticker(ctx, text, W, H, opts) {
+    return paintSticker(ctx, W, H, Object.assign({}, opts, { text }));
   }
 
   function drawCaptionPanel(ctx, text, W, H, opts = {}) {
@@ -471,6 +487,7 @@ const Imaging = (() => {
     renderPrepared,
     renderCollage,
     drawCaptionPanel,
+    paintSticker,
     toBlob,
     toDataURL,
     dataUrlToBlob,

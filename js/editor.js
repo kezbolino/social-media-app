@@ -176,7 +176,9 @@ const Editor = (() => {
       overlays = [];
     }
     if (modeText) { zoom = 1; }
-    selId = null;
+    // Optionally pre-select the first overlay (used when seeding a Generate
+    // sticker so its controls show and it's ready to drag straight away).
+    selId = opts.selectFirst && overlays.length ? overlays[0].id : null;
     ensureTextFonts().then(() => { if (src) render(); });
     els.zoom.value = zoom;
     syncAspectButtons();
@@ -598,6 +600,9 @@ const Editor = (() => {
     els.txtControls.hidden = !ov;
     els.txtDelete.hidden = !ov;
     els.txtHint.hidden = !!ov;
+    // A sticker carries the brand's own solid look, so the style/colour/align/
+    // highlight controls don't apply — hide them, keep text + size + rotate.
+    els.textPanel.classList.toggle("sticker-mode", !!ov && ov.kind === "sticker");
     if (!ov) return;
     els.txtInput.value = ov.text;
     els.txtSize.value = ov.size;
@@ -642,7 +647,35 @@ const Editor = (() => {
     return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? "#111111" : "#ffffff";
   }
 
+  // A Generate "sticker" overlay: same solid tilted label as the baked-on
+  // version, but movable. Rendering is delegated to Imaging.paintSticker so
+  // the draggable sticker and the exported one are pixel-identical (no drift).
+  // `size` drives the sticker scale (÷9 so the editor's default text size of 9
+  // maps to scale 1.0); `rot` is the tilt in degrees; `cx`/`cy` the centre.
+  function drawStickerOverlay(ctx, ov, W, H, selected, track) {
+    const box = Imaging.paintSticker(ctx, W, H, {
+      text: ov.text, fillRGB: ov.fillRGB, color: ov.color,
+      angle: ov.rot, scale: (ov.size || 9) / 9, cx: ov.cx, cy: ov.cy,
+    });
+    if (!box) { if (track) ov._box = null; return; }
+    if (selected) {
+      const pad = Math.round(W * 0.02);
+      ctx.save();
+      ctx.translate(ov.cx * W, ov.cy * H);
+      if (ov.rot) ctx.rotate((ov.rot * Math.PI) / 180);
+      ctx.setLineDash([6, 5]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      ctx.strokeRect(-box.boxW / 2 - pad, -box.boxH / 2 - pad, box.boxW + 2 * pad, box.boxH + 2 * pad);
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+    // Axis-aligned hit box (ignores tilt, like the text path) for tap/drag.
+    if (track) ov._box = { cx: ov.cx * W, cy: ov.cy * H, w: box.boxW, h: box.boxH };
+  }
+
   function drawTextOverlay(ctx, ov, W, H, selected, track) {
+    if (ov.kind === "sticker") return drawStickerOverlay(ctx, ov, W, H, selected, track);
     const st = TEXT_STYLES[ov.style] || TEXT_STYLES.classic;
     const fontPx = (ov.size / 100) * W;
     const raw = ov.text || "";
