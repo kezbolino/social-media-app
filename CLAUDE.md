@@ -31,6 +31,19 @@ static server.
 - Back buttons use `class="back"` with just the `‹` glyph (no "Back" text); they
   carry `aria-label="Back"` for screen readers and a 44px min tap target.
 - `data-back` value is the screen to return to (empty string = default/home flow).
+- Every `show(screen)` call also pushes a browser history entry (see the
+  History API gotcha below) — don't bypass `show()` to toggle `.is-active`
+  directly, or the hardware/gesture back button will desync from what's on
+  screen.
+- **History API gotcha**: this is a screen-switching SPA with no other pages,
+  so it never used to touch `history` at all — meaning only the in-app "‹"
+  arrows worked, and the phone's own back button/gesture tried to navigate
+  the browser away from the page, landing on a blank white screen (see
+  Notable changes, 2026-07-12). Fixed by having `show()` push a history entry
+  per navigation and a `popstate` listener re-show whichever screen that
+  entry belongs to. If you add a new way to change screens, route it through
+  `show()` (don't hand-roll `.is-active` toggling) or it'll reintroduce the
+  white-screen bug for that path.
 - Cross-script modules use the `const X = (()=>{})()` IIFE pattern. A top-level
   `const` in a classic `<script>` is a lexical global (reachable by bare name,
   e.g. `Store`, `Photos`) but is NOT a property of `window` — so any
@@ -71,6 +84,43 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-12: **Fixed the "back button white-screens the app" bug.** Root
+  cause: the app is a pure client-side screen-switcher (`show(screen)` just
+  toggles `.is-active`) that never touched the History API, so it never
+  pushed any entries — only the in-app "‹" arrows (`data-back` + `handleBack`)
+  worked. The phone's own back button/gesture tried to navigate the browser
+  itself *away* from the page (there's nothing else to navigate to), landing
+  on a blank document. Verified headless with `page.goBack()`: before the fix,
+  a single browser-back from any mid-flow screen (e.g. Review) immediately
+  blanked the page; confirmed this reproduced the bug, not just a hunch.
+  - Fix (js/app.js): `show()` now also calls `history.pushState({screen},
+    "", "")` on every navigation (guarded by a `suppressHistoryPush` flag). A
+    new `popstate` listener re-shows whichever screen the popped entry
+    belongs to, so hardware/gesture back now does exactly what the in-app
+    arrow does — confirmed the two mechanisms resolve to the same screen at
+    every step, including the dynamic Review-screen back targets (`generate`/
+    `queue`/`caption` — these fall out naturally: pushState always records
+    whichever screen was actually shown right before, so it doesn't need its
+    own copy of that logic). `boot()` tags the page's existing initial entry
+    as `{screen:"home"}` via `replaceState` so the very first popstate has
+    something to resolve to. Pressing back from Home now correctly exits the
+    app (there's nothing to suppress there) — matches normal back-button
+    expectations, not a regression.
+  - Verified headless: walked a full New Post flow to Review, then pressed
+    the *real* browser back 9 times in a row — each step landed on the exact
+    previous screen in order (review→caption→details→quiz→editor→single→
+    type→home), and only the 9th (back *from* home) exited, as expected. Also
+    re-verified the Generate-keeper and Queue-draft flows' dynamic back
+    targets under a real browser-back, and cross-checked the in-app arrow
+    still resolves the same way afterward. No console errors in any run.
+  - **Sounds turned off for now** (owner feedback: not quite right yet).
+    `<script src="js/sound.js">` removed from index.html so nothing plays;
+    the Settings "🔊 Sounds" toggle removed too (would've been a dead
+    control with the module unloaded). `js/sound.js` and `assets/sounds/*`
+    are untouched in the repo — re-add the `<script>` tag (and the Settings
+    toggle markup + its two small wireEvents/openSettings lines, see git
+    history around this commit) to bring it back once the clips are revised.
+    Version → v0.18.
 - 2026-07-12: Fixed a recurring-annoyance bug: photos picked via **"📁 Use a
   folder"** (single/collage) or **"📁 Photo folder"** (Generate) only ever
   lived in the session `photoPool` — never saved, so they vanished on every

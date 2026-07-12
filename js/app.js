@@ -58,6 +58,15 @@
   // Direction of the next screen wipe: "back" slides in from the left, anything
   // else from the right. Set by handleBack / go-home just before they show().
   let navDir = "fwd";
+  // The app never navigates the browser itself (no other pages exist), so it
+  // never pushed any history entries — meaning the phone's own back button/
+  // gesture (as opposed to the in-app "‹" arrows) tried to navigate *away*
+  // from the page and left a blank white screen. Every show() now also pushes
+  // a history entry mirroring the screen, and a popstate listener (below)
+  // re-shows whichever screen that entry belongs to, so the hardware back
+  // button behaves exactly like the in-app back arrow instead of exiting.
+  let suppressHistoryPush = false;
+
   function show(screen) {
     const app = $("#app");
     app.classList.toggle("nav-back", navDir === "back");
@@ -71,7 +80,18 @@
     );
     if (screen === "home") rollGreeting();
     window.scrollTo(0, 0);
+    if (!suppressHistoryPush) {
+      try { history.pushState({ screen }, "", ""); } catch (e) { /* ignore */ }
+    }
   }
+
+  // The phone's back button/gesture fires this instead of unloading the page.
+  window.addEventListener("popstate", (e) => {
+    navDir = "back";
+    suppressHistoryPush = true;
+    show((e.state && e.state.screen) || "home");
+    suppressHistoryPush = false;
+  });
 
   // Drop a fresh random greeting onto the home screen.
   function rollGreeting() {
@@ -100,6 +120,9 @@
 
   /* ---------- boot ---------- */
   async function boot() {
+    // Tag the page's own initial history entry as "home" (replace, not push —
+    // it already exists) so the very first popstate has a screen to resolve.
+    try { history.replaceState({ screen: "home" }, "", ""); } catch (e) { /* ignore */ }
     try {
       await Hooks.init();
       // Prefer the embedded templates (runs from a plain file); fall back to
@@ -224,10 +247,6 @@
     saveMetaField("#metaCloud", "cloudName");
     saveMetaField("#metaPreset", "uploadPreset");
     $("#notifyEnabled").addEventListener("change", onNotifyToggle);
-    $("#soundEnabled").addEventListener("change", (e) => {
-      const on = e.target.checked;
-      if (window.Sound) Sound.setMuted(!on);
-    });
     $("#notifyTime").addEventListener("change", (e) => {
       const n = Store.getNotify();
       n.time = e.target.value || "09:00";
@@ -1206,7 +1225,6 @@
     renderUserHooks();
     renderNotifySettings();
     renderMetaSettings();
-    if (window.Sound) $("#soundEnabled").checked = !Sound.isMuted();
     show("settings");
   }
 
