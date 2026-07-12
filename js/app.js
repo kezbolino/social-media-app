@@ -420,6 +420,10 @@
     }
     photoPool = files;
     refreshPoolUi();
+    // Also save these into the permanent stash so they're still here next
+    // time the app opens — a folder pick alone only lasts this session
+    // (browsers won't let a web app keep a live link to a device folder).
+    if (window.Photos && Photos.supported) Photos.add(files);
     // Immediately drop random photos in so they see it work.
     if (folderTarget === "single") shuffleSinglePhoto();
     else shuffleCollagePhotos();
@@ -1877,6 +1881,8 @@
     if (!files.length) { alert("That folder didn't have any photos in it."); return; }
     photoPool = files;
     refreshPoolUi();
+    // Also save these into the permanent stash — see onFolderPicked.
+    if (window.Photos && Photos.supported) Photos.add(files);
     runGenerate();
   }
 

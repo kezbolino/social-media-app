@@ -71,6 +71,18 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-12: Fixed a recurring-annoyance bug: photos picked via **"📁 Use a
+  folder"** (single/collage) or **"📁 Photo folder"** (Generate) only ever
+  lived in the session `photoPool` — never saved, so they vanished on every
+  reload and the owner had to re-pick a folder each time they opened the app.
+  `onFolderPicked` and `onGenFolderPicked` (js/app.js) now also call
+  `Photos.add(files)` to persist picked photos into the same stash Settings'
+  "📸 Add photos" uses, so any photo source now sticks around for next time.
+  Trade-off: re-picking the same folder in a later session adds duplicates to
+  the stash (no de-dupe by content) — the existing Settings "Clear all"/✕
+  per-photo remove handles that if it happens. Verified headless: picked a
+  folder, reloaded the whole page, confirmed the photos were still in the
+  stash and the pool note showed them loaded with no re-pick. Version → v0.17.
 - 2026-07-12: **Backup & restore**, the third item off the competitor-
   benchmarking pass and the one closing the app's biggest data-loss risk
   (everything lived only in one browser profile, no export).
