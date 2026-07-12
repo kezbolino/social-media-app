@@ -65,6 +65,9 @@ const Store = (() => {
   function getRecencyLog() {
     return read(K.RECENCY, []);
   }
+  function setRecencyLog(log) {
+    write(K.RECENCY, log);
+  }
   function recordHookUse(hookId, date = new Date()) {
     const log = getRecencyLog();
     log.push({ hookId, dateUsed: date.toISOString() });
@@ -213,6 +216,9 @@ const Store = (() => {
   function getPosts() {
     return read(K.POSTS, []);
   }
+  function setPosts(posts) {
+    write(K.POSTS, posts);
+  }
   function savePost(post) {
     const posts = getPosts();
     const idx = posts.findIndex((p) => p.id === post.id);
@@ -240,9 +246,11 @@ const Store = (() => {
     getMeta,
     setMeta,
     getRecencyLog,
+    setRecencyLog,
     recordHookUse,
     recentHookIds,
     getPosts,
+    setPosts,
     savePost,
     getUserHooks,
     setUserHooks,

@@ -217,6 +217,7 @@
     });
     $("#genFolderInput").addEventListener("change", onGenFolderPicked);
     $("#stashInput").addEventListener("change", onStashPicked);
+    $("#backupInput").addEventListener("change", onBackupPicked);
     saveMetaField("#metaToken", "accessToken");
     saveMetaField("#metaPageId", "pageId");
     saveMetaField("#metaIgId", "igUserId");
@@ -258,6 +259,8 @@
       case "gen-folder": $("#genFolderInput").click(); break;
       case "stash-add": $("#stashInput").click(); break;
       case "stash-clear": clearStash(); break;
+      case "backup-export": exportBackup(el); break;
+      case "backup-import": $("#backupInput").click(); break;
       case "gen-regenerate": runGenerate(); break;
       case "gen-like": flyOff("right"); break;
       case "gen-nope": flyOff("left"); break;
@@ -483,6 +486,47 @@
     photoPool = [];
     refreshPoolUi();
     await renderStash();
+  }
+
+  async function exportBackup(btn) {
+    const status = $("#backupStatus");
+    status.textContent = "Building your backup…";
+    try {
+      const data = await Backup.exportFile();
+      const n = data.photos.length + data.drafts.length;
+      status.textContent =
+        `Downloaded — ${data.store.posts.length} posts, ${data.store.queue.length} queued, ` +
+        `${n} photo${n === 1 ? "" : "s"} saved. Keep that file somewhere safe. 💾`;
+      if (window.FX && btn) FX.sparkle(btn, { count: 12 });
+    } catch (e) {
+      status.textContent = "Couldn't build a backup — try again.";
+      if (window.FX) FX.wiggle(status);
+    }
+  }
+
+  async function onBackupPicked(e) {
+    const file = e.target.files[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    const status = $("#backupStatus");
+    if (!confirm(
+      "Restoring will overwrite your current locations, hashtags, captions, calendar, queue, " +
+      "post history and saved photos on this phone with what's in that file. Continue?"
+    )) return;
+    status.textContent = "Restoring…";
+    try {
+      const summary = await Backup.restoreFile(file);
+      status.textContent =
+        `Restored — ${summary.posts} posts, ${summary.queue} queued, ${summary.photos} photo${summary.photos === 1 ? "" : "s"} back on this phone. 🎉`;
+      photoPool = [];
+      await loadPhotoStash();
+      refreshPoolUi(); // loadPhotoStash skips this when the stash is empty
+      openSettings(); // re-render every list on this screen from the restored data
+      if (window.FX) FX.sparkle(status, { count: 16 });
+    } catch (err) {
+      status.textContent = err.message || "That file couldn't be restored.";
+      if (window.FX) FX.wiggle(status);
+    }
   }
 
   async function renderStash() {

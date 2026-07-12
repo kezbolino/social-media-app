@@ -47,10 +47,9 @@ static server.
 A pass benchmarking this app against Buffer/Later/Planoly/Meta Business Suite/
 Canva and the 2026 food-truck marketing playbook (short-form video + Google
 Business Profile) turned up gaps + a prioritized backlog. **Built so far:**
-Story export (9:16), "Queue for later" (see Notable changes below). **Not yet
-built, roughly in priority order:**
-- Quick wins: backup/restore (export/import all local data + stash as one
-  file), recurring workdays ("every Friday = Greenwich"), hashtag sets per
+Story export (9:16), "Queue for later", backup/restore (see Notable changes
+below). **Not yet built, roughly in priority order:**
+- Quick wins: recurring workdays ("every Friday = Greenwich"), hashtag sets per
   location, tag stash photos by dish (fixes Generate photo/caption mismatch),
   static best-time-to-post nudge.
 - Medium: basic video/Reels sharing (pick a clip → caption → share sheet, no
@@ -72,6 +71,43 @@ built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-12: **Backup & restore**, the third item off the competitor-
+  benchmarking pass and the one closing the app's biggest data-loss risk
+  (everything lived only in one browser profile, no export).
+  - New `js/backup.js` (`window.Backup`, loaded after imaging.js since it
+    needs `Imaging.dataUrlToBlob`): `build()` gathers every `Store` list
+    (locations, hashtags, user hooks, menu items, schedule, notify, recency
+    log, queue, posts), the Photos stash, and any Drafts referenced by queue
+    items, into one JSON-serialisable object — blobs inlined as base64 data
+    URLs (no zip lib here, and it keeps the backup a single file).
+    `exportFile()` downloads it as `wingman-backup-YYYY-MM-DD.json` via a
+    throwaway `<a download>`. `restoreFile(file)` parses it back, applies
+    every `Store` field with (new) bulk setters, and calls `Photos.clear()` /
+    `Drafts.clear()` before re-adding so a restore is a full replace, not a
+    merge — Drafts keep their **original IDs** (`Drafts.save` upserts by
+    `id`) since queue items reference `draftId` directly; Photos don't need
+    ID stability so `Photos.add` just re-generates them.
+  - **Meta (Facebook/Instagram) credentials are deliberately excluded** — the
+    access token is meant to stay device-only (see store.js's own comment on
+    `getMeta`), and a backup file might get emailed or dropped in cloud
+    storage. The owner re-enters those after a restore; Settings says so.
+  - `Store` gained `setRecencyLog()` and `setPosts()` bulk setters (js/store.js)
+    purely for this — everything else already had a matching `setX` for its
+    `getX`. `Drafts` gained `clear()` (js/drafts.js), mirroring `Photos.clear()`.
+  - Settings screen: new "💾 Backup & restore" section (between Post reminders
+    and the Meta section) with Export/Restore buttons, a hidden file input
+    (`#backupInput`, `accept="application/json"`), and a status line
+    (`#backupStatus`). Restore runs through a native `confirm()` first (same
+    pattern as `clearStash`) since it overwrites everything on the device;
+    on success it calls `openSettings()` again so every list on screen
+    reflects the restored data immediately, no reload needed.
+  - Verified headless (Chromium, `file://`): exported a backup with a seeded
+    location/hashtag/queue-item/stash-photo, wiped `localStorage` + both
+    IndexedDB stores to simulate a cleared browser, restored, and confirmed
+    everything came back (including the Settings UI re-rendering live). Also
+    verified the harder path — a **Queue-for-later item with a real Drafts
+    image** — round-trips with the same `draftId` and a working queue
+    thumbnail after restore. No console errors either run. Version → v0.16.
 - 2026-07-12: **Story export + "Queue for later"**, the first two items off a
   competitor-benchmarking pass (Buffer/Later/Planoly/Meta Business Suite/food-
   truck marketing playbooks) that also produced a longer backlog — see "Ideas

@@ -24,7 +24,7 @@
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
           <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
           <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
-          <p class="app-version" id="appVersion">v0.15</p>
+          <p class="app-version" id="appVersion">v0.16</p>
         </div>
       </section>
 
@@ -489,6 +489,15 @@
           <button class="btn btn-ghost btn-sm" data-action="notify-test">Send a test reminder</button>
           <p id="notifyStatus" class="hint"></p>
 
+          <p class="lead" style="margin-top: 28px;">💾 Backup &amp; restore</p>
+          <p class="hint">Everything above — locations, hashtags, your captions, calendar, queue, post history and saved photos — lives only on this phone. Export it to one file so a new phone or a cleared browser doesn't start you from zero. (Meta credentials below aren't included — reconnect those after restoring.)</p>
+          <div class="row">
+            <button class="btn btn-secondary" data-action="backup-export">⬇️ Export backup</button>
+            <button class="btn btn-secondary" data-action="backup-import">⬆️ Restore backup</button>
+          </div>
+          <input id="backupInput" type="file" accept="application/json,.json" hidden />
+          <p id="backupStatus" class="hint"></p>
+
           <p class="lead" style="margin-top: 28px;">🚀 Auto-posting (Meta) — optional</p>
           <p class="hint">Post straight to Instagram/Facebook without the share sheet. Needs a one-time Meta setup — see <strong>docs/META_SETUP.md</strong> for the plain-English walkthrough. Everything you paste here stays on this device.</p>
           <div class="field">
@@ -543,6 +552,7 @@
     <script src="js/drafts.js"></script>
     <script src="js/hooks.js"></script>
     <script src="js/imaging.js"></script>
+    <script src="js/backup.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/share.js"></script>
     <script src="js/notify.js"></script>

@@ -69,7 +69,19 @@ const Drafts = (() => {
     });
   }
 
-  return { save, get, remove, supported };
+  async function clear() {
+    if (!supported) return;
+    const db = await open();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE, "readwrite");
+      tx.objectStore(STORE).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+      tx.onabort = () => resolve();
+    });
+  }
+
+  return { save, get, remove, clear, supported };
 })();
 
 // Expose on window so feature guards (`if (window.Drafts)`) see it — a
