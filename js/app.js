@@ -1750,6 +1750,7 @@
   async function postKeeper(i) {
     const g = keepers[i];
     if (!g) return;
+    if (window.Sound) Sound.play("swipe-keep");
     seedPostFromGen(g);
     $("#captionText").value = post.captionText; // buildReview reads the textarea
     await buildReview();

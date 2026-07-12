@@ -44,6 +44,10 @@ static server.
     should never have to ask for a version bump — it just happens.
 
 ## Notable changes
+- 2026-07-12: The keeper tray's **📤 Post** button (`postKeeper` in app.js) now
+  plays `swipe-keep` too — same chime as swiping right on the deck, since
+  posting a keeper is the same "keep it" gesture one step later. Version →
+  v0.14.
 - 2026-07-12: **Sound layer scaled back to sparing use.** The full delegated
   click-sound system (tap/nav-switch/toggle/back/small-win on nearly every
   button) was overkill, so `js/sound.js` now only exposes `play()` for two
