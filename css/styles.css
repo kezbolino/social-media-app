@@ -964,8 +964,8 @@ input[type="range"] { touch-action: none; }
 }
 .navbtn::after {
   content: "";
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: transparent;
   transition: background 0.15s ease;

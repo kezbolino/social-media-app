@@ -84,6 +84,17 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-13: **Service-worker cache fix (stale-version bug) + bigger nav dot.**
+  The owner kept seeing old builds after a deploy. Root cause: the SW's
+  network-first `fetch(request)` still used the browser HTTP cache, so it could
+  serve a stale-but-"network" file. Fixes: SW now fetches with
+  `cache: "no-store"` (truly fresh), cache name `v2`→`v3`; registration uses
+  `updateViaCache: "none"` so `sw.js` itself is never HTTP-cached; and a
+  `controllerchange` listener in index.html reloads the page once when a new SW
+  takes control, so a deploy swaps in without a manual hard-refresh. Also
+  bumped the bottom-nav dot 4px→6px so the (already-correct) orange post-button
+  dot is actually visible. Version → v0.24. (If a user is still stuck, it's a
+  device/PWA that needs a full close-reopen once to pick up the new SW.)
 - 2026-07-13: **Home declutter, chunkier home buttons, rounded post icon,
   Lottie confetti.**
   - **Home mascot removed** (owner: too cluttered). Deleted the `#homeMascot`

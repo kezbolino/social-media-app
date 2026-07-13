@@ -23,7 +23,7 @@
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
           <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
           <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
-          <p class="app-version" id="appVersion">v0.23</p>
+          <p class="app-version" id="appVersion">v0.24</p>
         </div>
       </section>
 
@@ -569,7 +569,20 @@
       // file:// open skips this and everything still works).
       if ("serviceWorker" in navigator &&
           (location.protocol === "https:" || ["localhost", "127.0.0.1"].includes(location.hostname))) {
-        addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+        // updateViaCache:"none" => the browser never serves sw.js from its HTTP
+        // cache, so a new service worker is picked up promptly.
+        addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).catch(() => {});
+        });
+        // When a fresh service worker takes control (new deploy), reload once so
+        // the page swaps to the new assets instead of getting stuck on an old
+        // cached build. The guard prevents a reload loop.
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (refreshing) return;
+          refreshing = true;
+          location.reload();
+        });
       }
     </script>
   </body>
