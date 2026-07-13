@@ -1845,7 +1845,7 @@
     const g = genDeck[deckCursor];
     if (!g) return;
     if (window.Sound) Sound.play(dir === "right" ? "swipe-keep" : "swipe-nope");
-    if (dir === "right") { keepers.push(g); if (window.FX) FX.buzz(6); }
+    if (dir === "right") { keepers.push(g); if (window.FX) { FX.buzz(6); FX.heart(); } }
     else { binnedHookIds.add(g.hook.id); }
     deckCursor++;
     advanceDeck();

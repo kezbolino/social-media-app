@@ -84,6 +84,15 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-13: **Swipe-right "like" heart (owner Lottie).** A red heart pops +
+  bursts, centred, when a Generate card is kept (swiped/tapped right). Same
+  Lottie setup as the confetti: `assets/lottie/heart.js` wraps the animation
+  JSON as `window.HEART_LOTTIE` (loads over file://), `<script>` after the
+  confetti data. `FX.heart()` (js/fx.js) mounts a `.fx-heart` centred overlay
+  (240px, `pointer-events:none` so swiping continues underneath), `loop:false`,
+  self-destroys on `complete` + 4s safety timeout; skipped under reduced motion.
+  Fired from `decideCard` on the right decision alongside `FX.buzz(6)`. Version
+  → v0.26.
 - 2026-07-13: Home white (secondary) buttons lost their blue 2px border
   (`.home .btn-secondary { border: none }`) — owner: "the grey ones shouldn't
   have a dark outline"; the grey bottom shadow gives the depth now. Version →

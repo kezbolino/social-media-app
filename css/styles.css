@@ -1243,6 +1243,18 @@ input[type="range"] { touch-action: none; }
   overflow: hidden;
 }
 .fx-lottie svg { width: 100% !important; height: 100% !important; }
+/* Swipe-right "like" heart — a centred pop, sized to a chunk of the screen,
+   above everything and non-interactive so swiping continues underneath. */
+.fx-heart {
+  position: fixed;
+  top: 42%;
+  left: 50%;
+  width: 240px;
+  height: 240px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9999;
+}
 
 /* =========================================================================
    Mascot — the Chuckling Wings chicken's moods (assets/mascot/*.svg).

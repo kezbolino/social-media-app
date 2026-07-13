@@ -96,6 +96,31 @@
     }
   }
 
+  /* ---- swipe-right "like" heart (owner's Lottie) ---- */
+  // A quick heart pop + burst, centred on screen, played once when a Generate
+  // card is swiped/kept right. Best-effort: does nothing if the runtime or the
+  // animation data isn't loaded, or under reduced motion.
+  function heart() {
+    if (reduceMotion || !window.lottie || !window.HEART_LOTTIE) return;
+    try {
+      const prev = document.querySelector(".fx-heart");
+      if (prev) prev.remove();
+      const host = document.createElement("div");
+      host.className = "fx-heart";
+      document.body.appendChild(host);
+      const anim = window.lottie.loadAnimation({
+        container: host,
+        renderer: "svg",
+        loop: false,
+        autoplay: true,
+        animationData: window.HEART_LOTTIE,
+      });
+      const cleanup = () => { try { anim.destroy(); } catch (_) {} host.remove(); };
+      anim.addEventListener("complete", cleanup);
+      setTimeout(cleanup, 4000); // safety net if "complete" never fires
+    } catch (_) {}
+  }
+
   /* ---- confetti burst ---- */
   let canvas, ctx;
   function ensureCanvas() {
@@ -211,5 +236,5 @@
     { passive: true }
   );
 
-  window.FX = { confetti, sparkle, pop, wiggle, buzz };
+  window.FX = { confetti, sparkle, pop, wiggle, buzz, heart };
 })();
