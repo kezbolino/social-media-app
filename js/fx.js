@@ -59,6 +59,43 @@
     el.classList.add("fx-pop");
   }
 
+  /* ---- Lottie confetti (owner's DC confetti) for the big win ---- */
+  // Played full-screen once on a real win (sharing a post). Falls back to the
+  // canvas burst below if the runtime or animation data isn't loaded. The small
+  // localized `sparkle()` puffs keep using the canvas — a full-screen Lottie
+  // can't originate from a tapped element.
+  let lottieAnim = null;
+  function playLottieConfetti() {
+    if (!window.lottie || !window.CONFETTI_LOTTIE) return false;
+    try {
+      // Tear down any in-flight burst so rapid wins don't stack overlays.
+      if (lottieAnim) { try { lottieAnim.destroy(); } catch (_) {} lottieAnim = null; }
+      const prev = document.querySelector(".fx-lottie");
+      if (prev) prev.remove();
+      const host = document.createElement("div");
+      host.className = "fx-lottie";
+      document.body.appendChild(host);
+      lottieAnim = window.lottie.loadAnimation({
+        container: host,
+        renderer: "svg",
+        loop: false,
+        autoplay: true,
+        animationData: window.CONFETTI_LOTTIE,
+      });
+      const cleanup = () => {
+        try { lottieAnim && lottieAnim.destroy(); } catch (_) {}
+        lottieAnim = null;
+        host.remove();
+      };
+      lottieAnim.addEventListener("complete", cleanup);
+      // Safety net in case "complete" never fires.
+      setTimeout(cleanup, 8000);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /* ---- confetti burst ---- */
   let canvas, ctx;
   function ensureCanvas() {
@@ -75,6 +112,9 @@
     buzz(opts.quiet ? 10 : 18);
     if (!opts.quiet) chime(); // the win sound — plays even if motion is reduced
     if (reduceMotion) return;
+    // The big win uses the owner's DC confetti Lottie; quiet/localized sparkles
+    // stay on the canvas (a full-screen Lottie can't fire from an element).
+    if (!opts.quiet && playLottieConfetti()) return;
     ensureCanvas();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const W = (canvas.width = window.innerWidth * dpr);

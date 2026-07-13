@@ -18,13 +18,12 @@
         <div class="home">
           <img class="brand-logo" src="assets/logo.svg" alt="Chuckling Wings" />
           <div class="tagline">Wingman</div>
-          <img class="mascot mascot-greeting mascot-wave" id="homeMascot" src="assets/mascot/wave.svg" alt="Wingman waving hello" draggable="false" />
           <p class="greeting" id="homeGreeting">Alright Boss man?</p>
           <button class="btn btn-primary" data-action="new-post">+ New Post</button>
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
           <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
           <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
-          <p class="app-version" id="appVersion">v0.22</p>
+          <p class="app-version" id="appVersion">v0.23</p>
         </div>
       </section>
 
@@ -530,7 +529,7 @@
       <!-- ===== BOTTOM NAV ===== -->
       <nav class="bottomnav" id="bottomNav" aria-label="Primary">
         <button class="navbtn" data-action="new-post" aria-label="New post">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v7.5M8.25 12h7.5"/></svg>
         </button>
         <button class="navbtn" data-nav="calendar" data-action="open-calendar" aria-label="Work calendar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/></svg>
@@ -560,6 +559,8 @@
     <script src="js/notify.js"></script>
     <script src="js/publish.js"></script>
     <script src="js/weather.js"></script>
+    <script src="js/vendor/lottie.min.js"></script>
+    <script src="assets/lottie/confetti.js"></script>
     <script src="js/fx.js"></script>
     <script src="js/mascot.js"></script>
     <script src="js/app.js"></script>

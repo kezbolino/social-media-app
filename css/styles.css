@@ -973,6 +973,10 @@ input[type="range"] { touch-action: none; }
 .navbtn.is-active { color: var(--blue); }
 .navbtn.is-active svg { stroke-width: 2; }
 .navbtn.is-active::after { background: var(--orange); }
+/* The post button (the only navbtn with no data-nav — it launches a flow
+   rather than a hub screen) is the primary action, so its orange dot is
+   always lit as a standing accent. */
+.navbtn:not([data-nav])::after { background: var(--orange); }
 /* Light press feedback: the icon dips down then springs back via the
    bouncy easing on release — same feel as the rest of the app's buttons. */
 .navbtn:active svg { transform: scale(0.78); }
@@ -1039,6 +1043,13 @@ input[type="range"] { touch-action: none; }
 }
 .btn-ghost:active { transform: translateY(2px); }
 .btn:disabled { box-shadow: 0 4px 0 var(--btn-edge); }
+
+/* Home buttons: a chunkier, more pronounced edge (owner request) — a darker
+   orange under the orange buttons, a grey under the white (secondary) ones. */
+.home .btn { box-shadow: 0 6px 0 var(--btn-edge); }
+.home .btn-primary, .home .btn-accent { --btn-edge: #b0590a; }
+.home .btn-secondary { --btn-edge: #a9b2bf; }
+.home .btn:active { transform: translateY(6px); box-shadow: 0 0 0 var(--btn-edge); }
 
 /* The hero CTA gently breathes to invite the first tap. */
 .btn-xl { animation: fx-breathe 2.6s ease-in-out infinite; }
@@ -1220,6 +1231,16 @@ input[type="range"] { touch-action: none; }
   pointer-events: none;
   z-index: 9999;
 }
+/* Full-screen Lottie confetti overlay (owner's DC confetti). The SVG fills the
+   viewport; the animation's own 9:16 canvas is scaled to cover. */
+.fx-lottie {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+.fx-lottie svg { width: 100% !important; height: 100% !important; }
 
 /* =========================================================================
    Mascot — the Chuckling Wings chicken's moods (assets/mascot/*.svg).

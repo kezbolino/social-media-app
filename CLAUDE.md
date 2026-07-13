@@ -84,6 +84,38 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-13: **Home declutter, chunkier home buttons, rounded post icon,
+  Lottie confetti.**
+  - **Home mascot removed** (owner: too cluttered). Deleted the `#homeMascot`
+    `<img>` from index.html; no JS referenced it, and it's an `<img>` not a
+    `.btn`, so the `.home .btn:nth-of-type` stagger is unaffected.
+  - **Home button edges more pronounced**: `.home .btn` box-shadow 4px → 6px,
+    with a darker-orange edge (`#b0590a`) under the orange primary/accent
+    buttons and a grey edge (`#a9b2bf`) under the white secondary ones; press
+    seats to `translateY(6px)`. (Values are a best guess — owner referenced a
+    button image that didn't upload; tweak to match when it arrives.)
+  - **Bottom-nav post button**: icon swapped from a plus-in-a-circle to a
+    plus-in-a-rounded-square (`<rect rx=5>`), and its orange dot is now always
+    lit — `.navbtn:not([data-nav])::after { background: var(--orange) }` (the
+    post button is the only navbtn without `data-nav`, since it launches a flow
+    rather than a hub screen).
+  - **Lottie confetti** (owner-supplied `DC_Confetti.lottie`): this reverses
+    the old "no Lottie/Rive" stance **for confetti only**. Vendored
+    `lottie-web` light SVG build → `js/vendor/lottie.min.js` (fetched via `npm
+    pack lottie-web`, since unpkg is proxy-blocked but `registry.npmjs.org`
+    isn't). The `.lottie` is a zip (manifest + bodymovin JSON); unpacked the
+    animation JSON and wrapped it as `window.CONFETTI_LOTTIE` in
+    `assets/lottie/confetti.js` so it loads over `file://` with no fetch. Both
+    are `<script>`-loaded before `js/fx.js`. `FX.confetti()` now plays the
+    Lottie full-screen (`.fx-lottie` overlay, `loop:false`, self-destroys on
+    `complete` + an 8s safety timeout) for the **big win only** (`!opts.quiet`);
+    the small localized `sparkle()` puffs and the quiet keeper-tray burst keep
+    the canvas confetti (a full-screen Lottie can't originate from a tapped
+    element). Falls back to the canvas burst if the runtime/data isn't loaded.
+  - Verified headless: page loads clean (lottie + data present, no errors),
+    mascot gone, post icon is a `<rect>`, post dot computes to the orange, home
+    orange/white edges are the darker-orange/grey at 6px, and `FX.confetti()`
+    mounts a `.fx-lottie` overlay that renders an animating SVG. Version → v0.23.
 - 2026-07-13: **Sticker box-fill colour + horizontal scroll hard-lock.**
   - **Box fill colour (Customise sticker)**: sticker overlays now have a
     Letters/Box-fill target toggle (`#stickerTargetRow`, `data-sticker-target`,
