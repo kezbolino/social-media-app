@@ -43,6 +43,7 @@
       status: "draft",
       finalBlob: null, // the (first) exported image
       finalBlobs: null, // all exported images (carousel); single => [finalBlob]
+      finalDataUrl: null, // the composed preview as a data URL (for keeper thumbs)
       created: new Date().toISOString(),
     };
   }
@@ -315,6 +316,7 @@
       case "share": doShare(); break;
       case "go-home": navDir = "back"; post = freshPost(); show("home"); break;
       case "back-to-keepers": returnToKeepers(); break;
+      case "save-customise": saveCustomiseToKeeper(); break;
       case "add-menu": addMenuItem(); break;
     }
   }
@@ -1096,7 +1098,9 @@
         post.finalBlobs.push(await Imaging.toBlob(c));
       }
       post.finalBlob = post.finalBlobs[0];
-      $("#reviewImage").src = Imaging.toDataURL(coverCanvas);
+      const coverUrl = Imaging.toDataURL(coverCanvas);
+      post.finalDataUrl = coverUrl;
+      $("#reviewImage").src = coverUrl;
       fitPreviewBox($("#reviewImage"), coverCanvas.width, coverCanvas.height);
       badge.hidden = false;
       badge.textContent = `1 / ${post.finalBlobs.length}`;
@@ -1104,7 +1108,9 @@
       const canvas = await composePostImage();
       post.finalBlob = await Imaging.toBlob(canvas);
       post.finalBlobs = [post.finalBlob];
-      $("#reviewImage").src = Imaging.toDataURL(canvas);
+      const url = Imaging.toDataURL(canvas);
+      post.finalDataUrl = url;
+      $("#reviewImage").src = url;
       fitPreviewBox($("#reviewImage"), canvas.width, canvas.height);
       badge.hidden = true;
     }
@@ -1117,6 +1123,14 @@
     $("#doneKeepers").hidden = true;
     const cm = $("#celebrateMascot");
     if (cm) cm.hidden = true; // reset the win mascot until this post is shared
+    // Customise-preview mode (a Generate keeper being edited): the endpoint is
+    // "save back to my posts", not share — sharing/scheduling happens from the
+    // keepers tray. Everything else keeps the normal share controls.
+    const customising = !!post.fromGenerate;
+    $("#reviewShareControls").hidden = customising;
+    $("#saveCustomise").hidden = !customising;
+    const rvTitle = document.querySelector('[data-screen="review"] h2');
+    if (rvTitle) rvTitle.textContent = customising ? "Preview" : "Ready to share";
     renderPublishButtons();
     show("review");
   }
@@ -1903,7 +1917,9 @@
 
   // Customise a kept post: open the photo in the editor's text-only mode with
   // the sticker as a MOVABLE overlay (not baked on), so the owner can drag it
-  // off the subject before sharing. Falls back to the plain caption screen for
+  // off the subject / recolour it. On "Save", the customised image + caption go
+  // back into the keeper (see saveCustomiseToKeeper) and you return to the tray
+  // to post/schedule from there. Falls back to the plain caption screen for
   // older keepers that predate rawImg/style (e.g. a restored session).
   async function customiseKeeper(i) {
     const g = keepers[i];
@@ -1917,8 +1933,15 @@
     let bg;
     try { bg = await Imaging.loadImageFromUrl(bgCanvas.toDataURL("image/png")); }
     catch (e) { return customiseKeeperCaption(g); }
-    // Seed the sticker overlay at the EXACT default bake position by measuring
-    // it once off-screen, so it opens where the kept card showed it.
+    setEditorChrome("generate", "Move your text");
+    show("editor"); // show first so the editor can measure its real width
+    if (g.editState) {
+      // Re-customising: restore the sticker exactly where it was left last time.
+      Editor.open(bg, g.editState, { mode: "text", hookProvider: makeHookProvider(), selectFirst: true });
+      return;
+    }
+    // First customise: seed the sticker overlay at the EXACT default bake
+    // position by measuring it once off-screen, so it opens where the card showed it.
     const mctx = document.createElement("canvas").getContext("2d");
     const pos = Imaging.paintSticker(mctx, 1080, 1080, {
       text: g.overlayText, fillRGB: g.style.fillRGB, color: g.style.color,
@@ -1930,9 +1953,25 @@
       cx: pos ? pos.cx : 0.5, cy: pos ? pos.cy : 0.82,
       size: 9 * (g.style.sizeScale || 1), rot: g.style.angle || 0,
     };
-    setEditorChrome("generate", "Move your text");
-    show("editor"); // show first so the editor can measure its real width
     Editor.open(bg, { overlays: [seed] }, { mode: "text", hookProvider: makeHookProvider(), selectFirst: true });
+  }
+
+  // "✓ Save & back to my posts" on the customise-preview Review: write the
+  // customised image + caption (and the editor state, so a later re-customise
+  // resumes where you left off) back into the keeper, then return to the tray.
+  function saveCustomiseToKeeper() {
+    const g = post.keeperRef;
+    if (g) {
+      if (post.baseImage) g.img = post.baseImage; // raw photo + repositioned sticker
+      if (post.finalDataUrl) g.dataUrl = post.finalDataUrl; // tray thumbnail / queue draft
+      g.filledText = post.captionText; // full edited caption…
+      g.hashtags = "";                 // …with hashtags already folded in
+      if (post.editState) g.editState = post.editState;
+    }
+    post = freshPost();
+    navDir = "back";
+    show("generate");
+    showKeepers();
   }
 
   // The old customise path — straight to the caption screen (no repositioning).

@@ -24,7 +24,7 @@
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
           <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
           <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
-          <p class="app-version" id="appVersion">v0.20</p>
+          <p class="app-version" id="appVersion">v0.21</p>
         </div>
       </section>
 
@@ -270,18 +270,21 @@
             <span id="reviewBadge" class="img-badge" hidden></span>
           </div>
           <p id="reviewCaption" class="review-caption"></p>
-          <button class="btn btn-primary btn-xl" data-action="share">📤 Share</button>
-          <div class="row">
-            <button class="btn btn-secondary" data-action="copy-caption">📋 Copy caption</button>
-            <button class="btn btn-secondary" data-action="save-image">⬇️ Save image</button>
-          </div>
-          <div id="publishRow" hidden>
-            <p class="or-row">— or post directly —</p>
+          <div id="reviewShareControls">
+            <button class="btn btn-primary btn-xl" data-action="share">📤 Share</button>
             <div class="row">
-              <button class="btn btn-accent" id="pubIG" data-action="publish-ig">📸 Instagram</button>
-              <button class="btn btn-secondary" id="pubFB" data-action="publish-fb">📘 Facebook</button>
+              <button class="btn btn-secondary" data-action="copy-caption">📋 Copy caption</button>
+              <button class="btn btn-secondary" data-action="save-image">⬇️ Save image</button>
+            </div>
+            <div id="publishRow" hidden>
+              <p class="or-row">— or post directly —</p>
+              <div class="row">
+                <button class="btn btn-accent" id="pubIG" data-action="publish-ig">📸 Instagram</button>
+                <button class="btn btn-secondary" id="pubFB" data-action="publish-fb">📘 Facebook</button>
+              </div>
             </div>
           </div>
+          <button class="btn btn-primary btn-xl" data-action="save-customise" hidden id="saveCustomise">✓ Save &amp; back to my posts</button>
           <p id="publishNote" class="hint" hidden></p>
           <img class="mascot mascot-lg mascot-center mascot-win" id="celebrateMascot" src="assets/mascot/excited.svg" alt="Wingman celebrating your post" hidden draggable="false" />
           <p id="shareNote" class="hint" hidden></p>

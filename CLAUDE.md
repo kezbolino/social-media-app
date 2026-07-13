@@ -84,6 +84,36 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-13: **Customise = edit-in-place → back to the tray, + SW cache bump.**
+  Owner's desired flow for a kept Generate post: *Customise → editor → caption →
+  Review (preview) → back to the keepers tray, then post/schedule from there* —
+  i.e. Customise is purely an EDIT step now, not a path to sharing.
+  - `buildReview` gained a **customise-preview mode**: when `post.fromGenerate`
+    is set, it hides the share controls (now wrapped in `#reviewShareControls`),
+    shows a **"✓ Save & back to my posts"** button (`#saveCustomise`,
+    action `save-customise`) and titles the screen "Preview". Also stashes the
+    composed preview as `post.finalDataUrl` (used for the keeper thumbnail).
+  - `saveCustomiseToKeeper` writes the customised result back into the keeper
+    object `g`: `g.img` = the raw photo + repositioned/recoloured sticker
+    (`post.baseImage`), `g.dataUrl` = `post.finalDataUrl` (tray thumb / queue
+    draft), `g.filledText` = the full edited caption with `g.hashtags = ""`
+    (so `seedPostFromGen` reconstructs the same text), and `g.editState` =
+    `post.editState`. Then returns to the tray (`showKeepers`). The keeper
+    STAYS in the tray (unlike post-share `returnToKeepers`, which removes it) —
+    you then tap Post/Queue on the now-customised card.
+  - **Re-customise resumes**: `customiseKeeper` opens the editor from
+    `g.editState` when present (sticker where you left it), else seeds a fresh
+    default sticker. Background is always `renderSingle(g.rawImg, null)` — the
+    clean photo — so the sticker is never double-baked.
+  - **Colour swatches were the missing piece the owner hit**: they only ship in
+    v0.20 (v0.19 hid `.text-swatches` in `sticker-mode`). Bumped the service-
+    worker cache `wingman-cache-v1` → `v2` so stale clients purge old assets and
+    actually pick up new versions (network-first already, this is belt-and-braces).
+  - Verified headless: Customise → recolour + drag sticker → caption edit →
+    Preview (share hidden, Save shown) → Save returns to tray with the
+    thumbnail + caption updated and the keeper still present; Post-from-tray
+    gives the normal share Review; re-customise reopens in sticker-mode. No
+    console errors. Version → v0.21.
 - 2026-07-13: **Sticker text colour + one app-wide easing + return-to-keepers.**
   - **Sticker text colour (Customise)**: the editor's colour swatches are no
     longer hidden in `sticker-mode` (css) — tapping one sets `ov.color`, which

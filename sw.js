@@ -6,7 +6,7 @@
  * bumping needed); offline you get the last copy that worked. Calls to other
  * origins (Meta, Cloudinary) are left alone entirely.
  */
-const CACHE = "wingman-cache-v1";
+const CACHE = "wingman-cache-v2";
 
 self.addEventListener("install", () => self.skipWaiting());
 
