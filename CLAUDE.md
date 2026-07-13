@@ -84,6 +84,30 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-13: **Sticker text colour + one app-wide easing + return-to-keepers.**
+  - **Sticker text colour (Customise)**: the editor's colour swatches are no
+    longer hidden in `sticker-mode` (css) — tapping one sets `ov.color`, which
+    `drawStickerOverlay` feeds to `Imaging.paintSticker` as the text colour, so
+    the owner can recolour the sticker's letters. Font-style/align/highlight
+    stay hidden (the brand shape is fixed); eyedropper + custom-colour picker
+    work too since they route through the same `setOverlayProp("color")`.
+  - **One easing for the whole app** (owner wanted consistency, willing to
+    revert): `--spring` and `--spring-smooth` now just alias `--ease-premium`
+    (`cubic-bezier(0.22,1,0.36,1)`), so every transition/animation uses the one
+    premium decelerate instead of the old bouncy `linear()` springs. Done by
+    redefining the three tokens in `:root` — the 28+ `var(--spring)` use-sites
+    are untouched, so **reverting is a one-block change**: restore the old
+    `linear()` curves in `:root` (see git history) and nothing else moves.
+    Swipe reveal duration trimmed 0.5s → 0.32s ("make it quicker").
+  - **Return to keepers after posting** (the "clunky" post-customise workflow):
+    sharing/publishing a Generate keeper used to dump you Home via "Done — back
+    to start", and reopening Generate re-rolls a fresh batch — so the other
+    kept posts were effectively lost. Now `seedPostFromGen` tags the live post
+    with `keeperRef`; after a successful share/publish, `showDoneButton` offers
+    "← Back to my kept posts" (`#doneKeepers`) instead of Home for keeper
+    posts. `returnToKeepers` drops the just-posted keeper from `keepers` (no
+    double-post) and re-shows the tray with the rest intact. Non-keeper posts
+    still get "Done — back to start". Version → v0.20.
 - 2026-07-12: **Repositionable Generate sticker + premium swipe reveal.**
   - **Movable sticker (Customise)**: previously `buildGeneratedPosts` baked the
     overlay line into the card image immediately (`renderSingle`), so by the

@@ -39,6 +39,7 @@
       hashtagBlock: "", // the appended hashtag block, if any
       fromHistory: false, // seeded from a past post / queue item (skip the quiz)
       fromGenerate: false, // customising a Generate keeper (sticker already placed in editor)
+      keeperRef: null, // the Generate keeper this post came from (to return to the tray)
       status: "draft",
       finalBlob: null, // the (first) exported image
       finalBlobs: null, // all exported images (carousel); single => [finalBlob]
@@ -313,6 +314,7 @@
       case "caption-next": buildReview(); break;
       case "share": doShare(); break;
       case "go-home": navDir = "back"; post = freshPost(); show("home"); break;
+      case "back-to-keepers": returnToKeepers(); break;
       case "add-menu": addMenuItem(); break;
     }
   }
@@ -1112,6 +1114,7 @@
     $("#shareNote").hidden = true;
     $("#publishNote").hidden = true;
     $("#doneHome").hidden = true;
+    $("#doneKeepers").hidden = true;
     const cm = $("#celebrateMascot");
     if (cm) cm.hidden = true; // reset the win mascot until this post is shared
     renderPublishButtons();
@@ -1143,6 +1146,14 @@
     });
   }
 
+  // After a post is shared/published, offer the right "what next" button:
+  // a keeper returns to its tray (so the rest can be posted); anything else
+  // goes back to the start.
+  function showDoneButton() {
+    if (post.keeperRef) $("#doneKeepers").hidden = false;
+    else $("#doneHome").hidden = false;
+  }
+
   async function doShare() {
     if (!post.finalBlob) return;
     const blobs = post.finalBlobs && post.finalBlobs.length ? post.finalBlobs : [post.finalBlob];
@@ -1159,7 +1170,7 @@
             ? "Caption copied & image downloaded — paste the caption into Instagram or Facebook."
             : "Image downloaded — copy your caption above into Instagram or Facebook.")
         : "Shared! Pick Instagram or Facebook to finish posting.";
-    $("#doneHome").hidden = false;
+    showDoneButton();
   }
 
   /* ---------- DIRECT PUBLISH (Meta) ---------- */
@@ -1187,7 +1198,7 @@
       else await Publish.postToFacebook(post.finalBlob, post.captionText);
       markPostShared(kind === "ig" ? "instagram-api" : "facebook-api");
       note.textContent = kind === "ig" ? "Posted to Instagram ✅" : "Posted to Facebook ✅";
-      $("#doneHome").hidden = false;
+      showDoneButton();
     } catch (e) {
       note.textContent = "Couldn't post: " + e.message;
     }
@@ -1768,7 +1779,7 @@
     d1.className = "swipe-card depth-0";
     // Premium scale-up reveal (skipped under reduced motion — the class-driven
     // transform change would otherwise use the bouncier default spring).
-    if (!reduceMotion) d1.style.transition = "transform 0.5s var(--ease-premium)";
+    if (!reduceMotion) d1.style.transition = "transform 0.32s var(--ease-premium)";
     attachDrag(d1);
     // Bring a fresh card in at the back (first child = furthest back) if any left.
     const backIndex = deckCursor + 2;
@@ -1861,6 +1872,21 @@
     if (window.FX) FX.confetti({ quiet: true });
   }
 
+  // After sharing a keeper, come back to the tray to handle the rest (the
+  // just-posted one is dropped so it doesn't invite a double-post). Keeps the
+  // other keepers intact — reopening Generate would re-roll a fresh batch.
+  function returnToKeepers() {
+    const ref = post.keeperRef;
+    if (ref) {
+      const idx = keepers.indexOf(ref);
+      if (idx >= 0) keepers.splice(idx, 1);
+    }
+    post = freshPost();
+    navDir = "back";
+    show("generate");
+    showKeepers();
+  }
+
   // Seed the live `post` from a generated item (shared by Post & Customise).
   function seedPostFromGen(g) {
     post = freshPost();
@@ -1872,6 +1898,7 @@
     post.caption = { hook: g.hook, filledText: g.filledText, item: null };
     post.captionText = g.filledText + (g.hashtags || "");
     post.hashtagBlock = g.hashtags || "";
+    post.keeperRef = g; // so Review can offer "back to my kept posts" after sharing
   }
 
   // Customise a kept post: open the photo in the editor's text-only mode with

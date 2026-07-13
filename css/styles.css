@@ -462,10 +462,10 @@ html, body {
 .text-row .chip { flex: 1; text-align: center; }
 .swatch-tool { box-shadow: none; background: var(--panel-2) !important; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .text-tip { margin: 2px 0 8px; font-size: 0.8rem; }
-/* Generate "sticker" overlay: the brand look is fixed, so hide the style /
-   colour / align / highlight controls — leave text, size and rotate. */
+/* Generate "sticker" overlay: the brand shape/style is fixed, so hide the
+   font-style / align / highlight controls — but keep the colour swatches
+   (they set the sticker's text colour) plus text, size and rotate. */
 .text-panel.sticker-mode .text-styles,
-.text-panel.sticker-mode .text-swatches,
 .text-panel.sticker-mode .text-tip,
 .text-panel.sticker-mode .text-row { display: none; }
 #editorCanvas.sampling { cursor: crosshair; }
@@ -988,15 +988,17 @@ html, body {
    two-point cubic-bezier fake. --spring is bouncy (buttons/pops/chips);
    --spring-smooth settles with one gentle overshoot (screen wipes). */
 :root {
-  --spring: linear(0, 0.3177, 0.8813, 1.2533, 1.3082, 1.1606, 0.9887, 0.9025,
-    0.9121, 0.9678, 1.0164, 1.0331, 1.0231, 1.0044, 0.9918, 0.9897, 0.9945,
-    1.0002, 1.0032, 1.003, 1.0011, 0.9995, 0.9989, 1);
-  --spring-smooth: linear(0, 0.0885, 0.2855, 0.5115, 0.7174, 0.8787, 0.9888,
-    1.0525, 1.0798, 1.0822, 1.0703, 1.0523, 1.0337, 1.0178, 1.006, 0.9984,
-    0.9944, 0.9931, 0.9934, 0.9947, 0.9963, 0.9977, 0.9989, 1);
-  /* Confident decelerate with a whisper of overshoot — the "premium" reveal
-     used when the next swipe card scales up into place. */
+  /* ONE app-wide easing: a confident "premium" decelerate (fast start, long
+     smooth settle, no bounce). Everything animates through the three tokens
+     below, which now all alias this single curve, so the whole app feels
+     consistent.
+     ↩ TO REVERT to the old playful bounce: restore the two linear() curves
+       that used to live here (see git history — `--spring` was a springy
+       overshoot, `--spring-smooth` a gentler one) and point them back at
+       those instead of `--ease-premium`. Nothing else needs to change. */
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: var(--ease-premium);
+  --spring-smooth: var(--ease-premium);
 }
 
 /* ---- Chunky 3D buttons: a solid colour "edge" underneath that the button
