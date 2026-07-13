@@ -84,6 +84,29 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-13: **Sticker box-fill colour + horizontal scroll hard-lock.**
+  - **Box fill colour (Customise sticker)**: sticker overlays now have a
+    Letters/Box-fill target toggle (`#stickerTargetRow`, `data-sticker-target`,
+    `.sticker-only` — shown only in `sticker-mode`). `editor.js` routes every
+    colour source (swatch, 🎯 eyedropper `sampleColourAt`, 🎨 custom
+    `colorInput`) through `applyChosenColor(hex)`, which sets `ov.fillRGB`
+    (via `hexToRgb`) when the fill target is active, else `ov.color`.
+    `stickerFillActive()`/`activeColorHex()` gate it; `syncTextPanel` highlights
+    the swatch matching whichever colour is being edited and resets the target
+    to Letters for non-sticker overlays / on `open()`. Both colours flow into
+    `Imaging.paintSticker` (fillRGB = box, color = letters) so the draggable and
+    exported stickers stay identical.
+  - **Horizontal scroll hard-lock** (owner: dragging the size/rotate sliders
+    panned the page like a web browser): `input[type="range"] { touch-action:
+    none }` so a slider drag moves its thumb instead of scrolling, plus
+    `html,body { overflow-x: hidden; overscroll-behavior-x: none }` to forbid
+    sideways drift/rubber-band globally. The intentional horizontal-scroll rows
+    (filter row, style chips, carousel thumbs) keep their own `overflow-x:auto`
+    — no `pan-y` on body, which would have broken them.
+  - Verified headless: box-fill toggle recolours the sticker box (green box +
+    blue letters screenshot) while Letters still recolours the text; slider
+    `touch-action` computes to `none`; body `overflow-x` is `hidden`; full
+    customise→save flow clean. Version → v0.22.
 - 2026-07-13: **Customise = edit-in-place → back to the tray, + SW cache bump.**
   Owner's desired flow for a kept Generate post: *Customise → editor → caption →
   Review (preview) → back to the keepers tray, then post/schedule from there* —

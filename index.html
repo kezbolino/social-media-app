@@ -24,7 +24,7 @@
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
           <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
           <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
-          <p class="app-version" id="appVersion">v0.21</p>
+          <p class="app-version" id="appVersion">v0.22</p>
         </div>
       </section>
 
@@ -112,9 +112,14 @@
             <div id="txtControls" hidden>
               <textarea id="txtInput" class="text-entry" rows="2" placeholder="Type your text…"></textarea>
               <div id="txtStyles" class="text-styles"></div>
+              <div id="stickerTargetRow" class="sticker-target-row sticker-only">
+                <button class="chip selected" data-sticker-target="text">Aa Letters</button>
+                <button class="chip" data-sticker-target="fill">▧ Box fill</button>
+              </div>
               <div id="txtSwatches" class="text-swatches"></div>
               <input type="color" id="txtColorInput" hidden />
               <p class="hint text-tip">Two-finger pinch on a selected text to resize &amp; spin it. 🎯 = pick a colour from the photo.</p>
+              <p class="hint sticker-tip sticker-only">Pick <strong>Letters</strong> or <strong>Box fill</strong>, then tap a colour. 🎯 samples a colour from the photo; 🎨 opens more colours.</p>
               <div class="text-row">
                 <button class="chip" id="txtAlign" data-txt="align">↔ Centre</button>
                 <button class="chip" id="txtHighlight" data-txt="highlight">▢ No fill</button>

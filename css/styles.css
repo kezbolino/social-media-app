@@ -84,7 +84,16 @@ html, body {
   color: var(--text);
   font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   font-weight: 500;
+  /* Hard-lock the page to vertical scrolling only — no sideways drift or
+     rubber-band, even when a gesture starts on a control. */
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
+
+/* Range sliders (size/rotate/zoom/adjust) must move their thumb on a drag,
+   never let the drag turn into a page scroll. Without this, dragging a slider
+   sideways pans the page like a web page. */
+input[type="range"] { touch-action: none; }
 
 #app {
   max-width: 520px;
@@ -464,10 +473,16 @@ html, body {
 .text-tip { margin: 2px 0 8px; font-size: 0.8rem; }
 /* Generate "sticker" overlay: the brand shape/style is fixed, so hide the
    font-style / align / highlight controls — but keep the colour swatches
-   (they set the sticker's text colour) plus text, size and rotate. */
+   (they set the letters OR box fill) plus text, size and rotate. */
 .text-panel.sticker-mode .text-styles,
 .text-panel.sticker-mode .text-tip,
 .text-panel.sticker-mode .text-row { display: none; }
+/* Sticker-only extras: the Letters/Box-fill colour-target toggle + its hint.
+   Hidden by default; shown only when a sticker overlay is selected. */
+.sticker-only { display: none; }
+.text-panel.sticker-mode .sticker-target-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.text-panel.sticker-mode .sticker-tip { display: block; }
+.sticker-target-row .chip { flex: 1; text-align: center; }
 #editorCanvas.sampling { cursor: crosshair; }
 
 /* Text-only editor mode (collage captions): hide crop + filter/adjust UI. */

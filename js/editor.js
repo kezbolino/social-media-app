@@ -56,6 +56,7 @@ const Editor = (() => {
   let modeText = false; // text-only mode (used for collages: no crop/filter)
   let bgRatio = 1; // background image aspect in text-only mode
   let sampleMode = false; // eyedropper: next tap samples a colour from the photo
+  let stickerFillMode = false; // sticker colour target: false = letters, true = box fill
   let hookProvider = null; // () => next hook text, supplied by the app
   let zoom = 1; // 1..3
   let offX = 0, offY = 0; // image top-left within the frame, in CSS px
@@ -80,6 +81,7 @@ const Editor = (() => {
       txtInput: document.getElementById("txtInput"),
       txtStyles: document.getElementById("txtStyles"),
       txtSwatches: document.getElementById("txtSwatches"),
+      stickerTargetRow: document.getElementById("stickerTargetRow"),
       txtSize: document.getElementById("txtSize"),
       txtRotate: document.getElementById("txtRotate"),
       txtAlign: document.getElementById("txtAlign"),
@@ -130,14 +132,23 @@ const Editor = (() => {
       }
       if (e.target.closest("[data-more]")) {
         const ov = selectedOverlay();
-        if (ov && els.colorInput) { els.colorInput.value = toHex6(ov.color); els.colorInput.click(); }
+        if (ov && els.colorInput) { els.colorInput.value = toHex6(activeColorHex()); els.colorInput.click(); }
         return;
       }
       const b = e.target.closest("[data-swatch]");
-      if (b) setOverlayProp("color", b.dataset.swatch);
+      if (b) applyChosenColor(b.dataset.swatch);
     });
     if (els.colorInput) {
-      els.colorInput.addEventListener("input", (e) => setOverlayProp("color", e.target.value));
+      els.colorInput.addEventListener("input", (e) => applyChosenColor(e.target.value));
+    }
+    // Sticker colour target: letters vs box fill.
+    if (els.stickerTargetRow) {
+      els.stickerTargetRow.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-sticker-target]");
+        if (!b) return;
+        stickerFillMode = b.dataset.stickerTarget === "fill";
+        syncTextPanel();
+      });
     }
     els.txtSize.addEventListener("input", (e) => setOverlayProp("size", parseFloat(e.target.value)));
     els.txtRotate.addEventListener("input", (e) => setOverlayProp("rot", parseInt(e.target.value, 10)));
@@ -164,6 +175,7 @@ const Editor = (() => {
     bgRatio = src.width / src.height;
     els.screen.classList.toggle("mode-text", modeText);
     sampleMode = false;
+    stickerFillMode = false;
     if (state) {
       aspectKey = state.aspectKey || "1:1";
       zoom = state.zoom || 1;
@@ -438,7 +450,7 @@ const Editor = (() => {
         Math.round(pt.x * dpr), Math.round(pt.y * dpr), 1, 1
       ).data;
       const hex = "#" + [d[0], d[1], d[2]].map((n) => n.toString(16).padStart(2, "0")).join("");
-      setOverlayProp("color", hex);
+      applyChosenColor(hex);
     } catch (e) { /* getImageData can fail on tainted canvases; ignore */ }
   }
   function dist(a, b) {
@@ -513,6 +525,30 @@ const Editor = (() => {
     const m = /^#([0-9a-f]{3})$/i.exec(c);
     if (m) return "#" + m[1].split("").map((h) => h + h).join("");
     return "#ffffff";
+  }
+  function hexToRgb(hex) {
+    const h = toHex6(hex).slice(1);
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+  function rgbToHex(rgb) {
+    if (!rgb || !rgb.length) return "#0a4da1";
+    return "#" + rgb.map((n) => Math.max(0, Math.min(255, n | 0)).toString(16).padStart(2, "0")).join("");
+  }
+  // Whether the chosen colour should paint the sticker's box fill (vs letters).
+  function stickerFillActive() {
+    const ov = selectedOverlay();
+    return !!(ov && ov.kind === "sticker" && stickerFillMode);
+  }
+  // The colour the swatches/picker currently act on (fill or letters).
+  function activeColorHex() {
+    const ov = selectedOverlay();
+    if (!ov) return "#ffffff";
+    return stickerFillActive() ? rgbToHex(ov.fillRGB) : (ov.color || "#ffffff");
+  }
+  // Apply a picked colour to the active target: sticker box fill, or text colour.
+  function applyChosenColor(hex) {
+    if (stickerFillActive()) setOverlayProp("fillRGB", hexToRgb(hex));
+    else setOverlayProp("color", hex);
   }
 
   function selectedOverlay() {
@@ -600,17 +636,25 @@ const Editor = (() => {
     els.txtControls.hidden = !ov;
     els.txtDelete.hidden = !ov;
     els.txtHint.hidden = !!ov;
-    // A sticker carries the brand's own solid look, so the style/colour/align/
-    // highlight controls don't apply — hide them, keep text + size + rotate.
-    els.textPanel.classList.toggle("sticker-mode", !!ov && ov.kind === "sticker");
+    const isSticker = !!ov && ov.kind === "sticker";
+    // A sticker carries the brand's own solid look, so the font-style/align/
+    // highlight controls don't apply — hide them (keep colour, size, rotate).
+    els.textPanel.classList.toggle("sticker-mode", isSticker);
+    if (!isSticker) stickerFillMode = false; // only stickers have a fill target
+    if (els.stickerTargetRow) {
+      els.stickerTargetRow.querySelectorAll("[data-sticker-target]").forEach((b) =>
+        b.classList.toggle("selected", (b.dataset.stickerTarget === "fill") === stickerFillMode));
+    }
     if (!ov) return;
     els.txtInput.value = ov.text;
     els.txtSize.value = ov.size;
     els.txtRotate.value = ov.rot;
     els.txtStyles.querySelectorAll("[data-style]").forEach((b) =>
       b.classList.toggle("selected", b.dataset.style === ov.style));
+    // Highlight the swatch matching whichever colour is being edited (letters or box fill).
+    const active = activeColorHex().toLowerCase();
     els.txtSwatches.querySelectorAll("[data-swatch]").forEach((b) =>
-      b.classList.toggle("selected", b.dataset.swatch.toLowerCase() === ov.color.toLowerCase()));
+      b.classList.toggle("selected", b.dataset.swatch.toLowerCase() === active));
     els.txtAlign.textContent = ov.align === "center" ? "↔ Centre" : ov.align === "left" ? "⇤ Left" : "⇥ Right";
     els.txtHighlight.textContent = ov.highlight === "none" ? "▢ No fill" : ov.highlight === "solid" ? "▣ Colour fill" : "▨ Shade";
   }
