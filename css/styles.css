@@ -1048,7 +1048,9 @@ input[type="range"] { touch-action: none; }
    orange under the orange buttons, a grey under the white (secondary) ones. */
 .home .btn { box-shadow: 0 6px 0 var(--btn-edge); }
 .home .btn-primary, .home .btn-accent { --btn-edge: #b0590a; }
-.home .btn-secondary { --btn-edge: #a9b2bf; }
+/* The white home buttons: grey edge, and NO blue border (owner: the grey
+   ones shouldn't have a dark outline) — the grey shadow gives the depth. */
+.home .btn-secondary { --btn-edge: #a9b2bf; border: none; }
 .home .btn:active { transform: translateY(6px); box-shadow: 0 0 0 var(--btn-edge); }
 
 /* The hero CTA gently breathes to invite the first tap. */

@@ -84,6 +84,10 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-13: Home white (secondary) buttons lost their blue 2px border
+  (`.home .btn-secondary { border: none }`) — owner: "the grey ones shouldn't
+  have a dark outline"; the grey bottom shadow gives the depth now. Version →
+  v0.25.
 - 2026-07-13: **Service-worker cache fix (stale-version bug) + bigger nav dot.**
   The owner kept seeing old builds after a deploy. Root cause: the SW's
   network-first `fetch(request)` still used the browser HTTP cache, so it could
