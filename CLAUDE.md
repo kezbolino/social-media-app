@@ -84,6 +84,74 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-14: **First-run onboarding** (`ob-welcome → ob-photos → ob-places →
+  ob-done`, order driven by `OB_STEPS` in js/app.js). Fixes the first-run cliff:
+  home's shiniest button is ✨ Generate, which with an empty stash dead-ended on
+  "go to Settings → 📸 My chicken photos" — a screen the user hadn't found yet.
+  - **Scope was set by measuring the hook library, not guessing**: photos are the
+    only real unlock (Generate is dead without them); `{location}` drives 72/130
+    hooks so pitches are worth a step (framed as *confirm* — they're already
+    seeded from `DEFAULT_LOCATIONS`); `{item}` drives only 5/130 (4%), so best
+    sellers did NOT earn a screen. Hashtags ship 30 seeded, Meta needs a token +
+    Cloudinary + a doc, and reminders only fire while the app is open — all
+    deliberately left out.
+  - **Photos step is soft-gated**: Next enables at ≥1 photo, "Skip for now" is
+    always live. Ends on "✨ Make my first posts" → straight into a working
+    Generate (the payoff, not a "done" pat on the head).
+  - **ob-welcome offers "I've got a backup file"** — new-phone path, reuses
+    `#backupInput`/`Backup.restoreFile`, then marks onboarded and skips to home.
+  - `Store.getOnboarded()/setOnboarded()` (key `sfp.onboarded`) gate it; only
+    `finishOnboarding()` ever sets the flag, and every exit routes through it, so
+    nobody can be stranded with `onboarded=false`. Settings → 🧭 Setup → "Run
+    setup again" re-runs it (also how you test it).
+  - **Gotchas hit, worth not re-learning:**
+    - `boot()`'s `replaceState` must tag the entry with whichever screen actually
+      opens — hardcoding `"home"` desyncs the back button on a first run (the
+      documented History API trap). Onboarding also has to `show()` *before*
+      `await Hooks.init()`, or home paints first and setup snaps over it.
+    - **`.ob-body` needs explicit `overflow-x: hidden`** — setting only
+      `overflow-y` makes the x axis compute to `auto`, handing it a sideways
+      scrollbar the html/body lock can't reach (same trap as `.editor-scroll`).
+    - **`.ob` uses `height`, not `min-height`** — with min-height the section
+      grows on a short screen and the "pinned" bar/actions drift off it.
+    - **`.ob-add .btn` needs `width: auto`** — `.btn` is `width:100%`, and with
+      `flex: 0 0 auto` that becomes an unshrinkable 100% basis that shoves Add
+      off a 320px screen (where `overflow-x:hidden` then clips it out of reach
+      rather than scrolling to it). `min-width:0` on the input is not enough.
+    - **Progress bar**: each step owns its own `.ob-bar`, and a width set while
+      the section is `display:none` lands with no transition — so `obGo` parks
+      the bar at the previous step's width, `show()`s, forces a reflow
+      (`void bar.offsetWidth`), then sets the target. Deliberately not rAF: that
+      makes the *correct final width* depend on frames running (it silently
+      stuck on the old step in a throttled tab).
+    - Both openers of `#backupInput` must set `obRestoring` explicitly —
+      cancelling a file picker fires no event, so a flag only cleared on success
+      stays set and hijacks the next restore.
+    - The confirm-skip on restore is gated on `!Store.getOnboarded()` (a genuine
+      first run), **not** on `obRestoring` — "Run setup again" walks a loaded
+      phone back to the same restore button, and that device has real data.
+  - Mascot poses per step: `wave` (mascot-wave), **`camera`** (mascot-breathe),
+    `walk` (**mascot-sway**, not bob — bob is a translateY hover that reads as
+    floating, wrong physics under a walking pose), `excited` (mascot-win, which
+    hands off to breathe inside the class). All four already in the
+    reduced-motion disable list.
+  - **New 16th pose `camera`** (owner-supplied `chicken-camera.svg`, a winking
+    chicken taking a photo) — added to `POSES` + `ALT` in js/mascot.js and used
+    on ob-photos, where it invites the action instead of the `thinking` pose
+    pondering it. `assets/mascot/camera.svg` is a straight copy of the owner's
+    re-export (viewBox `0 0 250 250`); the source stays at the repo root.
+  - **Two gotchas from that pose worth remembering for future art drops:**
+    - The first export's canvas was 1333x1180 around only 542x728 of artwork
+      (59% empty width), so it rendered small and shoved left — `.mascot` sizes
+      by height with `width:auto`, so an oversized canvas silently shrinks the
+      pose. **Check `getBBox()` against the viewBox on any new pose.**
+    - The eyeball's white was *transparent*, which nothing catches on the light
+      screens — but onboarding is on the blue gradient, so the page showed
+      through and the eye rendered as a solid blue disc. **Any pose used on a
+      dark/coloured background needs its whites actually filled**, not left as
+      holes. Both were fixed by the owner in the re-export.
+  - Reviewed by Fable, which caught the confirm-skip hole, the dead progress-bar
+    transition and the walk/bob physics. Version → v0.35.
 - 2026-07-14 (later): **Keeper date box tightened + post dot done properly.**
   Version → v0.33.
   - **Keeper date field** is now content-sized (`flex: 0 0 auto`) instead of

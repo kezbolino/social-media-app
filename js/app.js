@@ -12,6 +12,8 @@
   let photoPool = [];
   let folderTarget = "single"; // which screen asked to load a folder
   let stashUrls = []; // object URLs for stash thumbnails, revoked on re-render
+  let obUrls = []; // same, for the onboarding photo grid
+  let obRestoring = false; // true while #backupInput was opened from onboarding
 
   // The post currently being built.
   let post = freshPost();
@@ -129,9 +131,22 @@
 
   /* ---------- boot ---------- */
   async function boot() {
-    // Tag the page's own initial history entry as "home" (replace, not push —
-    // it already exists) so the very first popstate has a screen to resolve.
-    try { history.replaceState({ screen: "home" }, "", ""); } catch (e) { /* ignore */ }
+    // Tag the page's own initial history entry with whichever screen actually
+    // opens (replace, not push — it already exists) so the very first popstate
+    // has a screen to resolve. Hardcoding "home" here would desync the back
+    // button on a first run, where onboarding is what's on screen.
+    const firstRun = !Store.getOnboarded();
+    try {
+      history.replaceState({ screen: firstRun ? "ob-welcome" : "home" }, "", "");
+    } catch (e) { /* ignore */ }
+    // Swap to onboarding BEFORE the awaits below: home is is-active in the
+    // static HTML, so waiting until after Hooks.init() lets a slow phone paint
+    // home first and then snap setup over the top of it.
+    if (firstRun) {
+      suppressHistoryPush = true;
+      startOnboarding();
+      suppressHistoryPush = false;
+    }
     try {
       await Hooks.init();
       // Prefer the embedded templates (runs from a plain file); fall back to
@@ -250,6 +265,10 @@
     $("#genFolderInput").addEventListener("change", onGenFolderPicked);
     $("#stashInput").addEventListener("change", onStashPicked);
     $("#backupInput").addEventListener("change", onBackupPicked);
+    $("#obPhotoInput").addEventListener("change", onObPhotosPicked);
+    $("#obPlaceInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); addObPlace(); }
+    });
     saveMetaField("#metaToken", "accessToken");
     saveMetaField("#metaPageId", "pageId");
     saveMetaField("#metaIgId", "igUserId");
@@ -270,6 +289,150 @@
     show(target);
   }
 
+  /* ---------- ONBOARDING (first run) ---------- */
+  // The order of setup. Screens are in index.html; none are in HUB_SCREENS, so
+  // the bottom nav stays hidden for the whole flow.
+  const OB_STEPS = ["ob-welcome", "ob-photos", "ob-places", "ob-done"];
+
+  function obPct(i) {
+    return ((i + 1) / OB_STEPS.length) * 100;
+  }
+
+  function obGo(screen) {
+    const i = OB_STEPS.indexOf(screen);
+    if (i < 0) return;
+    const cur = $(".screen.is-active");
+    const from = OB_STEPS.indexOf(cur ? cur.dataset.screen : "");
+    const sec = $(`.screen[data-screen="${screen}"]`);
+    const bar = sec && sec.querySelector(".ob-bar");
+    // Each step owns its own bar, and a width set while the section is still
+    // display:none lands with no transition — so park it at the PREVIOUS step's
+    // width, reveal the screen, then move it. Without the park the fill never
+    // animates, it only ever appears at its final width.
+    if (bar) {
+      bar.style.transition = "none";
+      bar.style.width = (from >= 0 ? obPct(from) : obPct(i)) + "%";
+    }
+    if (screen === "ob-photos") renderObPhotos();
+    if (screen === "ob-places") renderObPlaces();
+    show(screen);
+    if (bar) {
+      // Reading offsetWidth once the screen is visible forces a synchronous
+      // reflow, so the parked width is the painted "from" value and the line
+      // below has something to transition out of. Deliberately NOT rAF: that
+      // would leave the bar stuck on the old step whenever frames are paused
+      // (background tab), making the correct value depend on an animation
+      // callback. This way the final width is always set, animation or not.
+      void bar.offsetWidth;
+      bar.style.transition = ""; // back to the stylesheet (none under reduced motion)
+      bar.style.width = obPct(i) + "%";
+    }
+  }
+
+  function obNext() {
+    const cur = $(".screen.is-active");
+    const i = OB_STEPS.indexOf(cur ? cur.dataset.screen : "");
+    const next = OB_STEPS[i + 1];
+    if (next) obGo(next);
+    else finishOnboarding("home");
+  }
+
+  function startOnboarding() {
+    obGo("ob-welcome");
+  }
+
+  // Every exit from setup runs through here, so the flag can't be missed and
+  // strand someone in onboarding on every launch.
+  function finishOnboarding(target) {
+    Store.setOnboarded(true);
+    obUrls.forEach((u) => URL.revokeObjectURL(u));
+    obUrls = [];
+    if (target === "generate") openGenerate(null);
+    else show("home");
+  }
+
+  async function renderObPhotos() {
+    const grid = $("#obPhotoGrid");
+    const note = $("#obPhotoNote");
+    const next = $("#obPhotosNext");
+    if (!grid) return;
+    obUrls.forEach((u) => URL.revokeObjectURL(u));
+    obUrls = [];
+    if (!window.Photos || !Photos.supported) {
+      // No IndexedDB — the stash can't work, so don't gate setup on it.
+      grid.innerHTML = "";
+      if (note) note.textContent = "This phone can't save photos in the app — you can still pick one per post.";
+      if (next) next.disabled = false;
+      return;
+    }
+    const items = await Photos.all();
+    grid.innerHTML = items
+      .map((it) => {
+        const url = URL.createObjectURL(it.blob);
+        obUrls.push(url);
+        return `<div class="stash-thumb"><img src="${url}" alt="" /></div>`;
+      })
+      .join("");
+    if (note) note.textContent = items.length ? `${items.length} photo${items.length === 1 ? "" : "s"} saved. 📸` : "";
+    // Soft gate: Next needs one photo, but "Skip for now" is always live.
+    if (next) next.disabled = items.length === 0;
+  }
+
+  async function onObPhotosPicked(e) {
+    const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith("image/"));
+    e.target.value = "";
+    if (!files.length) return;
+    const note = $("#obPhotoNote");
+    if (note) note.textContent = "Saving…";
+    await Photos.add(files);
+    await loadPhotoStash();
+    await renderObPhotos();
+    const btn = $('[data-action="ob-add-photos"]');
+    if (window.FX && FX.sparkle && btn) FX.sparkle(btn);
+  }
+
+  function renderObPlaces() {
+    const list = $("#obPlaceList");
+    if (!list) return;
+    const items = Store.getLocations();
+    list.innerHTML = "";
+    if (!items.length) {
+      list.innerHTML = '<p class="ob-hint">No pitches saved — add one below.</p>';
+      return;
+    }
+    items.forEach((item, i) => {
+      const row = document.createElement("div");
+      row.className = "ob-place";
+      const span = document.createElement("span");
+      span.textContent = item;
+      const del = document.createElement("button");
+      del.textContent = "✕";
+      del.setAttribute("aria-label", "Remove " + item);
+      del.addEventListener("click", () => {
+        const next = Store.getLocations();
+        next.splice(i, 1);
+        Store.setLocations(next);
+        renderObPlaces();
+      });
+      row.appendChild(span);
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function addObPlace() {
+    const input = $("#obPlaceInput");
+    const val = input.value.trim();
+    if (!val) {
+      if (window.FX) FX.wiggle(input);
+      return;
+    }
+    Store.addLocation(val);
+    input.value = "";
+    renderObPlaces();
+    if (window.FX) FX.pop($("#obPlaceList").lastElementChild);
+  }
+
   function handleAction(action, el) {
     switch (action) {
       case "new-post": post = freshPost(); show("type"); break;
@@ -287,8 +450,19 @@
       case "gen-folder": $("#genFolderInput").click(); break;
       case "stash-add": $("#stashInput").click(); break;
       case "stash-clear": clearStash(); break;
+      case "ob-next": obNext(); break;
+      case "ob-skip": obNext(); break;
+      case "ob-add-photos": $("#obPhotoInput").click(); break;
+      case "ob-add-place": addObPlace(); break;
+      case "ob-finish": finishOnboarding("generate"); break;
+      case "ob-home": finishOnboarding("home"); break;
+      case "ob-restart": startOnboarding(); break;
+      case "ob-restore": obRestoring = true; $("#backupInput").click(); break;
       case "backup-export": exportBackup(el); break;
-      case "backup-import": $("#backupInput").click(); break;
+      // Both openers of #backupInput must state which one they are: cancelling
+      // a file picker fires no event, so a flag that's only cleared on success
+      // would stay set and hijack the next restore (skipping its confirm).
+      case "backup-import": obRestoring = false; $("#backupInput").click(); break;
       case "gen-regenerate": runGenerate(); break;
       case "gen-like": flyOff("right"); break;
       case "gen-nope": flyOff("left"); break;
@@ -554,11 +728,17 @@
     const file = e.target.files[0];
     e.target.value = ""; // allow re-picking the same file
     if (!file) return;
-    const status = $("#backupStatus");
-    if (!confirm(
+    // Restoring from onboarding writes to the welcome screen's own status line.
+    const status = obRestoring ? $("#obRestoreStatus") : $("#backupStatus");
+    // The confirm is skipped ONLY on a genuine first run, where there's nothing
+    // but seeded defaults to lose. It can't hang off obRestoring alone: "Run
+    // setup again" walks an already-loaded phone back to the same restore
+    // button, and that device has months of queue, history and photos to wipe.
+    const firstRunRestore = obRestoring && !Store.getOnboarded();
+    if (!firstRunRestore && !confirm(
       "Restoring will overwrite your current locations, hashtags, captions, calendar, queue, " +
       "post history and saved photos on this phone with what's in that file. Continue?"
-    )) return;
+    )) { obRestoring = false; return; }
     status.textContent = "Restoring…";
     try {
       const summary = await Backup.restoreFile(file);
@@ -567,11 +747,21 @@
       photoPool = [];
       await loadPhotoStash();
       refreshPoolUi(); // loadPhotoStash skips this when the stash is empty
-      openSettings(); // re-render every list on this screen from the restored data
-      if (window.FX) FX.sparkle(status, { count: 16 });
+      if (obRestoring) {
+        // A restored phone is already set up — no point walking them through it.
+        obRestoring = false;
+        finishOnboarding("home");
+        // sparkle, not confetti: the full-screen Lottie is reserved for the big
+        // win (sharing a post), and this matches the Settings restore's feedback.
+        if (window.FX) FX.sparkle(status, { count: 16 });
+      } else {
+        openSettings(); // re-render every list on this screen from the restored data
+        if (window.FX) FX.sparkle(status, { count: 16 });
+      }
     } catch (err) {
       status.textContent = err.message || "That file couldn't be restored.";
       if (window.FX) FX.wiggle(status);
+      obRestoring = false;
     }
   }
 

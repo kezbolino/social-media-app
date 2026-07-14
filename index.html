@@ -13,6 +13,81 @@
   </head>
   <body>
     <div id="app" class="has-bottomnav">
+      <!-- ===== ONBOARDING (first run) =====
+           Four steps, driven by OB_STEPS in js/app.js. None of these are in
+           HUB_SCREENS, so the bottom nav hides itself while setup runs. -->
+      <section class="screen ob" data-screen="ob-welcome">
+        <div class="ob-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="Setup progress">
+          <span class="ob-bar"></span>
+        </div>
+        <div class="ob-body">
+          <img class="brand-logo ob-logo" src="assets/logo.svg" alt="Chuckling Wings" />
+          <img class="mascot mascot-lg mascot-center mascot-wave" src="assets/mascot/wave.svg" alt="Wingman waving hello" decoding="async" draggable="false" />
+          <h2 class="ob-title">Alright boss.</h2>
+          <p class="ob-hint">Wingman turns your pics into posts — caption written, pitch and day filled in, ready to share. Two minutes and you're away.</p>
+          <p id="obRestoreStatus" class="ob-note"></p>
+        </div>
+        <div class="ob-actions">
+          <button class="btn btn-accent" data-action="ob-next">Let's go</button>
+          <button class="btn btn-ghost btn-sm" data-action="ob-restore">I've got a backup file</button>
+        </div>
+      </section>
+
+      <section class="screen ob" data-screen="ob-photos">
+        <div class="ob-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-label="Setup progress">
+          <span class="ob-bar"></span>
+        </div>
+        <div class="ob-body">
+          <img class="mascot mascot-lg mascot-center mascot-breathe" src="assets/mascot/camera.svg" alt="Wingman ready with a camera" decoding="async" draggable="false" />
+          <h2 class="ob-title">Show us your food</h2>
+          <p class="ob-hint">Wingman picks from these every time it builds a post. Add a few now — they're saved on this phone, so it works with no internet.</p>
+          <input id="obPhotoInput" type="file" accept="image/*" multiple hidden />
+          <button class="btn btn-secondary" data-action="ob-add-photos">📸 Add photos</button>
+          <div id="obPhotoGrid" class="stash-grid ob-grid"></div>
+          <p id="obPhotoNote" class="ob-note"></p>
+        </div>
+        <div class="ob-actions">
+          <button class="btn btn-accent" id="obPhotosNext" data-action="ob-next" disabled>Next ›</button>
+          <button class="btn btn-ghost btn-sm" data-action="ob-skip">Skip for now</button>
+        </div>
+      </section>
+
+      <section class="screen ob" data-screen="ob-places">
+        <div class="ob-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="3" aria-label="Setup progress">
+          <span class="ob-bar"></span>
+        </div>
+        <div class="ob-body">
+          <!-- sway, not bob: bob is a translateY hover, which reads as floating —
+               wrong physics under a walking pose. sway keeps the feet planted. -->
+          <img class="mascot mascot-lg mascot-center mascot-sway" src="assets/mascot/walk.svg" alt="Wingman strolling along" decoding="async" draggable="false" />
+          <h2 class="ob-title">Where do you trade?</h2>
+          <p class="ob-hint">Most captions name the spot, so these earn their keep. We've started you off with a few — bin any that are wrong.</p>
+          <div id="obPlaceList" class="ob-places"></div>
+          <div class="row ob-add">
+            <input id="obPlaceInput" class="text-input" type="text" placeholder="e.g. Greenwich Market" />
+            <button class="btn btn-secondary" data-action="ob-add-place">Add</button>
+          </div>
+        </div>
+        <div class="ob-actions">
+          <button class="btn btn-accent" data-action="ob-next">Next ›</button>
+        </div>
+      </section>
+
+      <section class="screen ob" data-screen="ob-done">
+        <div class="ob-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="4" aria-label="Setup progress">
+          <span class="ob-bar"></span>
+        </div>
+        <div class="ob-body">
+          <img class="mascot mascot-lg mascot-center mascot-win" src="assets/mascot/excited.svg" alt="Wingman thrilled and wide-eyed" decoding="async" draggable="false" />
+          <h2 class="ob-title">You're all set.</h2>
+          <p class="ob-hint">Wingman's got your photos, your pitches and a pile of ready-written captions. Let's make some posts.</p>
+        </div>
+        <div class="ob-actions">
+          <button class="btn btn-accent" data-action="ob-finish">✨ Make my first posts</button>
+          <button class="btn btn-ghost btn-sm" data-action="ob-home">I'll have a look around first</button>
+        </div>
+      </section>
+
       <!-- ===== HOME ===== -->
       <section class="screen is-active" data-screen="home">
         <div class="home">
@@ -23,7 +98,7 @@
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
           <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
           <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
-          <p class="app-version" id="appVersion">v0.34</p>
+          <p class="app-version" id="appVersion">v0.35</p>
         </div>
       </section>
 
@@ -498,6 +573,10 @@
           </div>
           <input id="backupInput" type="file" accept="application/json,.json" hidden />
           <p id="backupStatus" class="hint"></p>
+
+          <p class="lead" style="margin-top: 28px;">🧭 Setup</p>
+          <p class="hint">Walk through the first-run setup again — photos and pitches. Nothing gets wiped.</p>
+          <button class="btn btn-secondary" data-action="ob-restart">Run setup again</button>
 
           <p class="lead" style="margin-top: 28px;">🚀 Auto-posting (Meta) — optional</p>
           <p class="hint">Post straight to Instagram/Facebook without the share sheet. Needs a one-time Meta setup — see <strong>docs/META_SETUP.md</strong> for the plain-English walkthrough. Everything you paste here stays on this device.</p>

@@ -31,6 +31,7 @@ window.APP_CONFIG = {
     INSTAGRAM: "sfp.instagram",
     QUEUE: "sfp.queue",
     WEATHER: "sfp.weatherCache",
+    ONBOARDED: "sfp.onboarded",
   },
 
   // Locations pre-loaded the first time the app runs. The user can add/remove

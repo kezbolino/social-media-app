@@ -200,6 +200,117 @@ input[type="range"] { touch-action: none; }
   letter-spacing: 0.06em;
 }
 
+/* ---- Onboarding (first run) ----
+   A self-contained flow on the home gradient, so "you're in setup" reads at a
+   glance. Progress bar pinned top, mascot + copy in the middle, actions pinned
+   bottom. Screens live in index.html; OB_STEPS in app.js drives the order. */
+/* Beats `.screen.is-active { display: block }` on specificity, not source order. */
+.screen.ob.is-active {
+  display: flex;
+  flex-direction: column;
+}
+.ob {
+  /* height, not min-height: the bar is pinned top and the actions pinned
+     bottom, so the section must be exactly the viewport and let .ob-body take
+     the overflow. With min-height the section just grows on a short screen and
+     both "pinned" ends drift off it (same approach as the editor screen). */
+  height: 100vh;
+  height: 100dvh;
+  padding: max(14px, env(safe-area-inset-top)) 20px max(18px, env(safe-area-inset-bottom));
+  background: linear-gradient(160deg, #0a4da1 0%, #0a4da1 45%, #0d59b8 100%);
+  color: #fff;
+}
+.ob-progress {
+  flex: 0 0 auto;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+}
+.ob-bar {
+  display: block;
+  height: 100%;
+  width: 25%;
+  border-radius: 999px;
+  background: var(--orange);
+  transition: width 0.45s var(--ease-premium);
+}
+/* The scrolling middle. overflow-x MUST be pinned: setting only overflow-y
+   makes the x axis compute to `auto`, which hands this its own sideways
+   scrollbar that the html/body lock can't reach (same trap as .editor-scroll). */
+.ob-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  padding: 14px 0;
+}
+.ob-logo { width: min(240px, 74%); margin-bottom: -6px; }
+.ob-title { margin: 2px 0 0; font-size: 1.5rem; }
+.ob-hint {
+  margin: 0;
+  max-width: 24rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+.ob-note {
+  margin: 4px 0 0;
+  min-height: 1.2em;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--orange);
+}
+.ob-actions { flex: 0 0 auto; }
+.ob-actions .btn { margin: 8px 0 0; }
+.ob .btn-ghost { color: rgba(255, 255, 255, 0.9); }
+.ob .btn-sm { width: 100%; }
+/* Photo thumbs sit on blue here, not the light settings panel. */
+.ob-grid { width: 100%; }
+.ob .stash-thumb {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+}
+.ob-places { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.ob-place {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+  font-weight: 600;
+  text-align: left;
+}
+.ob-place button {
+  flex: 0 0 auto;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.ob-add { width: 100%; }
+/* Without min-width:0 a flex child won't shrink below its content, so the
+   Add button gets shoved off-screen on a narrow phone. */
+.ob-add .text-input { min-width: 0; }
+/* width:auto is load-bearing: .btn sets width:100%, and with flex:0 0 auto that
+   becomes an unshrinkable 100%-of-the-row basis, pushing Add off a 320px screen
+   (where overflow-x:hidden then clips it out of reach rather than scrolling). */
+.ob-add .btn { margin: 0; flex: 0 0 auto; width: auto; }
+
 /* ---- Buttons ---- */
 .btn {
   display: block;
@@ -1446,4 +1557,6 @@ input[type="range"] { touch-action: none; }
   .btn { transition: background 0.15s ease; }
   .back, .tile-icon, .slot, .cal-cell, .etab { transition: none; }
   .swipe-card, .swipe-btn { transition: none !important; }
+  /* The progress bar still moves — it just jumps to its new width. */
+  .ob-bar { transition: none; }
 }

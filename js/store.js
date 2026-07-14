@@ -27,6 +27,18 @@ const Store = (() => {
     }
   }
 
+  /* ---- First-run setup ---- */
+  // False/absent means the setup flow hasn't been completed on this device, so
+  // boot() opens onboarding instead of home. Only finishOnboarding() sets it —
+  // every exit from setup routes through there, including a backup restore
+  // (that phone is already set up) and skipping the photo step.
+  function getOnboarded() {
+    return read(K.ONBOARDED, false) === true;
+  }
+  function setOnboarded(v) {
+    write(K.ONBOARDED, v === true);
+  }
+
   /* ---- Menu items (best sellers / sauces) ---- */
   function getMenuItems() {
     return read(K.MENU, []);
@@ -263,5 +275,7 @@ const Store = (() => {
     addQueueItem,
     updateQueueItem,
     removeQueueItem,
+    getOnboarded,
+    setOnboarded,
   };
 })();
