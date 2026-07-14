@@ -164,6 +164,7 @@
       return;
     }
     wireEvents();
+    applyFont(Store.getFont());
     rollGreeting();
     adaptPhotoPickers();
     loadPhotoStash();
@@ -217,6 +218,9 @@
 
       const calLoc = e.target.closest("[data-cal-loc]");
       if (calLoc) return pickCalLocation(calLoc.dataset.calLoc);
+
+      const fontOpt = e.target.closest("[data-font-option]");
+      if (fontOpt) return pickFont(fontOpt.dataset.fontOption);
 
       const qMake = e.target.closest("[data-q-make]");
       if (qMake) return makeFromQueue(Store.getQueue().find((x) => x.id === qMake.dataset.qMake));
@@ -1459,6 +1463,7 @@
     renderUserHooks();
     renderNotifySettings();
     renderMetaSettings();
+    renderFontPicker();
     show("settings");
   }
 
@@ -2510,6 +2515,35 @@
     note.hidden = false;
     note.textContent = blobs.length > 1 ? `Saved ${blobs.length} images to your downloads. ⬇️` : "Image saved to your downloads. ⬇️";
     if (window.FX) FX.pop(note);
+  }
+
+  /* ---------- APP FONT ---------- */
+  // Swaps the `data-font` attribute on <html>, which flips --font-family in
+  // css/styles.css — every element inherits from html,body, so this one
+  // attribute change reskins the whole app. "poppins" is the built-in
+  // default (no override rule needed, so clearing the attribute is enough).
+  function applyFont(id) {
+    if (id && id !== "poppins") document.documentElement.setAttribute("data-font", id);
+    else document.documentElement.removeAttribute("data-font");
+  }
+
+  function renderFontPicker() {
+    const wrap = $("#fontChips");
+    if (!wrap) return;
+    const current = Store.getFont();
+    wrap.innerHTML = (window.APP_CONFIG.FONTS || [])
+      .map(
+        (f) =>
+          `<button type="button" class="chip font-chip${f.id === current ? " selected" : ""}" data-font-option="${f.id}" style="font-family:'${f.label}'" title="${f.blurb}">${f.label}</button>`
+      )
+      .join("");
+  }
+
+  function pickFont(id) {
+    Store.setFont(id);
+    applyFont(id);
+    renderFontPicker();
+    if (window.FX) FX.pop($(`[data-font-option="${id}"]`));
   }
 
   /* ---------- NOTIFY SETTINGS ---------- */

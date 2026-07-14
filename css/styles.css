@@ -54,6 +54,107 @@
   src: url("../assets/fonts/spacemono-700.woff2") format("woff2");
 }
 
+/* App-wide font options (Settings → 🔤 App font) — bundled locally so they
+   work offline, same reasoning as Poppins above. All SIL OFL (see OFL.txt). */
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/fredoka-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/fredoka-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/fredoka-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Baloo 2";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/baloo2-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Baloo 2";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/baloo2-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Baloo 2";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/baloo2-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Baloo 2";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../assets/fonts/baloo2-800.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/nunito-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/nunito-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/nunito-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../assets/fonts/nunito-800.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Quicksand";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/quicksand-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Quicksand";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/quicksand-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Quicksand";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/quicksand-700.woff2") format("woff2");
+}
+
 :root {
   --blue: #0a4da1;
   --blue-press: #083f85;
@@ -69,6 +170,24 @@
   --error: #c0362c;
   --radius: 16px;
   --navh: 54px;
+
+  /* App-wide UI font (Settings → 🔤 App font). A `data-font` attribute on
+     <html> (set by applyFont() in app.js) swaps --font-family; every element
+     inherits it from html,body below rather than hardcoding "Poppins", so
+     this is the one place a new option needs a stack added. */
+  --font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+html[data-font="fredoka"] {
+  --font-family: "Fredoka", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+html[data-font="baloo2"] {
+  --font-family: "Baloo 2", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+html[data-font="nunito"] {
+  --font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+html[data-font="quicksand"] {
+  --font-family: "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -82,7 +201,7 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--font-family);
   font-weight: 500;
   /* Hard-lock the page to vertical scrolling only — no sideways drift or
      rubber-band, even when a gesture starts on a control. */
@@ -472,6 +591,11 @@ input[type="range"] { touch-action: none; }
 }
 .chip.selected { background: var(--orange); border-color: var(--orange); color: #1a1208; }
 .chip-add { color: var(--muted); border-style: dashed; }
+
+/* ---- Font picker (Settings → 🔤 App font) — each chip previews its own
+   font via an inline font-family style set in app.js, same trick as the
+   editor's .style-chip text-style picker. */
+.font-chip { font-size: 1.05rem; }
 
 /* ---- Photo editor (Instagram-style) ---- */
 /* The editor fills the screen: header on top, the photo pinned, and the

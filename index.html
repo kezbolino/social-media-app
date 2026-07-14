@@ -10,6 +10,17 @@
     <link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
     <title>Chuckling Wings · Wingman</title>
     <link rel="stylesheet" href="css/styles.css" />
+    <script>
+      // Apply the saved UI font before first paint, so switching it in
+      // Settings doesn't flash the default font on the next launch. Reads
+      // localStorage directly (Store isn't loaded yet at this point).
+      (function () {
+        try {
+          var f = JSON.parse(localStorage.getItem("sfp.font") || '"poppins"');
+          if (f && f !== "poppins") document.documentElement.setAttribute("data-font", f);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="app" class="has-bottomnav">
@@ -104,7 +115,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
           <button class="btn btn-ghost btn-sm" data-action="ob-restart">🧪 View onboarding (debug)</button>
-          <p class="app-version" id="appVersion">v0.40</p>
+          <p class="app-version" id="appVersion">v0.41</p>
         </div>
       </section>
 
@@ -579,6 +590,10 @@
           </div>
           <input id="backupInput" type="file" accept="application/json,.json" hidden />
           <p id="backupStatus" class="hint"></p>
+
+          <p class="lead" style="margin-top: 28px;">🔤 App font</p>
+          <p class="hint">Pick the look for the whole app — menus, buttons, everything.</p>
+          <div id="fontChips" class="chips"></div>
 
           <p class="lead" style="margin-top: 28px;">🧭 Setup</p>
           <p class="hint">Walk through the first-run setup again — photos and pitches. Nothing gets wiped.</p>

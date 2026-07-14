@@ -224,6 +224,14 @@ const Store = (() => {
     return q;
   }
 
+  /* ---- App-wide UI font (Settings → 🔤 App font) ---- */
+  function getFont() {
+    return read(K.FONT, "poppins");
+  }
+  function setFont(id) {
+    write(K.FONT, id);
+  }
+
   /* ---- Saved posts: draft -> approved -> shared ---- */
   function getPosts() {
     return read(K.POSTS, []);
@@ -277,5 +285,7 @@ const Store = (() => {
     removeQueueItem,
     getOnboarded,
     setOnboarded,
+    getFont,
+    setFont,
   };
 })();

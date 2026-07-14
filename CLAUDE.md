@@ -84,6 +84,49 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-14 (latest): **App-wide font picker** (Settings → 🔤 App font, owner
+  request for "a fun friendly Duolingo feel"). Five options: Poppins (existing
+  default), Fredoka, Baloo 2, Nunito, Quicksand — all rounded/friendly Google
+  Fonts, bundled locally as static woff2 (same offline-first reasoning as the
+  existing Poppins/Oswald/Pacifico/Space Mono @font-faces; SIL OFL, see
+  `assets/fonts/OFL.txt`). Weights fetched match what the app already uses
+  (500/600/700, +800 for Baloo 2/Nunito which have it — Fredoka/Quicksand cap
+  at 700, so a 800-weight rule just renders their 700 face, no error).
+  - **One CSS variable is the whole mechanism**: `--font-family` in `:root`
+    (default Poppins stack) is the only thing `html,body`'s `font-family`
+    reads; every other element in the app already used `font-family: inherit`
+    or nothing, so flipping this one variable reskins the entire UI with no
+    per-component changes. `html[data-font="fredoka"]` (etc.) override blocks
+    swap it; `applyFont(id)` (js/app.js) sets/clears that attribute.
+  - **Not the same font system as the editor's text tool** (Oswald/Pacifico/
+    Space Mono in `TEXT_STYLES`, `js/editor.js`) — that's per-post caption
+    styling baked into exported images; this is the live app chrome (menus,
+    buttons, headings). Deliberately kept separate; don't merge them.
+  - Settings renders `#fontChips` (`.chips`/`.chip`, the same reusable "pick
+    one" pattern as the editor's aspect-ratio chips) via `renderFontPicker()`,
+    each chip's label set in its own font via inline `style="font-family:…"`
+    — same trick `.style-chip` already used for text-style previews — so the
+    picker doubles as a live sample. Choice saved via `Store.getFont()/
+    setFont()` (key `sfp.font`, default `"poppins"`); the option list lives in
+    `APP_CONFIG.FONTS` (js/config.js) — adding a 6th font means a font entry
+    there + an `@font-face`/`html[data-font=...]` pair in styles.css.
+  - **FOUC fix**: a small inline `<script>` in `index.html`'s `<head>` (before
+    the stylesheet's owner reads anything else) reads `sfp.font` straight out
+    of `localStorage` and sets `data-font` before first paint — `Store` isn't
+    loaded yet at that point in the parse, so it can't go through the normal
+    API. `boot()` also calls `applyFont(Store.getFont())` once app.js is up,
+    so the attribute is never dependent on the inline script alone.
+  - **Deliberately left out of Backup & restore**: this is a device display
+    preference, not trader content (same class of thing as "don't sync theme
+    across devices"), so `backup.js` wasn't touched — a restore leaves
+    whatever font the new device already had.
+  - Verified headless (Chromium, 390×844, `http://localhost:5173`): all 5
+    families report `document.fonts.check(...) === true`; picking a chip
+    changes `getComputedStyle(document.body).fontFamily` immediately and
+    re-renders the whole Settings screen in the new font (screenshotted);
+    `localStorage.sfp.font` and the `data-font` attribute agree after a
+    reload, with the attribute already correct before `boot()` runs (no
+    flash); no console errors. Version → v0.41.
 - 2026-07-14 (later still): **Fixed queue/history buttons rendering unequal
   width** (~122px each instead of the intended half-screen split) — the v0.39
   change below wrapped them in `.row`, but `.home` is a `flex-direction:

@@ -32,7 +32,20 @@ window.APP_CONFIG = {
     QUEUE: "sfp.queue",
     WEATHER: "sfp.weatherCache",
     ONBOARDED: "sfp.onboarded",
+    FONT: "sfp.font",
   },
+
+  // App-wide UI font choices (Settings → 🔤 App font). `id` matches the
+  // `data-font` attribute value in css/styles.css (see the --font-family
+  // overrides there) — add a matching @font-face + override block if you add
+  // an option here. "poppins" is the built-in default (no override needed).
+  FONTS: [
+    { id: "poppins", label: "Poppins", blurb: "Clean & modern (default)" },
+    { id: "fredoka", label: "Fredoka", blurb: "Round & bubbly" },
+    { id: "baloo2", label: "Baloo 2", blurb: "Bold & playful" },
+    { id: "nunito", label: "Nunito", blurb: "Soft & friendly" },
+    { id: "quicksand", label: "Quicksand", blurb: "Light & breezy" },
+  ],
 
   // Locations pre-loaded the first time the app runs. The user can add/remove
   // these in Settings.
