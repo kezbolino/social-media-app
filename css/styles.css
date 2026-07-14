@@ -794,14 +794,30 @@ input[type="range"] { touch-action: none; }
 }
 .keeper-actions { display: flex; gap: 8px; }
 .keeper-actions .btn { flex: 1; }
-.keeper-queue { display: flex; gap: 8px; margin-top: 8px; }
-.keeper-date {
-  flex: 1; min-width: 0; padding: 8px 10px; border-radius: 10px;
+/* The keeper card's body is only ~240px wide on a phone (an 84px thumbnail eats
+   the rest). A native date field can't fit there alongside the queue button —
+   it shrank to ~83px and clipped its own text. Showing just "15/7" (see
+   fmtKeeperDate) makes it fit again; flex-wrap stays as a safety net in case a
+   locale or font renders the button wider than expected. */
+.keeper-queue { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.keeper-date-field {
+  position: relative; flex: 1 1 auto; min-width: 72px;
+  display: flex; align-items: center;
+  padding: 8px 10px; border-radius: 10px;
   border: 1px solid var(--line); background: var(--panel); color: var(--text);
-  font-family: inherit; font-size: 0.85rem;
+  font-size: 0.85rem; cursor: pointer;
 }
-.keeper-date:focus { outline: none; border-color: var(--blue); }
-.keeper-queue .btn { flex: 0 0 auto; }
+.keeper-date-label { pointer-events: none; }
+/* The real input lies invisible across the whole field: tapping anywhere opens
+   the OS date picker (no showPicker() needed, so it works on older iOS too)
+   while `.keeper-date` stays in the DOM for reading .value. */
+.keeper-date {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; border: none; padding: 0; margin: 0; background: none;
+  font-family: inherit; cursor: pointer;
+}
+.keeper-date-field:focus-within { outline: none; border-color: var(--blue); }
+.keeper-queue .btn { flex: 1 1 auto; }
 
 /* ---- Weather mode ---- */
 .weather-note {
@@ -972,11 +988,10 @@ input[type="range"] { touch-action: none; }
 }
 .navbtn.is-active { color: var(--blue); }
 .navbtn.is-active svg { stroke-width: 2; }
+/* The dot marks which hub screen you're on, so only a [data-nav] button can
+   light it — the post button launches a flow rather than a screen and never
+   becomes is-active. */
 .navbtn.is-active::after { background: var(--orange); }
-/* The post button (the only navbtn with no data-nav — it launches a flow
-   rather than a hub screen) is the primary action, so its orange dot is
-   always lit as a standing accent. */
-.navbtn:not([data-nav])::after { background: var(--orange); }
 /* Light press feedback: the icon dips down then springs back via the
    bouncy easing on release — same feel as the rest of the app's buttons. */
 .navbtn:active svg { transform: scale(0.78); }

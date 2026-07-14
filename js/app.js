@@ -1578,7 +1578,7 @@
     if (selectedDate) {
       Store.setWorkday(selectedDate, val);
       selectCalDay(selectedDate);
-      celebrateWorkday(selectedDate);
+      bounceWorkdayCell(selectedDate);
     }
   }
 
@@ -1586,15 +1586,16 @@
     if (!selectedDate) return;
     Store.setWorkday(selectedDate, loc);
     selectCalDay(selectedDate);
-    celebrateWorkday(selectedDate);
+    bounceWorkdayCell(selectedDate);
   }
 
-  // Marking a working day is a small win — the day's cell gets a quiet
-  // sparkle-burst + bounce (the big confetti stays reserved for sharing).
-  function celebrateWorkday(key) {
+  // Setting a day's pitch is routine admin, not a win — the cell just bounces
+  // to acknowledge the tap. No confetti here (owner's call); the sparkle/
+  // confetti stay for the things worth celebrating, like sharing a post.
+  function bounceWorkdayCell(key) {
     if (!window.FX) return;
     const cell = document.querySelector(`.cal-cell[data-date="${key}"]`);
-    if (cell) FX.sparkle(cell, { count: 18 });
+    if (cell) FX.pop(cell);
   }
   function clearCalDay() {
     if (!selectedDate) return;
@@ -1851,15 +1852,32 @@
     advanceDeck();
   }
 
+  // A native <input type="date"> always renders in the browser/OS locale and
+  // always includes the year — that's not restylable, so the keeper cards show
+  // our own short "15/7" label with the real input sitting invisibly on top of
+  // it (which keeps the native picker and the value). Queueing is a near-term
+  // thing, so the year is noise (owner's call); the picker still shows it.
+  function fmtKeeperDate(iso) {
+    const [y, m, d] = String(iso || "").split("-").map(Number);
+    if (!y || !m || !d) return "Pick a day";
+    return `${d}/${m}`;
+  }
+  function syncKeeperDateLabel(inp) {
+    const field = inp.closest(".keeper-date-field");
+    const label = field && field.querySelector(".keeper-date-label");
+    if (label) label.textContent = fmtKeeperDate(inp.value);
+  }
+
   function showKeepers() {
     genShow("keepers");
     $("#genInfo").textContent = "";
     const wrap = $("#genKeepers");
     if (!keepers.length) {
+      // No "New batch" button here — #genFolderRow already shows one on every
+      // Generate panel, and a second copy just read as a duplicate.
       wrap.innerHTML =
         (window.Mascot ? Mascot.html("sad", { size: "lg", className: "mascot-center" }) : "") +
-        '<p class="hint" style="text-align:center">None kept this round — no worries.</p>' +
-        '<button class="btn btn-accent" data-action="gen-regenerate">🔀 New batch</button>';
+        '<p class="hint" style="text-align:center">None kept this round — no worries.</p>';
       return;
     }
     const today = Notify.todayStr();
@@ -1877,12 +1895,20 @@
         `<button class="btn btn-secondary btn-sm" data-keeper-edit="${i}">✏️ Customise</button>` +
         `</div>` +
         `<div class="keeper-queue">` +
+        `<label class="keeper-date-field">` +
+        `<span class="keeper-date-label" aria-hidden="true">${fmtKeeperDate(tomorrow)}</span>` +
         `<input type="date" class="keeper-date" min="${today}" value="${tomorrow}" aria-label="Queue for date" />` +
+        `</label>` +
         `<button class="btn btn-secondary btn-sm" data-keeper-queue="${i}">🗓 Queue for later</button>` +
         `</div></div></div>`;
     });
-    html += `</div><button class="btn btn-accent" data-action="gen-regenerate" style="margin-top:14px">🔀 New batch</button>`;
+    html += `</div>`;
     wrap.innerHTML = html;
+    // The invisible native input supplies the picker + value; our own label is
+    // what's actually read, so keep it in step with whatever day they pick.
+    wrap.querySelectorAll(".keeper-date").forEach((inp) =>
+      inp.addEventListener("change", () => syncKeeperDateLabel(inp))
+    );
     if (window.FX) FX.confetti({ quiet: true });
   }
 

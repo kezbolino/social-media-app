@@ -84,6 +84,51 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-14: **Five small fixes** (nav dot, calendar confetti, heart length,
+  keeper tray). Version → v0.31.
+  - **Post-button dot**: the bottom-nav dot is the *you-are-here* marker
+    (`.navbtn.is-active::after`), and `show()` only ever toggles `is-active` on
+    `.navbtn[data-nav]` — the post button deliberately has no `data-nav` (it
+    launches a flow, not a hub screen), so it can never legitimately light one.
+    The v0.24 "standing accent" rule (`.navbtn:not([data-nav])::after`) was
+    painting one in permanently; removed.
+  - **No confetti when setting a day's pitch**: `celebrateWorkday` →
+    `bounceWorkdayCell`, `FX.sparkle` → `FX.pop`. NB `sparkle()` = a quiet
+    confetti puff **plus** `pop()`, so dropping to `pop` keeps the cell's
+    tap-acknowledgement and loses only the celebration. Both callers
+    (`pickCalLocation`, `addCalDayLocation`) share the helper.
+  - **Heart trimmed** ~3.0s → ~1.6s: the source Lottie is 181f@60fps — heart
+    pops, bursts (~f45), particles gone by ~f75, then it **holds a static heart
+    to f118** where an *outline* heart fades in and lingers to the end. `heart()`
+    now loads with `initialSegment: [0, HEART_END_FRAME]` (84) + a 200ms fade-out,
+    killing the outline **and** the dead hold. `HEART_END_FRAME` is the one dial
+    (anything ≤117 stays clear of the outline).
+  - **Keeper tray had two "New batch" buttons**: `#genFolderRow` (index.html) is
+    outside all the gen panels so it shows on *every* Generate state and already
+    carries one — `showKeepers` injected a second. Removed the injected copies.
+    Don't re-add one to a gen panel.
+  - **Keeper date truncated → now "15/7"**: the card body is only ~240px (an
+    84px thumb eats the rest); the queue button was `flex: 0 0 auto` at 149px,
+    starving the date to 83px so it clipped ("2026/"). Same flexbox trap as the
+    calendar add-place input — see the `min-width: 0` note above.
+    **A native `<input type="date">` renders in the browser/OS locale and cannot
+    be reformatted or restyled**, so the visible text is now our own
+    `fmtKeeperDate(iso)` → `d/M` label, with the real input `position:absolute;
+    inset:0; opacity:0` on top inside a `<label class="keeper-date-field">`.
+    That keeps the native picker (overlay, not `showPicker()` — the latter needs
+    newer iOS) and `.keeper-date`.value, so `queueKeeper` is untouched. A
+    `change` listener resyncs the label. Year is dropped deliberately (owner) —
+    a date queued into another year reads ambiguously; the picker still shows it.
+  - **Gotcha (cost real time twice)**: `npm start`/`python http.server` send **no
+    cache headers**, so browsers heuristically cache `js/*.js` and silently run
+    **stale code** — a fix can look broken when it isn't. Tell: the resource's
+    `transferSize` is 0 in `performance.getEntriesByType("resource")`. Clear with
+    `fetch(url, {cache:"reload"})` over every `script[src]`/stylesheet, then
+    reload. Preview-only; the live site is network-first via the SW.
+  - **Gotcha**: the in-app preview tab is `visibility: hidden` with rAF fully
+    paused (0 ticks/500ms), so Lottie/confetti/CSS-transition timing never run
+    there — `flyOff` only advances because it uses `setTimeout`, not
+    `transitionend`. Verify animation by asserting bounds/config, not by watching.
 - 2026-07-13: **Swipe-right "like" heart (owner Lottie).** A red heart pops +
   bursts, centred, when a Generate card is kept (swiped/tapped right). Same
   Lottie setup as the confetti: `assets/lottie/heart.js` wraps the animation

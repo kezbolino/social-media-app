@@ -1,5 +1,47 @@
 # Session Log
 
+## 2026-07-14 — Five small fixes (nav dot, calendar confetti, heart, keeper tray)
+**Done** (all verified in a real browser; v0.26 → v0.31)
+- **Post icon's orange dot always lit** — the dot is the "you are here" tab
+  marker, and the post button launches a flow rather than a screen, so it can
+  never legitimately earn one. Dropped the always-on rule we added in v0.24.
+- **Calendar confetti removed** when picking a market (owner preference).
+  `celebrateWorkday` → `bounceWorkdayCell`: `FX.sparkle` (confetti + pop) is now
+  just `FX.pop`, so the cell still acknowledges the tap. Covers both entry
+  points (pick a market / add a place) — they share the helper.
+- **Heart shortened** (~3.0s → ~1.6s). The Lottie holds a static heart from
+  ~frame 75 then swaps to an *outline* heart at 118 that lingers to 181. Now
+  plays `initialSegment: [0, 84]` + a 200ms fade — kills both the outline and
+  ~0.7s of dead air. `HEART_END_FRAME` is one constant if it wants nudging.
+- **Keeper tray: two "New batch" buttons** — `#genFolderRow` is permanently
+  visible and already has one; `showKeepers` injected a second. Removed the
+  injected copies (tray + "None kept" state).
+- **Keeper tray: truncated date** — the button was `flex: 0 0 auto` at 149px in
+  a 240px row, leaving the date 83px so it clipped to "2026/". Same flexbox
+  trap as the calendar's add-place input.
+- **Date now shows "15/7"** (owner's call). A native date input renders in the
+  OS locale and can't be reformatted, so the visible text is our own
+  `fmtKeeperDate` label with the real input invisible on top (keeps the native
+  picker + value; overlay rather than `showPicker()`, which needs newer iOS).
+  Verified the round trip: "3/8" saved `2026-08-03` with its draft blob.
+
+**Notes**
+- Local preview kept serving **stale JS**: `python http.server` sends no cache
+  headers, so the browser heuristically caches `app.js`/`fx.js` and silently
+  runs old code — it faked a "fix didn't work" twice. `transferSize: 0` in the
+  perf entries is the tell; `fetch(url, {cache:'reload'})` then reload clears it.
+  Preview-only — the live site is network-first via the SW.
+- The preview tab reports `visibility: hidden` and rAF is fully paused, so
+  Lottie/confetti never animate there. The heart's cut was verified by proving
+  playback is *bounded* to frame 84 (< 118) rather than by watching it.
+
+**Next**
+- `js/photos.js` has uncommitted, inert dish-tagging groundwork (a `tag` field +
+  `Photos.setTag`, nothing calls it) — either finish tagging stash photos by
+  dish (fixes Generate pairing a wings caption with a fries photo) or revert it.
+- Backlog otherwise unchanged (recurring workdays, hashtag sets per location,
+  visual history/grid preview).
+
 ## 2026-07-08 (pm) — Fixed the dead deploy + Duolingo-style animations
 **Done**
 - **Live-site bug found & fixed.** GitHub Pages was silently deploying the stale

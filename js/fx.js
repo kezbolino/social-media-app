@@ -100,6 +100,15 @@
   // A quick heart pop + burst, centred on screen, played once when a Generate
   // card is swiped/kept right. Best-effort: does nothing if the runtime or the
   // animation data isn't loaded, or under reduced motion.
+  //
+  // The source file runs 181 frames @60fps (3.0s), but we only want the front
+  // half: the heart pops, bursts (~frame 45), and the particles are gone by
+  // ~frame 75 — after which it holds a static heart, then swaps to an outline
+  // heart at frame 118 that lingers to the end. Stopping at HEART_END_FRAME
+  // drops both the dead hold and the outline heart (owner's call), and we fade
+  // the overlay out so it leaves rather than snapping off.
+  const HEART_END_FRAME = 84;
+  const HEART_FADE_MS = 200;
   function heart() {
     if (reduceMotion || !window.lottie || !window.HEART_LOTTIE) return;
     try {
@@ -114,10 +123,16 @@
         loop: false,
         autoplay: true,
         animationData: window.HEART_LOTTIE,
+        initialSegment: [0, HEART_END_FRAME],
       });
       const cleanup = () => { try { anim.destroy(); } catch (_) {} host.remove(); };
-      anim.addEventListener("complete", cleanup);
-      setTimeout(cleanup, 4000); // safety net if "complete" never fires
+      const fadeOut = () => {
+        host.style.transition = `opacity ${HEART_FADE_MS}ms linear`;
+        host.style.opacity = "0";
+        setTimeout(cleanup, HEART_FADE_MS + 40);
+      };
+      anim.addEventListener("complete", fadeOut);
+      setTimeout(cleanup, 2500); // safety net if "complete" never fires
     } catch (_) {}
   }
 
