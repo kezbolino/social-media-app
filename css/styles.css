@@ -800,14 +800,21 @@ input[type="range"] { touch-action: none; }
    fmtKeeperDate) makes it fit again; flex-wrap stays as a safety net in case a
    locale or font renders the button wider than expected. */
 .keeper-queue { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+/* Sized to its content ("🗓 15/7") — flex: 0 0 auto stops it stretching to fill
+   the row, which left dead space to the right of the date. The queue button
+   takes the slack instead. */
 .keeper-date-field {
-  position: relative; flex: 1 1 auto; min-width: 72px;
-  display: flex; align-items: center;
+  position: relative; flex: 0 0 auto;
+  display: flex; align-items: center; gap: 6px;
   padding: 8px 10px; border-radius: 10px;
   border: 1px solid var(--line); background: var(--panel); color: var(--text);
   font-size: 0.85rem; cursor: pointer;
 }
 .keeper-date-label { pointer-events: none; }
+.keeper-date-icon {
+  width: 15px; height: 15px; flex: 0 0 auto;
+  color: var(--muted); pointer-events: none;
+}
 /* The real input lies invisible across the whole field: tapping anywhere opens
    the OS date picker (no showPicker() needed, so it works on older iOS too)
    while `.keeper-date` stays in the DOM for reading .value. */
@@ -988,9 +995,10 @@ input[type="range"] { touch-action: none; }
 }
 .navbtn.is-active { color: var(--blue); }
 .navbtn.is-active svg { stroke-width: 2; }
-/* The dot marks which hub screen you're on, so only a [data-nav] button can
-   light it — the post button launches a flow rather than a screen and never
-   becomes is-active. */
+/* The dot marks where you are, so it follows is-active and nothing else. The
+   post button gets is-active from show() on the "type" screen (it has no
+   data-nav to match on) — never lit unconditionally, or it reads as "you are
+   here" on every screen. */
 .navbtn.is-active::after { background: var(--orange); }
 /* Light press feedback: the icon dips down then springs back via the
    bouncy easing on release — same feel as the rest of the app's buttons. */

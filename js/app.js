@@ -81,6 +81,12 @@
     $$(".navbtn[data-nav]").forEach((b) =>
       b.classList.toggle("is-active", b.dataset.nav === screen)
     );
+    // The post button has no data-nav (it starts a flow rather than opening a
+    // hub screen), so it needs marking active by hand. "type" is the flow's
+    // first screen and the only one of its screens in HUB_SCREENS — the rest
+    // hide the bottom nav altogether, so there's nowhere else a dot could show.
+    const postBtn = $(".navbtn:not([data-nav])");
+    if (postBtn) postBtn.classList.toggle("is-active", screen === "type");
     if (screen === "home") rollGreeting();
     window.scrollTo(0, 0);
     if (!suppressHistoryPush) {
@@ -1857,6 +1863,15 @@
   // our own short "15/7" label with the real input sitting invisibly on top of
   // it (which keeps the native picker and the value). Queueing is a near-term
   // thing, so the year is noise (owner's call); the picker still shows it.
+  // Hiding the native input also hid its built-in calendar indicator, so the
+  // field draws its own — same outline glyph as the bottom-nav calendar rather
+  // than a second 🗓 emoji next to the queue button's.
+  const KEEPER_DATE_ICON =
+    '<svg class="keeper-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" ' +
+    'd="M7 3v3M17 3v3M3.5 9.5h17M5 6h14a1.5 1.5 0 0 1 1.5 1.5V19A1.5 1.5 0 0 1 19 20.5H5A1.5 ' +
+    '1.5 0 0 1 3.5 19V7.5A1.5 1.5 0 0 1 5 6Z"/></svg>';
+
   function fmtKeeperDate(iso) {
     const [y, m, d] = String(iso || "").split("-").map(Number);
     if (!y || !m || !d) return "Pick a day";
@@ -1896,6 +1911,7 @@
         `</div>` +
         `<div class="keeper-queue">` +
         `<label class="keeper-date-field">` +
+        KEEPER_DATE_ICON +
         `<span class="keeper-date-label" aria-hidden="true">${fmtKeeperDate(tomorrow)}</span>` +
         `<input type="date" class="keeper-date" min="${today}" value="${tomorrow}" aria-label="Queue for date" />` +
         `</label>` +

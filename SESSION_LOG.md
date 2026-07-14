@@ -1,29 +1,30 @@
 # Session Log
 
-## 2026-07-14 — Five small fixes (nav dot, calendar confetti, heart, keeper tray)
-**Done** (all verified in a real browser; v0.26 → v0.31)
-- **Post icon's orange dot always lit** — the dot is the "you are here" tab
-  marker, and the post button launches a flow rather than a screen, so it can
-  never legitimately earn one. Dropped the always-on rule we added in v0.24.
-- **Calendar confetti removed** when picking a market (owner preference).
-  `celebrateWorkday` → `bounceWorkdayCell`: `FX.sparkle` (confetti + pop) is now
-  just `FX.pop`, so the cell still acknowledges the tap. Covers both entry
-  points (pick a market / add a place) — they share the helper.
-- **Heart shortened** (~3.0s → ~1.6s). The Lottie holds a static heart from
-  ~frame 75 then swaps to an *outline* heart at 118 that lingers to 181. Now
-  plays `initialSegment: [0, 84]` + a 200ms fade — kills both the outline and
-  ~0.7s of dead air. `HEART_END_FRAME` is one constant if it wants nudging.
-- **Keeper tray: two "New batch" buttons** — `#genFolderRow` is permanently
-  visible and already has one; `showKeepers` injected a second. Removed the
-  injected copies (tray + "None kept" state).
-- **Keeper tray: truncated date** — the button was `flex: 0 0 auto` at 149px in
-  a 240px row, leaving the date 83px so it clipped to "2026/". Same flexbox
-  trap as the calendar's add-place input.
-- **Date now shows "15/7"** (owner's call). A native date input renders in the
-  OS locale and can't be reformatted, so the visible text is our own
-  `fmtKeeperDate` label with the real input invisible on top (keeps the native
-  picker + value; overlay rather than `showPicker()`, which needs newer iOS).
-  Verified the round trip: "3/8" saved `2026-08-03` with its draft blob.
+## 2026-07-14 — Bug-fix session: nav dot, calendar confetti, heart, keeper tray
+**Done** — v0.26 → v0.33, all verified in a real browser. Shipped to `main`
+(live at kezbolino.github.io/social-media-app, confirmed serving the new build).
+- **Post dot**: now lit only on the `type` screen (`show()` hand-sets
+  `is-active`; the post button has no `data-nav` to match on). Went through all
+  three states today — always-on (v0.24, read as "you are here" everywhere) →
+  removed → on `type` only, which is what the owner wanted. One line, because
+  `type` is the only post-flow screen in HUB_SCREENS; everything deeper hides
+  the nav.
+- **Calendar**: no confetti when picking a market. `celebrateWorkday` →
+  `bounceWorkdayCell`, `FX.sparkle` → `FX.pop` (sparkle = confetti *plus* pop,
+  so the cell still acknowledges the tap). Both callers share the helper.
+- **Heart**: ~3.0s → ~1.6s. The Lottie holds a static heart from ~f75 then swaps
+  to an *outline* heart at f118 that lingers to f181 — now plays
+  `initialSegment: [0, HEART_END_FRAME=84]` + a 200ms fade, cutting the outline
+  and ~0.7s of dead air. One constant to nudge (≤117 stays clear of the outline).
+- **Keeper tray**: dropped the duplicate "New batch" (`#genFolderRow` already
+  shows one on every Generate panel); fixed the truncated date (queue button was
+  `flex: 0 0 auto` at 149px in a 240px row, starving the date to 83px → "2026/").
+- **Keeper date** now reads "15/7" with its own calendar glyph, content-sized.
+  A native date input renders in the OS locale and **can't be reformatted**, so
+  the visible text is our `fmtKeeperDate` label with the real input invisible on
+  top (overlay, not `showPicker()` — that needs newer iOS). Keeps the native
+  picker + `.keeper-date`.value, so `queueKeeper` is untouched. Round trip
+  verified: "3/8" saved `2026-08-03` with its draft blob.
 
 **Notes**
 - Local preview kept serving **stale JS**: `python http.server` sends no cache
@@ -32,13 +33,23 @@
   perf entries is the tell; `fetch(url, {cache:'reload'})` then reload clears it.
   Preview-only — the live site is network-first via the SW.
 - The preview tab reports `visibility: hidden` and rAF is fully paused, so
-  Lottie/confetti never animate there. The heart's cut was verified by proving
-  playback is *bounded* to frame 84 (< 118) rather than by watching it.
+  Lottie/confetti never animate and **CSS transitions never advance** there —
+  `getComputedStyle` on a transitioned property returns the pre-transition
+  value, which faked a second false negative on the nav dot. Assert on classes
+  and config, not computed transitioned values.
+- Sandbox has **no general network egress** (`curl` → 000, even github.com), but
+  git push works and the in-app Browser pane has real network — that's how the
+  live deploy was verified. Don't reach for curl to check the live site.
+- Live deploy confirmed: `https://kezbolino.github.io/social-media-app/` served
+  v0.31 with all five fixes present in the deployed assets (checked the files,
+  not just the version string).
 
 **Next**
 - `js/photos.js` has uncommitted, inert dish-tagging groundwork (a `tag` field +
   `Photos.setTag`, nothing calls it) — either finish tagging stash photos by
   dish (fixes Generate pairing a wings caption with a fries photo) or revert it.
+  Deliberately kept out of both commits: it's an unused API, dead code until the
+  feature lands.
 - Backlog otherwise unchanged (recurring workdays, hashtag sets per location,
   visual history/grid preview).
 

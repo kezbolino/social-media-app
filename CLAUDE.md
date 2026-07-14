@@ -84,14 +84,35 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-14 (later): **Keeper date box tightened + post dot done properly.**
+  Version → v0.33.
+  - **Keeper date field** is now content-sized (`flex: 0 0 auto`) instead of
+    stretching to fill the row, which had left dead space right of "15/7". Hiding
+    the native input also hid its built-in picker indicator, so the field draws
+    its own calendar glyph (`KEEPER_DATE_ICON`, the bottom-nav outline icon
+    rather than a second 🗓 next to the button's). Net width barely moved
+    (72→71px) — the icon reclaimed the dead space; it's now tight against
+    icon+gap+text+padding, so it can't shrink much further while keeping an icon.
+    `.keeper-date-icon` is `pointer-events:none` so taps still reach the input.
+  - **Post-button dot, final rule** (this superseded the v0.31 bullet below —
+    the owner *does* want a dot, just only when on the post screen):
+    `show()` hand-toggles `is-active` on `.navbtn:not([data-nav])` when
+    `screen === "type"`. Why that's the whole rule: the bottom nav only renders
+    on `HUB_SCREENS`, and **`type` is the only post-flow screen in that set** —
+    single/editor/collage/quiz/details/caption/review all hide the nav entirely,
+    so there's nowhere else a post dot could show and no ambiguity with the
+    Generate→Customise→editor path. Three revisions total: always-on (wrong —
+    claimed "you are here" everywhere) → removed → lit on `type` only.
 - 2026-07-14: **Five small fixes** (nav dot, calendar confetti, heart length,
   keeper tray). Version → v0.31.
-  - **Post-button dot**: the bottom-nav dot is the *you-are-here* marker
-    (`.navbtn.is-active::after`), and `show()` only ever toggles `is-active` on
-    `.navbtn[data-nav]` — the post button deliberately has no `data-nav` (it
-    launches a flow, not a hub screen), so it can never legitimately light one.
-    The v0.24 "standing accent" rule (`.navbtn:not([data-nav])::after`) was
-    painting one in permanently; removed.
+  - **Post-button dot**: ⚠️ superseded by the v0.33 entry above — the dot is now
+    lit on the `type` screen. What was removed here was the v0.24 "standing
+    accent" rule (`.navbtn:not([data-nav])::after`), which lit the post dot
+    unconditionally so it read as "you are here" on every screen. The dot is the
+    you-are-here marker (`.navbtn.is-active::after`); `show()` matches
+    `.navbtn[data-nav]` against the screen, and the post button has no
+    `data-nav` (it launches a flow), so it needs setting by hand — it is NOT
+    true that it can never be active.
   - **No confetti when setting a day's pitch**: `celebrateWorkday` →
     `bounceWorkdayCell`, `FX.sparkle` → `FX.pop`. NB `sparkle()` = a quiet
     confetti puff **plus** `pop()`, so dropping to `pop` keeps the cell's
