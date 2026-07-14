@@ -253,6 +253,23 @@ input[type="range"] { touch-action: none; }
   padding: 14px 0;
 }
 .ob-logo { width: min(240px, 74%); margin-bottom: -6px; }
+/* A landscape scene (the stall), unlike the portrait mascot poses — so it's
+   sized by WIDTH. .mascot's height:108px/width:auto would render it as a
+   ~139x104 thumbnail with unreadable branding. */
+.ob-scene {
+  width: min(300px, 86%);
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  /* The stall is painted in the brand blue — rgb(9,76,160) against this screen's
+     rgb(10,77,161) background, i.e. the same colour — so its canopy and counter
+     dissolve into the backdrop and it reads as floating poles. This lifts the
+     silhouette off. It's a mitigation, not a cure: the real fix is the artwork
+     not being the same blue as the surface it sits on. */
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.32));
+}
 .ob-title { margin: 2px 0 0; font-size: 1.5rem; }
 .ob-hint {
   margin: 0;

@@ -24,7 +24,10 @@ const Mascot = (() => {
 
   // Canonical pose files (assets/mascot/<pose>.svg).
   const POSES = [
-    "camera",
+    // "stall" is a scene (the branded gazebo with Wingman behind the counter),
+    // not a mood — it's landscape, so it's sized by width via .ob-scene rather
+    // than by height like the poses. Registered here to keep the art in one place.
+    "camera", "stall",
     "main", "run", "thinking", "excited", "sleep", "happy", "laughing",
     "surprised", "wink", "sad", "jump", "wave", "angry", "dance", "walk",
   ];
@@ -61,6 +64,7 @@ const Mascot = (() => {
     dance: "Wingman having a dance",
     walk: "Wingman strolling along",
     camera: "Wingman ready with a camera",
+    stall: "Wingman waving from the Chuckling Wings stall",
   };
 
   // Resolve any state (pose or alias) → canonical pose, defaulting to "main".

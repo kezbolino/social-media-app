@@ -57,9 +57,12 @@
           <span class="ob-bar"></span>
         </div>
         <div class="ob-body">
-          <!-- sway, not bob: bob is a translateY hover, which reads as floating —
-               wrong physics under a walking pose. sway keeps the feet planted. -->
-          <img class="mascot mascot-lg mascot-center mascot-sway" src="assets/mascot/walk.svg" alt="Wingman strolling along" decoding="async" draggable="false" />
+          <!-- The stall is a landscape SCENE, not a pose: sized by width via
+               .ob-scene (the .mascot height sizing would shrink it to a
+               thumbnail), and deliberately unanimated — every mascot transform
+               is whole-image, and a rigid gazebo that sways, breathes or bobs
+               is just wrong physics. The waving chicken carries it. -->
+          <img class="ob-scene" src="assets/mascot/stall.svg" alt="Wingman waving from the Chuckling Wings stall" decoding="async" draggable="false" />
           <h2 class="ob-title">Where do you trade?</h2>
           <p class="ob-hint">Most captions name the spot, so these earn their keep. We've started you off with a few — bin any that are wrong.</p>
           <div id="obPlaceList" class="ob-places"></div>
@@ -98,7 +101,7 @@
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
           <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
           <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
-          <p class="app-version" id="appVersion">v0.35</p>
+          <p class="app-version" id="appVersion">v0.36</p>
         </div>
       </section>
 

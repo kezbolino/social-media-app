@@ -84,6 +84,30 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-14: **Stall scene on the onboarding "Where do you trade?" step**
+  (owner-supplied `chicken-stall.svg` → `assets/mascot/stall.svg`, replacing the
+  `walk` pose). Registered as `stall` in js/mascot.js `POSES`/`ALT`. Version → v0.36.
+  - **It's a SCENE, not a pose, and that changes three things:**
+    - **Sized by width** via a new `.ob-scene` class, not `.mascot`. The artwork
+      is landscape (247x186, aspect 1.33) and `.mascot` sizes by *height*
+      (`height:140px; width:auto`), which rendered the whole stall — logo, text
+      and all — as a ~139x104 thumbnail. `.ob-scene` uses `width: min(300px, 86%)`.
+    - **Deliberately unanimated.** Every mascot animation is a whole-image
+      transform (the SVG parts aren't grouped), and a rigid gazebo that sways,
+      breathes or bobs is wrong physics. The waving chicken inside carries it.
+    - viewBox cropped to the artwork (26% of its height was empty) — same
+      `getBBox()`-vs-viewBox check as the `camera` pose. Owner's source is
+      untouched at the repo root.
+  - ⚠️ **Known issue — the stall is the same blue as the screen it sits on.**
+    Measured: stall body/canopy `rgb(9,76,160)` vs the `.ob` gradient's
+    `rgb(10,77,161)` — one value per channel apart, i.e. identical. The canopy
+    and counter dissolve into the backdrop and the stall reads as floating
+    poles; the tent's peak is invisible entirely. Mitigated with a
+    `drop-shadow()` on `.ob-scene` which lifts the silhouette, but that's a
+    patch — **the real fix is the artwork not being brand-blue on a brand-blue
+    surface** (a lighter/cream stall, or an outline). Lesson for any future art
+    on the onboarding gradient: check the fill palette against `--blue`
+    (#0a4da1) before dropping it on there.
 - 2026-07-14: **First-run onboarding** (`ob-welcome → ob-photos → ob-places →
   ob-done`, order driven by `OB_STEPS` in js/app.js). Fixes the first-run cliff:
   home's shiniest button is ✨ Generate, which with an empty stash dead-ended on
