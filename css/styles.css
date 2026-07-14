@@ -352,7 +352,17 @@ input[type="range"] { touch-action: none; }
 .editor-scroll {
   flex: 1 1 auto;
   overflow-y: auto;
+  /* Vertical only. This is its own scroll container nested inside .pad, so the
+     html/body horizontal lock can't reach it — and setting overflow-y alone
+     would make overflow-x compute to `auto`, giving it a sideways scroll. */
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
   min-height: 0;
+  /* Carry .pad's 16px side inset ourselves so the sticky .actionbar's
+     edge-to-edge bleed (margin: 0 -16px) lands on OUR padding box instead of
+     overflowing past it — which is what created the sideways scroll. */
+  margin-inline: -16px;
+  padding-inline: 16px;
   -webkit-overflow-scrolling: touch;
 }
 .editor-scroll .actionbar { margin-bottom: 0; }
