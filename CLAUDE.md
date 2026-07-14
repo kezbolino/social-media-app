@@ -115,16 +115,21 @@ below). **Not yet built, roughly in priority order:**
       1.05% but bounded at delta ≤7/255 by construction, and path-merging adds
       exactly zero. **Check SVGO keeps the viewBox** — it's cropped here and a
       rewrite would silently rescale the art.
-  - ⚠️ **Known issue — the stall is the same blue as the screen it sits on.**
+  - **The stall is the same blue as the screen it sits on — fixed in CSS.**
     Measured: stall body/canopy `rgb(9,76,160)` vs the `.ob` gradient's
-    `rgb(10,77,161)` — one value per channel apart, i.e. identical. The canopy
-    and counter dissolve into the backdrop and the stall reads as floating
-    poles; the tent's peak is invisible entirely. Mitigated with a
-    `drop-shadow()` on `.ob-scene` which lifts the silhouette, but that's a
-    patch — **the real fix is the artwork not being brand-blue on a brand-blue
-    surface** (a lighter/cream stall, or an outline). Lesson for any future art
-    on the onboarding gradient: check the fill palette against `--blue`
-    (#0a4da1) before dropping it on there.
+    `rgb(10,77,161)` — one value per channel apart, i.e. identical (the trace
+    approximated `--blue` #0a4da1 and missed). The canopy and counter dissolved
+    into the backdrop and the tent's peak was invisible entirely. Fixed with
+    **four zero-blur `drop-shadow()`s on `.ob-scene`** that trace the alpha
+    silhouette into a white "sticker" outline, plus one soft shadow to lift it.
+    Works off the alpha channel, so it survives an SVG→PNG swap. Lesson for any
+    future art on the onboarding gradient: check the fill palette against
+    `--blue` before dropping it on there.
+  - **If this art is ever re-exported, ship the RASTER, not a trace.** Measured
+    at the 288px display size: traced SVG 74.6KB, vs 3x PNG (900x681) 69.4KB and
+    3x WebP 35.2KB — the raster is *smaller than the trace and pixel-exact to the
+    original*, since the trace is a lossy approximation that invented 199
+    colours. Tracing a raster to "get a vector" is a net loss here.
 - 2026-07-14: **First-run onboarding** (`ob-welcome → ob-photos → ob-places →
   ob-done`, order driven by `OB_STEPS` in js/app.js). Fixes the first-run cliff:
   home's shiniest button is ✨ Generate, which with an empty stash dead-ended on
