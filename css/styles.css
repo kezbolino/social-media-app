@@ -1255,6 +1255,12 @@ input[type="range"] { touch-action: none; }
 .home .btn:nth-of-type(2) { animation-delay: 0.28s; }
 .home .btn:nth-of-type(3) { animation-delay: 0.36s; }
 .home .btn:nth-of-type(4) { animation-delay: 0.44s; }
+/* .row wraps the queue/run-it-back pair, which resets nth-of-type counting to
+   that div's own children — override explicitly so the stagger stays in
+   visual order instead of doubling up with new-post/generate. */
+.home .row .btn:nth-of-type(1) { animation-delay: 0.36s; }
+.home .row .btn:nth-of-type(2) { animation-delay: 0.40s; }
+.home > .btn:nth-of-type(3) { animation-delay: 0.44s; }
 @keyframes fx-drop-in {
   from { opacity: 0; transform: translateY(-18px) scale(0.94); }
   to { opacity: 1; transform: translateY(0) scale(1); }

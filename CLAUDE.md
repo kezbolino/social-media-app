@@ -84,6 +84,29 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-14 (later): **Home screen: half-width queue/history buttons +
+  debug onboarding entry point.** Owner request. `🗓 Post queue` and
+  `🔁 Run it back` were both full-width `.btn-secondary` stacked; now wrapped
+  in the existing `.row` div (flex, already used elsewhere for side-by-side
+  buttons) with `.btn-sm` added, so they sit side by side at half width/
+  smaller padding. Added `🧪 View onboarding (debug)` below them — a
+  `.btn-ghost.btn-sm` reusing the **existing** `data-action="ob-restart"`
+  (same action Settings → 🧭 Setup → "Run setup again" already used, no new
+  JS), so tapping it calls `startOnboarding()` straight from home. **Owner
+  said they'll remove this later — it's a temporary test button, don't design
+  around it staying.**
+  - **Stagger gotcha hit immediately**: `.home .btn:nth-of-type(n)` (the
+    entrance-animation delays noted below) counts position among same-type
+    siblings *of the same parent* — wrapping the two buttons in `.row` resets
+    their counting to that div's children, so without a fix they'd collide
+    with new-post/generate's delays (both landing on 0.20s/0.28s) instead of
+    continuing the sequence. Added explicit `.home .row .btn:nth-of-type(1)/
+    (2)` and `.home > .btn:nth-of-type(3)` overrides so the debug button
+    stays last in the stagger. Confirms the existing gotcha note below is
+    real and not just theoretical.
+  - Verified headless (Chromium, 390×844, `file://`): queue/history render
+    side by side at half width, debug button reaches `ob-welcome` with no
+    console errors, screenshot confirms layout. Version → v0.39.
 - 2026-07-14: **Stall scene on the onboarding "Where do you trade?" step**
   (owner-supplied `chicken-stall.svg` → `assets/mascot/stall.svg`, replacing the
   `walk` pose). Registered as `stall` in js/mascot.js `POSES`/`ALT`. Version → v0.36.
