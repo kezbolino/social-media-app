@@ -98,6 +98,23 @@ below). **Not yet built, roughly in priority order:**
     - viewBox cropped to the artwork (26% of its height was empty) — same
       `getBBox()`-vs-viewBox check as the `camera` pose. Owner's source is
       untouched at the repo root.
+  - **Optimised 134.8KB → 76.4KB (43%)**, rendering unchanged. The export was an
+    **auto-traced raster**, not hand-drawn vectors — the tell is 199 distinct
+    fills across 337 paths, where clusters like `#062035/#072033/#082134/…` are
+    eight names for one navy (the flat poses use 4–8 brand colours). Pipeline,
+    in order: drop `display:none` leftovers (one invisible path was shipping its
+    full `d` data); quantise fills within 8/255 to one representative (199 → 73);
+    merge **consecutive** same-fill sibling paths only (337 → 232 — merging
+    non-adjacent ones would hoist a path over whatever sits between and change
+    z-order); then `npx svgo@3 --multipass -p 2`.
+    - **Where the win actually comes from**: SVGO alone gets 41% — the bulk is
+      path coordinate data, so the colour work is worth only ~3KB. Its real
+      value is cleanliness, not bytes.
+    - Verified by pixel-diffing both against each other on the real background:
+      SVGO's change is 0.007% of pixels (edge antialiasing), the quantiser's is
+      1.05% but bounded at delta ≤7/255 by construction, and path-merging adds
+      exactly zero. **Check SVGO keeps the viewBox** — it's cropped here and a
+      rewrite would silently rescale the art.
   - ⚠️ **Known issue — the stall is the same blue as the screen it sits on.**
     Measured: stall body/canopy `rgb(9,76,160)` vs the `.ob` gradient's
     `rgb(10,77,161)` — one value per channel apart, i.e. identical. The canopy
