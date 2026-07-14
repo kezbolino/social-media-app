@@ -84,6 +84,22 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-14 (later still): **Fixed queue/history buttons rendering unequal
+  width** (~122px each instead of the intended half-screen split) — the v0.39
+  change below wrapped them in `.row`, but `.home` is a `flex-direction:
+  column; align-items: center` container, which shrink-wraps any
+  intrinsic-width child to its content size instead of stretching it to the
+  column's full width. `.row` has no explicit width, so it shrank to fit its
+  two buttons' natural content size, and `flex:1` on the buttons only ever
+  divided up *that* shrunk space rather than the available ~half-screen
+  width. Fixed with `.home .row { width: 100%; }` — same trap `.ob-add {
+  width: 100%; }` already works around for the onboarding add-place row (see
+  the History API / flexbox gotchas above), so this is the second time it's
+  bitten a `.row` nested in a centred flex column. **Any future `.row` (or
+  other intrinsic-width flex child) dropped inside a `align-items: center`
+  flex column needs an explicit `width: 100%` or it'll silently shrink-wrap.**
+  Verified headless: both buttons now measure equal width (166px each on a
+  390px viewport, ~48.5% of the available column width). Version → v0.40.
 - 2026-07-14 (later): **Home screen: half-width queue/history buttons +
   debug onboarding entry point.** Owner request. `🗓 Post queue` and
   `🔁 Run it back` were both full-width `.btn-secondary` stacked; now wrapped
