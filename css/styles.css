@@ -157,6 +157,13 @@ input[type="range"] { touch-action: none; }
   background: linear-gradient(160deg, #0a4da1 0%, #0a4da1 45%, #0d59b8 100%);
   color: #fff;
 }
+/* .home is a centred flex column (align-items: center), which shrink-wraps
+   any child of intrinsic width to its content instead of the full column
+   width — the .row here (no explicit width) was shrinking to fit its two
+   buttons' natural size, so flex:1 only ever divided up that shrunk space
+   (~122px each) rather than the available ~half-screen width. Same trap the
+   .ob-add width fix above works around. */
+.home .row { width: 100%; }
 .brand-mark { font-size: 60px; line-height: 1; }
 .brand-logo { width: min(340px, 92%); height: auto; display: block; margin: 0 auto 4px; }
 .tagline {
