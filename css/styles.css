@@ -192,6 +192,11 @@ html[data-font="quicksand"] {
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+/* Form controls don't inherit font-family from the page by default (browser
+   UA stylesheets give button/input/select their own system font) — without
+   this, the font picker would restyle every screen except its own buttons. */
+button, input, select, optgroup { font-family: inherit; }
+
 /* The `hidden` attribute must always win, even over elements that set their
    own display (e.g. .filter-row/.preview-img use display:flex/block). */
 [hidden] { display: none !important; }

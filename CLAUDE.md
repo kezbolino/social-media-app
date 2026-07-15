@@ -84,7 +84,25 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-14 (latest): **App-wide font picker** (Settings → 🔤 App font, owner
+- 2026-07-15 (latest): **Font-picker follow-up: buttons weren't changing font +
+  Settings header renamed.** Owner-reported bugs from the v0.41 font picker.
+  - **Buttons/inputs/selects stayed on Arial regardless of the picked font.**
+    Root cause: browser UA stylesheets give `button`/`input`/`select` their
+    own system font rather than inheriting the page's — the v0.41 CLAUDE.md
+    note claiming "every other element already used `font-family: inherit` or
+    nothing" was wrong for form controls specifically (it held for plain text
+    elements like `<p>`/`<span>`, which really do inherit). Fixed with one
+    rule right after the `*` box-sizing reset: `button, input, select,
+    optgroup { font-family: inherit; }`. The `.font-chip` previews in the font
+    picker itself are unaffected (each sets its own font via a higher-
+    specificity inline `style`, which is the point — they preview a font
+    other than the active one).
+  - **Settings header "Menu & Settings" → "Settings"** (owner: drop "Menu").
+  - Verified headless: `getComputedStyle` on `.btn`, `<select>`, `<input>` all
+    report the active picked font (tested with Baloo 2) instead of Arial;
+    font-picker chips still preview their own font correctly; Settings header
+    reads "Settings"; no console errors. Version → v0.42.
+- 2026-07-14: **App-wide font picker** (Settings → 🔤 App font, owner
   request for "a fun friendly Duolingo feel"). Five options: Poppins (existing
   default), Fredoka, Baloo 2, Nunito, Quicksand — all rounded/friendly Google
   Fonts, bundled locally as static woff2 (same offline-first reasoning as the
