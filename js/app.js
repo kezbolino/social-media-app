@@ -2143,6 +2143,12 @@
     post = freshPost();
     post.type = "single";
     post.singleImage = g.img;
+    // A customised keeper's g.img is the editor's finished export (already the
+    // right aspect — it may have been reframed to Portrait/Story). Feed it in as
+    // the prepared base so composePostImage draws it AS-IS instead of re-cropping
+    // it back to a square via renderSingle. Default (un-customised) keepers keep
+    // the renderSingle path so the rare raw-image fallback still gets squared.
+    if (g.customised && g.img) post.baseImage = g.img;
     post.tag = "location";
     post.location = genLocation;
     post.day = genDay;
@@ -2152,9 +2158,14 @@
     post.keeperRef = g; // so Review can offer "back to my kept posts" after sharing
   }
 
-  // Customise a kept post: open the photo in the editor's text-only mode with
-  // the sticker as a MOVABLE overlay (not baked on), so the owner can drag it
-  // off the subject / recolour it. On "Save", the customised image + caption go
+  // Customise a kept post: open the RAW photo in the FULL editor with the
+  // sticker as a MOVABLE overlay (not baked on). The owner can drag/recolour the
+  // sticker AND reframe the photo — the aspect chips (Square/Portrait/Landscape/
+  // Story), zoom and pan crop the original photo, so this is a real re-crop, not
+  // a zoom into an already-squared image (which is why the background is the raw
+  // photo here, not a pre-composed square). Filters/adjust come along too. We
+  // land on the Text tab so the sticker stays the primary focus; the crop
+  // controls sit right above it. On "Save", the customised image + caption go
   // back into the keeper (see saveCustomiseToKeeper) and you return to the tray
   // to post/schedule from there. Falls back to the plain caption screen for
   // older keepers that predate rawImg/style (e.g. a restored session).
@@ -2165,16 +2176,14 @@
     seedPostFromGen(g);
     post.fromGenerate = true;
     await Imaging.ensureFonts();
-    // Background = the raw photo composed to the export square, NO sticker.
-    const bgCanvas = Imaging.renderSingle(g.rawImg, null);
-    let bg;
-    try { bg = await Imaging.loadImageFromUrl(bgCanvas.toDataURL("image/png")); }
-    catch (e) { return customiseKeeperCaption(g); }
-    setEditorChrome("generate", "Move your text");
+    setEditorChrome("generate", "Customise post");
     show("editor"); // show first so the editor can measure its real width
+    // Background = the raw photo itself (no baked sticker). With no state the
+    // editor defaults to Square / zoom 1 / centred, which cover-fits the photo
+    // identically to the card's default bake, so nothing shifts until you reframe.
     if (g.editState) {
-      // Re-customising: restore the sticker exactly where it was left last time.
-      Editor.open(bg, g.editState, { mode: "text", hookProvider: makeHookProvider(), selectFirst: true });
+      // Re-customising: restore the sticker AND the last reframe exactly.
+      Editor.open(g.rawImg, g.editState, { hookProvider: makeHookProvider(), selectFirst: true, startTab: "text" });
       return;
     }
     // First customise: seed the sticker overlay at the EXACT default bake
@@ -2190,7 +2199,7 @@
       cx: pos ? pos.cx : 0.5, cy: pos ? pos.cy : 0.82,
       size: 9 * (g.style.sizeScale || 1), rot: g.style.angle || 0,
     };
-    Editor.open(bg, { overlays: [seed] }, { mode: "text", hookProvider: makeHookProvider(), selectFirst: true });
+    Editor.open(g.rawImg, { overlays: [seed] }, { hookProvider: makeHookProvider(), selectFirst: true, startTab: "text" });
   }
 
   // "✓ Save & back to my posts" on the customise-preview Review: write the
@@ -2199,8 +2208,9 @@
   function saveCustomiseToKeeper() {
     const g = post.keeperRef;
     if (g) {
-      if (post.baseImage) g.img = post.baseImage; // raw photo + repositioned sticker
+      if (post.baseImage) g.img = post.baseImage; // reframed photo + repositioned sticker
       if (post.finalDataUrl) g.dataUrl = post.finalDataUrl; // tray thumbnail / queue draft
+      g.customised = true; // g.img is now a finished export (possibly non-square) — post it as-is
       g.filledText = post.captionText; // full edited caption…
       g.hashtags = "";                 // …with hashtags already folded in
       if (post.editState) g.editState = post.editState;
@@ -2464,6 +2474,10 @@
     post = freshPost();
     post.type = "single";
     post.singleImage = img;
+    // The draft blob is already a finished, composed post (caption/sticker baked
+    // on, at whatever aspect it was reframed to) — draw it AS-IS rather than
+    // letting composePostImage re-crop it back to a square via renderSingle.
+    post.baseImage = img;
     post.fromHistory = true;
     post.tag = item.location ? "location" : "brand";
     post.location = item.location || "";

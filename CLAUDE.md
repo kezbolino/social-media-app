@@ -84,7 +84,45 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-15 (latest): **Font-picker follow-up: buttons weren't changing font +
+- 2026-07-15 (latest): **Reframe/re-crop in Customise mode** (owner: "I cannot
+  reframe the images when in customise mode"). Customising a Generate keeper now
+  opens the **full editor** on the RAW photo instead of the text-only editor on a
+  pre-composed square, so the aspect chips (Square/Portrait/Landscape/Story),
+  zoom and pan all work — you can genuinely re-crop the original photo, not just
+  zoom into an already-squared one. Filters/Adjust come along for free too. The
+  sticker is still a movable overlay and the Text tab is where you land, so the
+  primary sticker-move gesture is unchanged.
+  - **`customiseKeeper` (js/app.js)** dropped `mode: "text"` + the
+    `renderSingle(g.rawImg, null)` pre-compose; it now passes `g.rawImg` straight
+    to `Editor.open(..., { startTab: "text", selectFirst: true })`. With no
+    editState the editor defaults to Square/zoom 1/centred, which cover-fits the
+    photo **identically to the card's default bake** (both are `drawCover` into
+    1080² = `APP_CONFIG.EXPORT` = `ASPECTS["1:1"].export`), so nothing shifts
+    until you actually reframe. Re-customise restores the full editState (aspect
+    + zoom + offset + filter + overlays), so a reframe survives a re-open.
+  - **New `opts.startTab` on `Editor.open` (js/editor.js)** — full mode now honours
+    it (`showTab(modeText ? "text" : (opts.startTab || "filters"))`); collages
+    still force text via `modeText`. Landing on the Text tab keeps `textMode()`
+    true so the seeded sticker shows selected and single-finger drags IT; to pan
+    the photo you switch to Filters/Adjust (same established single-editor UX).
+  - **Re-square bug fixed along the way**: a reframed keeper is now a non-square
+    export, but the tray's **Post** (`postKeeper` → `seedPostFromGen`) and the
+    **queue draft** (`postFromDraft`) both fed the image through `renderSingle`,
+    which cover-fits back into 1080² and would have squared a Portrait/Story post
+    on the way out. Fixed by routing already-composed images through
+    `composePostImage`'s `post.baseImage` branch (`renderPrepared`, draws at the
+    image's own size): `saveCustomiseToKeeper` sets `g.customised = true`,
+    `seedPostFromGen` does `if (g.customised && g.img) post.baseImage = g.img`,
+    and `postFromDraft` sets `post.baseImage = img` (the draft blob is ALWAYS a
+    finished composite, so drawing it as-is is strictly more correct — a default
+    square keeper is byte-identical either way). Un-customised keepers keep the
+    `renderSingle` path so the rare raw-image fallback still gets squared.
+  - Verified headless (Chromium, 390×844, localhost): Generate → keep →
+    Customise opens the full editor (aspect chips + zoom visible, `mode-text`
+    absent, Text tab active, panel in `sticker-mode`); reframing to Portrait
+    yields a 1080×1350 customise preview; Save → Post-from-tray stays 1080×1350
+    (1.25), i.e. NOT re-squared; no console errors. Version → v0.43.
+- 2026-07-15: **Font-picker follow-up: buttons weren't changing font +
   Settings header renamed.** Owner-reported bugs from the v0.41 font picker.
   - **Buttons/inputs/selects stayed on Arial regardless of the picked font.**
     Root cause: browser UA stylesheets give `button`/`input`/`select` their
