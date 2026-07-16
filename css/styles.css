@@ -1040,6 +1040,43 @@ input[type="range"] { touch-action: none; }
 .gen-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 26px 0; text-align: center; }
 .gen-empty .btn { width: auto; }
 
+/* ---- Generate brief (the three quick questions before a batch) ---- */
+/* Light-background twin of .ob-progress; the fill inside is a real .ob-bar,
+   so it keeps the orange + the 0.45s premium-ease width sweep for free. */
+.gen-brief-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(10, 77, 161, 0.14);
+  overflow: hidden;
+  margin: 6px 0 4px;
+}
+/* Each step slides in with the premium decelerate — forward from the right,
+   back from the left (.from-back, set when the ‹ step-back is used). */
+.gen-q {
+  text-align: center;
+  padding-top: 12px;
+  animation: gen-step-in 0.42s var(--ease-premium) backwards;
+}
+.gen-q.from-back { animation-name: gen-step-in-back; }
+@keyframes gen-step-in {
+  from { opacity: 0; transform: translateX(34px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes gen-step-in-back {
+  from { opacity: 0; transform: translateX(-34px); }
+  to { opacity: 1; transform: none; }
+}
+.gen-q-title { margin: 10px 0 2px; font-size: 1.3rem; }
+.gen-q .mascot { height: 110px; }
+.gen-q .chips { margin-top: 14px; }
+.gen-cook { margin-top: 18px; }
+.gen-step-back { width: auto; margin: 4px auto 0; }
+.gen-brief-add { margin-top: 12px; }
+/* Flex-row input trap (see the calendar add-place note): without min-width:0
+   the input's intrinsic size can shove the row past a 320px screen. */
+.gen-brief-add .text-input { min-width: 0; }
+.gen-brief-add .btn { width: auto; flex: 0 0 auto; }
+
 .gen-deck { position: relative; width: 100%; aspect-ratio: 1 / 1.14; margin: 8px 0 14px; }
 .swipe-card {
   position: absolute;
@@ -1744,7 +1781,7 @@ input[type="range"] { touch-action: none; }
   .btn, .btn-xl, .screen.is-active, .home .brand-logo, .home .tagline,
   .home .greeting, .home .btn, .greeting.fx-pop, .chip.selected, .fx-pop,
   .fx-wiggle, .screen.is-active .tile, .chips .chip, .tag-cloud .tag-chip,
-  .chips .chip.selected, .gen-card, .queue-item, .menu-item, .cal-sched-item,
+  .chips .chip.selected, .gen-card, .gen-q, .queue-item, .menu-item, .cal-sched-item,
   .cal-day, .cal-cell.selected, .navbtn.is-active svg, .slot.filled,
   .carousel-thumb, .home .btn-primary::after,
   .mascot-bob, .mascot-float, .mascot-sway, .mascot-spin, .mascot-pop,

@@ -84,7 +84,63 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **"Generate more" — but only once there's nothing left
+- 2026-07-16 (latest): **Generate now starts with "the brief"** — three quick
+  questions (owner: "at the moment there's no input and the posts are generated
+  with Leadenhall"; wanted location/date/type input, made fun, with an
+  onboarding-style progress bar and satisfying easing). Version → v0.48.
+  - **Opening Generate no longer runs a batch immediately.** `openGenerate()`
+    shows a `#genBrief` panel (new `genShow("brief")` state) with a progress
+    bar + one question at a time, rendered into `#genBriefStep` by
+    `renderBriefStep()` (steps need live data — saved pitches, real dates — so
+    they're JS-built, not static HTML). Exception: an empty photo pool skips
+    the brief straight to the existing add-photos empty state (no point
+    briefing a batch that can't cook).
+  - **The three steps**: ① Where — chips from `Store.getLocations()`, workday
+    pitch (or last answer) preselected, plus a dashed "＋ Somewhere new" chip
+    revealing an add row (saves via `Store.addLocation`, so it sticks
+    app-wide); ② When — Today / Tomorrow chips (+ a chip for a calendar-passed
+    or previously-picked other day) and a "📅 Another day" native date row;
+    sets `{day}` in captions; ③ Vibe — **multi-select** chips (chips, not
+    checkboxes — same tap pattern as the font/aspect pickers) mapping straight
+    onto hook tags: location/brand/other/events, first three preselected to
+    match the old hardcoded behaviour. The last selected vibe refuses to
+    deselect (wiggles instead) — a batch needs ≥1 tag. `weather` deliberately
+    not offered (weather-pinned hooks need a live condition Generate doesn't
+    supply — roadmap).
+  - **Answers live in the session `genBrief` object** (location/date/tags) so
+    "Generate more" re-rolls the same brief and reopening Generate resumes
+    last time's answers. `buildGeneratedPosts` now reads its tag list from
+    `genBrief.tags` (both the main pick loop AND the relaxed fallback — the
+    old fallback hardcoded brand/location, which would have polluted an
+    events-only brief). The keepers zero-state gained a second ghost button
+    "🎛 Change the brief" (`gen-brief` action) next to Generate more.
+  - **Fun/easing mechanics**: steps 1–2 auto-advance off a single chip tap
+    (`briefSelectAndAdvance` — pop plays, then ~380ms later the next step
+    slides in; guarded by a `briefAdvancing` flag against double-taps).
+    `.gen-q` slides in with `--ease-premium` from the right (`.from-back`
+    variant from the left for "‹ Back a step"). The bar is a real `.ob-bar`
+    inside a light-background `.gen-brief-track` (rgba blue, vs the
+    onboarding's white-on-gradient), so it inherits the 0.45s premium-ease
+    width sweep and the reduced-motion jump for free — 25/50/75%, then "✨
+    Cook 'em up" sweeps it to 100% and waits ~480ms before `runGenerate()`.
+    Same park-at-zero + forced-reflow trick as `obGo` when the panel unhides.
+    Mascot per step: walk(sway) / thinking(breathe) / excited(breathe).
+    `.gen-q` added to the reduced-motion disable list.
+  - **Gotcha dodged**: the delegated click handler checks `[data-tag]` BEFORE
+    `[data-action]` (it's the caption quiz's hook), so the vibe chips carry
+    their tag in `data-val`, never `data-tag`.
+  - Bonus: keeper cards' queue date now defaults to the brief's day when it's
+    in the future (was always tomorrow) — queueing for the day you briefed for
+    is the obvious intent.
+  - Verified headless (Chromium, 390×844, localhost, seeded stash photo):
+    32-check Playwright run — bar hits 25/50/75/100 with the park trick
+    animating each move, chips preselect correctly, back-step slides from the
+    left, an events-only vibe narrows the batch, both cook runs produce a
+    10-card deck whose `#genInfo` names the picked day+pitch, "Change the
+    brief" reopens step 1 with answers intact, "Somewhere new" saves and
+    auto-advances, keeper queue date = the brief's future day. Screenshots
+    eyeballed; no console errors.
+- 2026-07-16: **"Generate more" — but only once there's nothing left
   to act on.** Follow-up to the swipe-deck declutter below: after removing the
   always-on "New batch" button, the owner clarified they don't want a reshuffle
   offered while there's still a card to swipe or a kept post sitting unposted
@@ -143,10 +199,10 @@ below). **Not yet built, roughly in priority order:**
     specific `genNote` block was dead-code-removed since its target element
     no longer exists.
     - **Net effect: no in-panel way to start a fresh batch or re-pick photos
-      from Generate.** `runGenerate()` still fires automatically every time
-      the Generate screen is *opened* (`openGenerate()` → nav tap, "✨
-      Generate" home button, `cal-generate`), so the workaround is nav away
-      and back. The underlying JS/DOM the buttons drove — `data-action=
+      from Generate.** ⚠️ Partly superseded by v0.48: opening Generate now
+      lands on the brief (not an auto-run batch), and the keepers zero-state
+      offers "🎛 Change the brief" — but re-picking photos from Generate is
+      still gone, as decided here. The underlying JS/DOM the buttons drove — `data-action=
       "gen-folder"` case, `#genFolderInput` (hidden file input),
       `onGenFolderPicked` — were deliberately left wired but now unreachable
       from Generate (same "leave the plumbing, drop the UI" call as the

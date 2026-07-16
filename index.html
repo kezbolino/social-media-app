@@ -115,7 +115,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
           <button class="btn btn-ghost btn-sm" data-action="ob-restart">🧪 View onboarding (debug)</button>
-          <p class="app-version" id="appVersion">v0.47</p>
+          <p class="app-version" id="appVersion">v0.48</p>
         </div>
       </section>
 
@@ -435,6 +435,16 @@
         <div class="pad">
           <p id="genInfo" class="hint"></p>
           <input id="genFolderInput" type="file" accept="image/*" multiple webkitdirectory hidden />
+
+          <!-- the brief: three quick questions before a batch is cooked.
+               Steps render into #genBriefStep from app.js (they need live data:
+               saved pitches, real dates); the bar reuses the onboarding fill. -->
+          <div id="genBrief" hidden>
+            <div class="gen-brief-track" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-label="Brief progress">
+              <span class="ob-bar" id="genBriefBar"></span>
+            </div>
+            <div id="genBriefStep"></div>
+          </div>
 
           <!-- loading -->
           <div id="genLoading" class="gen-loading" hidden></div>

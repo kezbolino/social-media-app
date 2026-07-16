@@ -468,6 +468,16 @@
       // would stay set and hijack the next restore (skipping its confirm).
       case "backup-import": obRestoring = false; $("#backupInput").click(); break;
       case "gen-regenerate": runGenerate(); break;
+      case "gen-brief": openBrief(); break;
+      case "brief-loc": briefSelectAndAdvance(el, () => { genBrief.location = el.dataset.val; }); break;
+      case "brief-new-loc": $("#briefAddRow").hidden = false; $("#briefLocInput").focus(); break;
+      case "brief-add-loc": briefAddLoc(); break;
+      case "brief-when": briefSelectAndAdvance(el, () => { genBrief.date = el.dataset.val; }); break;
+      case "brief-pick-day": $("#briefDayRow").hidden = false; break;
+      case "brief-day-next": briefDayNext(); break;
+      case "brief-vibe": briefToggleVibe(el); break;
+      case "brief-back": goBriefStep(genBriefStep - 1, "back"); break;
+      case "brief-cook": briefCook(el); break;
       case "gen-like": flyOff("right"); break;
       case "gen-nope": flyOff("left"); break;
       case "notify-test": notifyTest(); break;
@@ -1825,24 +1835,201 @@
     { fillRGB: [17, 24, 39], color: "#f58b1f", accent: null, angle: -5, sizeScale: 1.0 },   // near-black, orange text
   ];
 
+  /* ---- the brief: three quick questions before a batch is cooked ---- */
+  // Answers live for the whole session so "Generate more" re-rolls the same
+  // brief and reopening Generate starts from last time's choices.
+  const genBrief = {
+    location: "",
+    date: "", // ISO yyyy-mm-dd the posts are for (drives {day} in captions)
+    tags: new Set(["location", "brand", "other"]), // hook tags = the "vibe"
+  };
+  let genBriefStep = 0;
+  let briefAdvancing = false; // a chip tap is mid auto-advance — ignore repeats
+  const GEN_BRIEF_STEPS = 3; // where / when / vibe; the bar's 4th stop = cooking
+  // The vibe chips map straight onto the hook library's tags. `weather` is
+  // deliberately not offered — weather-pinned hooks need a live condition the
+  // Generate flow doesn't supply yet (see the roadmap note in CLAUDE.md).
+  const GEN_VIBES = [
+    { tag: "location", label: "📍 Shout the pitch" },
+    { tag: "brand", label: "🐔 Big brand energy" },
+    { tag: "other", label: "😜 Fun & FOMO" },
+    { tag: "events", label: "🎉 Events & catering" },
+  ];
+
   function openGenerate(dateStr) {
-    const key = dateStr || Notify.todayStr();
-    const [y, m, d] = key.split("-").map(Number);
-    const dt = new Date(y, m - 1, d);
-    genDay = WEEKDAYS[dt.getDay()];
-    const wd = Store.getWorkday(key);
-    genLocation = (wd && wd.location) || Store.getLocations()[0] || "";
-    genDateLabel = `${genDay}${genLocation ? " at " + genLocation : ""}`;
+    // No photos = nothing to brief about; runGenerate shows the add-photos
+    // empty state without touching the brief's answers.
+    if (!photoPool.length) {
+      show("generate");
+      runGenerate();
+      return;
+    }
+    genBrief.date = dateStr || Notify.todayStr();
+    const wd = Store.getWorkday(genBrief.date);
+    // That day's planned pitch wins; otherwise keep the session's last answer.
+    genBrief.location = (wd && wd.location) || genBrief.location || Store.getLocations()[0] || "";
     show("generate");
-    runGenerate();
+    openBrief();
   }
 
   // Show exactly one of the generate panels.
   function genShow(which) {
+    $("#genBrief").hidden = which !== "brief";
     $("#genLoading").hidden = which !== "loading";
     $("#genDeckWrap").hidden = which !== "deck";
     $("#genKeepers").hidden = which !== "keepers";
     $("#genEmpty").hidden = which !== "empty";
+  }
+
+  function briefPct(i) {
+    return ((i + 1) / (GEN_BRIEF_STEPS + 1)) * 100;
+  }
+
+  function openBrief() {
+    $("#genInfo").textContent = "";
+    const bar = $("#genBriefBar");
+    // Same trap as the onboarding bar: a width set while the panel is hidden
+    // lands with no transition — park it at zero first, reveal, reflow, move.
+    bar.style.transition = "none";
+    bar.style.width = "0%";
+    genShow("brief");
+    void bar.offsetWidth;
+    bar.style.transition = "";
+    goBriefStep(0);
+  }
+
+  function goBriefStep(i, dir) {
+    genBriefStep = Math.max(0, Math.min(GEN_BRIEF_STEPS - 1, i));
+    briefAdvancing = false;
+    const bar = $("#genBriefBar");
+    bar.style.width = briefPct(genBriefStep) + "%";
+    const track = bar.parentElement;
+    if (track) track.setAttribute("aria-valuenow", String(genBriefStep + 1));
+    renderBriefStep(dir === "back");
+  }
+
+  function briefChip(action, val, label, selected) {
+    return (
+      `<button class="chip${selected ? " selected" : ""}" data-action="${action}" ` +
+      `data-val="${escapeAttr(val)}">${escapeAttr(label)}</button>`
+    );
+  }
+
+  function renderBriefStep(fromBack) {
+    const el = $("#genBriefStep");
+    let html = "";
+    if (genBriefStep === 0) {
+      const locs = Store.getLocations();
+      html =
+        (window.Mascot ? Mascot.html("walk", { anim: "sway", size: "lg", className: "mascot-center" }) : "") +
+        `<h3 class="gen-q-title">Right — where are we at?</h3>` +
+        `<p class="hint">The captions will shout about this pitch.</p>` +
+        `<div class="chips chips-centre">` +
+        locs.map((l) => briefChip("brief-loc", l, l, l === genBrief.location)).join("") +
+        `<button class="chip chip-add" data-action="brief-new-loc">＋ Somewhere new</button>` +
+        `</div>` +
+        `<div class="row gen-brief-add" id="briefAddRow" ${locs.length ? "hidden" : ""}>` +
+        `<input id="briefLocInput" class="text-input" type="text" placeholder="e.g. Greenwich Market" />` +
+        `<button class="btn btn-secondary" data-action="brief-add-loc">Add</button>` +
+        `</div>`;
+    } else if (genBriefStep === 1) {
+      const today = Notify.todayStr();
+      const tomorrow = Notify.todayStr(new Date(Date.now() + 86400000));
+      const chips = [
+        { val: today, label: `Today · ${weekdayName(today).slice(0, 3)}` },
+        { val: tomorrow, label: `Tomorrow · ${weekdayName(tomorrow).slice(0, 3)}` },
+      ];
+      // A calendar-picked (or previously picked) day that isn't today/tomorrow
+      // gets its own chip so the current answer is always visible.
+      if (genBrief.date && genBrief.date !== today && genBrief.date !== tomorrow) {
+        chips.push({ val: genBrief.date, label: fmtQueueDate(genBrief.date) });
+      }
+      html =
+        (window.Mascot ? Mascot.html("thinking", { anim: "breathe", size: "lg", className: "mascot-center" }) : "") +
+        `<h3 class="gen-q-title">When's it going out?</h3>` +
+        `<p class="hint">Sets the day the captions mention.</p>` +
+        `<div class="chips chips-centre">` +
+        chips.map((c) => briefChip("brief-when", c.val, c.label, c.val === genBrief.date)).join("") +
+        `<button class="chip chip-add" data-action="brief-pick-day">📅 Another day</button>` +
+        `</div>` +
+        `<div class="row gen-brief-add" id="briefDayRow" hidden>` +
+        `<input id="briefDayInput" class="text-input" type="date" min="${today}" value="${escapeAttr(genBrief.date || today)}" aria-label="Post day" />` +
+        `<button class="btn btn-secondary" data-action="brief-day-next">That day ›</button>` +
+        `</div>` +
+        `<button class="btn btn-ghost btn-sm gen-step-back" data-action="brief-back">‹ Back a step</button>`;
+    } else {
+      html =
+        (window.Mascot ? Mascot.html("excited", { anim: "breathe", size: "lg", className: "mascot-center" }) : "") +
+        `<h3 class="gen-q-title">What's the vibe?</h3>` +
+        `<p class="hint">Tick as many as you fancy — mix it up.</p>` +
+        `<div class="chips chips-centre" id="briefVibes">` +
+        GEN_VIBES.map((v) => briefChip("brief-vibe", v.tag, v.label, genBrief.tags.has(v.tag))).join("") +
+        `</div>` +
+        `<button class="btn btn-accent gen-cook" data-action="brief-cook">✨ Cook 'em up</button>` +
+        `<button class="btn btn-ghost btn-sm gen-step-back" data-action="brief-back">‹ Back a step</button>`;
+    }
+    el.innerHTML = `<div class="gen-q${fromBack ? " from-back" : ""}">${html}</div>`;
+  }
+
+  // Steps 1 & 2 auto-advance off a single tap: mark the chip picked, let its
+  // pop play, then move on — Duolingo-style, no Next button needed.
+  function briefSelectAndAdvance(el, apply) {
+    if (briefAdvancing) return;
+    briefAdvancing = true;
+    apply();
+    $$("#genBriefStep .chip").forEach((c) => c.classList.toggle("selected", c === el));
+    setTimeout(() => goBriefStep(genBriefStep + 1), reduceMotion ? 0 : 380);
+  }
+
+  function briefAddLoc() {
+    const input = $("#briefLocInput");
+    const val = (input.value || "").trim();
+    if (!val) {
+      if (window.FX) FX.wiggle(input);
+      return;
+    }
+    Store.addLocation(val); // saved for good, same list Settings/calendar use
+    input.value = "";
+    briefSelectAndAdvance(null, () => { genBrief.location = val; });
+  }
+
+  function briefDayNext() {
+    const input = $("#briefDayInput");
+    const val = input.value;
+    if (!val) {
+      if (window.FX) FX.wiggle(input);
+      return;
+    }
+    briefSelectAndAdvance(null, () => { genBrief.date = val; });
+  }
+
+  function briefToggleVibe(el) {
+    const tag = el.dataset.val;
+    if (genBrief.tags.has(tag)) {
+      // Never let the last vibe go — a batch needs at least one kind of post.
+      if (genBrief.tags.size === 1) {
+        if (window.FX) FX.wiggle(el);
+        return;
+      }
+      genBrief.tags.delete(tag);
+    } else {
+      genBrief.tags.add(tag);
+    }
+    el.classList.toggle("selected", genBrief.tags.has(tag));
+  }
+
+  function briefCook(el) {
+    const key = genBrief.date || Notify.todayStr();
+    genLocation = genBrief.location;
+    genDay = weekdayName(key);
+    genDateLabel = `${genDay}${genLocation ? " at " + genLocation : ""}`;
+    if (el && window.FX) FX.pop(el);
+    // The satisfying bit: the bar sweeps its last quarter to full, THEN the
+    // cooking starts — same premium ease the steps use.
+    $("#genBriefBar").style.width = "100%";
+    const track = $("#genBriefBar").parentElement;
+    if (track) track.setAttribute("aria-valuenow", "4");
+    setTimeout(() => runGenerate(), reduceMotion ? 0 : 480);
   }
 
   async function runGenerate() {
@@ -1884,7 +2071,8 @@
   async function buildGeneratedPosts() {
     await Imaging.ensureFonts();
     const ctx = { location: genLocation, day: genDay, menuItems: Store.getMenuItems() };
-    const tags = ["location", "other", "brand"];
+    // The vibe picked in the brief decides which hook tags feed the batch.
+    const tags = genBrief.tags.size ? [...genBrief.tags] : ["location", "other", "brand"];
     const usedHookIds = [];
     const out = [];
     // Decode a handful of distinct photos once (decoding is the slow bit), then
@@ -1905,8 +2093,12 @@
         if (r && !usedHookIds.includes(r.hook.id) && !binnedHookIds.has(r.hook.id)) { picked = r; break; }
       }
       if (!picked) {
-        const r = Hooks.choose("brand", ctx) || Hooks.choose("location", ctx);
-        if (r && !usedHookIds.includes(r.hook.id) && !binnedHookIds.has(r.hook.id)) picked = r;
+        // Relaxed retry (no exclude-last) — but only within the picked vibes,
+        // so an events-only brief never gets padded out with brand hype.
+        for (const tag of tags) {
+          const r = Hooks.choose(tag, ctx);
+          if (r && !usedHookIds.includes(r.hook.id) && !binnedHookIds.has(r.hook.id)) { picked = r; break; }
+        }
       }
       if (!picked) break; // out of fresh captions — stop with what we have
       usedHookIds.push(picked.hook.id);
@@ -2089,11 +2281,14 @@
         (window.Mascot ? Mascot.html("sad", { size: "lg", className: "mascot-center" }) : "") +
         `<p class="hint">${message}</p>` +
         `<button class="btn btn-accent" data-action="gen-regenerate">🔀 Generate more</button>` +
+        `<button class="btn btn-ghost btn-sm" data-action="gen-brief">🎛 Change the brief</button>` +
         `</div>`;
       return;
     }
     const today = Notify.todayStr();
     const tomorrow = Notify.todayStr(new Date(Date.now() + 86400000));
+    // If the brief was for a future day, that's the natural queue date too.
+    const queueDefault = genBrief.date && genBrief.date > today ? genBrief.date : tomorrow;
     let html = `<p class="lead">You kept ${keepers.length} 🎉</p>` +
       `<p class="hint">Post one now, tweak it, or queue it for a day at the pitch.</p><div class="keeper-list">`;
     keepers.forEach((g, i) => {
@@ -2109,8 +2304,8 @@
         `<div class="keeper-queue">` +
         `<label class="keeper-date-field">` +
         KEEPER_DATE_ICON +
-        `<span class="keeper-date-label" aria-hidden="true">${fmtKeeperDate(tomorrow)}</span>` +
-        `<input type="date" class="keeper-date" min="${today}" value="${tomorrow}" aria-label="Queue for date" />` +
+        `<span class="keeper-date-label" aria-hidden="true">${fmtKeeperDate(queueDefault)}</span>` +
+        `<input type="date" class="keeper-date" min="${today}" value="${queueDefault}" aria-label="Queue for date" />` +
         `</label>` +
         `<button class="btn btn-secondary btn-sm" data-keeper-queue="${i}">🗓 Queue for later</button>` +
         `</div></div></div>`;
