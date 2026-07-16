@@ -84,7 +84,25 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Progress-bar fill flattened back to minimal.** Owner
+- 2026-07-16 (latest): **Onboarding welcome logo removed + overflow-clip fix.**
+  Owner: drop the Chuckling Wings logo on ob-welcome (keep just the chicken);
+  also flagged the orange bar "covering" the photos on ob-photos. Version → v0.54.
+  - Removed the `<img class="brand-logo ob-logo" src="assets/logo.svg">` from
+    ob-welcome — the waving mascot is the only mark there now. `.ob-logo` CSS
+    left in place (harmless, unused).
+  - **The "bar covers the photos" was a real bug, not cosmetic.** `.ob-body` is
+    a scrolling flex column that was `justify-content: center`. When the content
+    overflows (e.g. a full photo grid), centering pushes the TOP of the column
+    *above* the scroll area, where it can't be scrolled to — measured the mascot
+    at `top:-68px` with `scrollTop` already pinned at 0, i.e. genuinely
+    unreachable, tucked under the bar. Fixed with **`justify-content: safe
+    center`**: centres when the content fits (short screens keep the nice
+    vertical centering), falls back to top-aligned when it overflows so nothing
+    clips. Verified: with 20 photos the mascot now sits at `top:+38px` (below the
+    bar, reachable) and the body scrolls normally. Applies to every `.ob` screen
+    (welcome/photos/places/done) since they share `.ob-body` — also protects
+    ob-places with many pitches and small screens generally.
+- 2026-07-16: **Progress-bar fill flattened back to minimal.** Owner
   liked the fat bar + the recessed-track shading but not the glossy gradient on
   the fill itself. Dropped the gradient + inset highlight/shade on `.ob-bar` —
   it's now a flat solid `var(--orange)` pill again. The track groove
