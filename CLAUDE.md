@@ -84,7 +84,24 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Settings grouped into collapsible sections + New Post
+- 2026-07-16 (latest): **One confetti look — the full-screen burst is always the
+  Lottie now.** Owner: "there's 2 confetti effects, only use the lottie file
+  one." There were two full-screen confetti visuals: the owner's DC-confetti
+  **Lottie** (`playLottieConfetti`, fired on the real win in `markPostShared`)
+  and the code-drawn **canvas** burst (`FX.confetti({quiet:true})` when landing
+  on the keepers tray). `FX.confetti` used to gate the Lottie on `!opts.quiet`,
+  so the quiet keepers-tray burst fell through to canvas — the mismatched second
+  effect. Now the gate is `!localized` (localized = an x/y origin was passed):
+  **every full-screen burst uses the Lottie** (quiet or loud — `quiet` only
+  silences the chime), and the canvas is reached solely by the small localized
+  `sparkle()` puffs (marking a workday, adding a pitch/hashtag — a full-screen
+  Lottie can't originate from a tapped element) or as a fallback if the Lottie
+  runtime/data isn't loaded. Verified headless: keepers tray now mounts
+  `.fx-lottie` with no canvas `.fx-confetti` painted; no console errors.
+  Version → v0.51. **Note**: the tiny per-tap sparkle puffs are still canvas by
+  necessity — if the owner wants those gone too they'd become a plain `pop()`
+  bounce (flagged to them).
+- 2026-07-16: **Settings grouped into collapsible sections + New Post
   icon badges.** Owner: Settings "all a bit messy now"; New Post buttons
   "inconsistent... maybe rounded squares". Version → v0.50.
   - **Settings was 10 flat `.lead` sections in one long scroll.** Regrouped into

@@ -152,9 +152,14 @@
     buzz(opts.quiet ? 10 : 18);
     if (!opts.quiet) chime(); // the win sound — plays even if motion is reduced
     if (reduceMotion) return;
-    // The big win uses the owner's DC confetti Lottie; quiet/localized sparkles
-    // stay on the canvas (a full-screen Lottie can't fire from an element).
-    if (!opts.quiet && playLottieConfetti()) return;
+    // One confetti look across the whole app: every FULL-SCREEN burst uses the
+    // owner's DC confetti Lottie (quiet or loud — `quiet` only silences the
+    // chime, not the visual). Only the small localized sparkles (which pass an
+    // x/y origin from a tapped element) stay on the canvas, since a full-screen
+    // Lottie can't originate from a point. The canvas burst below is also the
+    // fallback if the Lottie runtime/data isn't loaded.
+    const localized = opts.x != null || opts.y != null;
+    if (!localized && playLottieConfetti()) return;
     ensureCanvas();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const W = (canvas.width = window.innerWidth * dpr);
