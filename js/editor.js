@@ -195,7 +195,7 @@ const Editor = (() => {
     els.zoom.value = zoom;
     syncAspectButtons();
     syncAdjustInputs();
-    showTab(modeText ? "text" : "filters");
+    showTab(modeText ? "text" : (opts.startTab || "filters"));
     layout();
     if (state && state.offset) { offX = state.offset.x; offY = state.offset.y; }
     else centreImage();
