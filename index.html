@@ -115,7 +115,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
           <button class="btn btn-ghost btn-sm" data-action="ob-restart">🧪 View onboarding (debug)</button>
-          <p class="app-version" id="appVersion">v0.49</p>
+          <p class="app-version" id="appVersion">v0.50</p>
         </div>
       </section>
 
@@ -519,114 +519,185 @@
           <h2>Settings</h2>
         </header>
         <div class="pad">
-          <p class="lead">📍 Saved locations</p>
-          <p class="hint">Your regular pitches. These show as quick-tap buttons when you make a post.</p>
-          <div id="locationList" class="menu-list"></div>
-          <div class="row">
-            <input id="locationInput" class="text-input" type="text" placeholder="e.g. Greenwich Market" />
-            <button class="btn btn-secondary" data-action="add-location">Add</button>
-          </div>
+          <!-- Settings are grouped into collapsible cards (native <details>, so
+               it's accessible + needs no JS state). Dynamic lists still render
+               into the same inner IDs, so openSettings() is untouched. Only the
+               render-target IDs matter — the wrapping structure is free to move.
+               The two everyday-content groups open by default; config/advanced
+               stay collapsed so the screen isn't a giant scroll. -->
 
-          <p class="lead" style="margin-top: 28px;">📸 My chicken photos</p>
-          <p class="hint">Add your food photos once — they're saved on this phone, so every post can grab random ones. No internet needed. Tap ✕ to remove a photo.</p>
-          <div id="stashGrid" class="stash-grid"></div>
-          <input id="stashInput" type="file" accept="image/*" multiple hidden />
-          <div class="row">
-            <button class="btn btn-secondary" data-action="stash-add">📸 Add photos</button>
-            <button class="btn btn-ghost btn-sm" data-action="stash-clear">Clear all</button>
-          </div>
-          <p id="stashNote" class="hint"></p>
+          <details class="settings-group" open>
+            <summary class="sg-head">
+              <span class="sg-heading">
+                <span class="sg-title">📸 Photos &amp; pitches</span>
+                <span class="sg-sub">Where you trade and the photos posts pull from</span>
+              </span>
+              <svg class="sg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <div class="sg-body">
+              <p class="lead">📍 Saved locations</p>
+              <p class="hint">Your regular pitches. These show as quick-tap buttons when you make a post.</p>
+              <div id="locationList" class="menu-list"></div>
+              <div class="row">
+                <input id="locationInput" class="text-input" type="text" placeholder="e.g. Greenwich Market" />
+                <button class="btn btn-secondary" data-action="add-location">Add</button>
+              </div>
 
-          <p class="lead" style="margin-top: 28px;">🍗 Best sellers &amp; sauces</p>
-          <p class="hint">Used to fill food captions (picked at random). Leave empty to skip food captions.</p>
-          <div id="menuList" class="menu-list"></div>
-          <div class="row">
-            <input id="menuInput" class="text-input" type="text" placeholder="e.g. loaded fries" />
-            <button class="btn btn-secondary" data-action="add-menu">Add</button>
-          </div>
+              <p class="lead">📸 My chicken photos</p>
+              <p class="hint">Add your food photos once — they're saved on this phone, so every post can grab random ones. No internet needed. Tap ✕ to remove a photo.</p>
+              <div id="stashGrid" class="stash-grid"></div>
+              <input id="stashInput" type="file" accept="image/*" multiple hidden />
+              <div class="row">
+                <button class="btn btn-secondary" data-action="stash-add">📸 Add photos</button>
+                <button class="btn btn-ghost btn-sm" data-action="stash-clear">Clear all</button>
+              </div>
+              <p id="stashNote" class="hint"></p>
+            </div>
+          </details>
 
-          <p class="lead" style="margin-top: 28px;">#️⃣ Hashtags</p>
-          <p class="hint">Tapped in on the caption screen — a shuffled, relevant mix each time, plus your pitch location auto-tagged. Tap one to remove it.</p>
-          <div id="hashtagList" class="tag-cloud"></div>
-          <div class="row">
-            <input id="hashtagInput" class="text-input" type="text" placeholder="e.g. #halalfood" />
-            <button class="btn btn-secondary" data-action="add-hashtag">Add</button>
-          </div>
+          <details class="settings-group" open>
+            <summary class="sg-head">
+              <span class="sg-heading">
+                <span class="sg-title">✍️ Captions &amp; hashtags</span>
+                <span class="sg-sub">The words that go on your posts</span>
+              </span>
+              <svg class="sg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <div class="sg-body">
+              <p class="lead">🍗 Best sellers &amp; sauces</p>
+              <p class="hint">Used to fill food captions (picked at random). Leave empty to skip food captions.</p>
+              <div id="menuList" class="menu-list"></div>
+              <div class="row">
+                <input id="menuInput" class="text-input" type="text" placeholder="e.g. loaded fries" />
+                <button class="btn btn-secondary" data-action="add-menu">Add</button>
+              </div>
 
-          <p class="lead" style="margin-top: 28px;">💬 My captions</p>
-          <p class="hint">Write your own lines — they join the shuffle with the built-in ones. Tip: type <strong>{location}</strong> or <strong>{day}</strong> and the app fills them in. Tap ✕ to remove one.</p>
-          <div id="userHookList" class="menu-list"></div>
-          <div class="field">
-            <input id="userHookText" class="text-input" type="text" placeholder="e.g. Fresh batch on at {location} — get in quick." />
-          </div>
-          <div class="row">
-            <select id="userHookTag" class="text-input">
-              <option value="brand">Brand / hype</option>
-              <option value="location">Where we are</option>
-              <option value="other">Something else</option>
-              <option value="events">Weddings &amp; events</option>
-            </select>
-            <select id="userHookLoc" class="text-input">
-              <option value="">Any location</option>
-            </select>
-          </div>
-          <button class="btn btn-secondary" data-action="add-userhook">Add caption</button>
-          <p id="userHookError" class="hint"></p>
+              <p class="lead">#️⃣ Hashtags</p>
+              <p class="hint">Tapped in on the caption screen — a shuffled, relevant mix each time, plus your pitch location auto-tagged. Tap one to remove it.</p>
+              <div id="hashtagList" class="tag-cloud"></div>
+              <div class="row">
+                <input id="hashtagInput" class="text-input" type="text" placeholder="e.g. #halalfood" />
+                <button class="btn btn-secondary" data-action="add-hashtag">Add</button>
+              </div>
 
-          <p class="lead" style="margin-top: 28px;">🔔 Post reminders</p>
-          <p class="hint">Get a nudge to post on the days you're working (set those in the Work calendar).</p>
-          <label class="switch-row">
-            <span>Remind me to post</span>
-            <input type="checkbox" id="notifyEnabled" />
-          </label>
-          <label class="switch-row">
-            <span>Reminder time</span>
-            <input type="time" id="notifyTime" class="time-input" value="09:00" />
-          </label>
-          <button class="btn btn-ghost btn-sm" data-action="notify-test">Send a test reminder</button>
-          <p id="notifyStatus" class="hint"></p>
+              <p class="lead">💬 My captions</p>
+              <p class="hint">Write your own lines — they join the shuffle with the built-in ones. Tip: type <strong>{location}</strong> or <strong>{day}</strong> and the app fills them in. Tap ✕ to remove one.</p>
+              <div id="userHookList" class="menu-list"></div>
+              <div class="field">
+                <input id="userHookText" class="text-input" type="text" placeholder="e.g. Fresh batch on at {location} — get in quick." />
+              </div>
+              <div class="row">
+                <select id="userHookTag" class="text-input">
+                  <option value="brand">Brand / hype</option>
+                  <option value="location">Where we are</option>
+                  <option value="other">Something else</option>
+                  <option value="events">Weddings &amp; events</option>
+                </select>
+                <select id="userHookLoc" class="text-input">
+                  <option value="">Any location</option>
+                </select>
+              </div>
+              <button class="btn btn-secondary" data-action="add-userhook">Add caption</button>
+              <p id="userHookError" class="hint"></p>
+            </div>
+          </details>
 
-          <p class="lead" style="margin-top: 28px;">💾 Backup &amp; restore</p>
-          <p class="hint">Everything above — locations, hashtags, your captions, calendar, queue, post history and saved photos — lives only on this phone. Export it to one file so a new phone or a cleared browser doesn't start you from zero. (Meta credentials below aren't included — reconnect those after restoring.)</p>
-          <div class="row">
-            <button class="btn btn-secondary" data-action="backup-export">⬇️ Export</button>
-            <button class="btn btn-secondary" data-action="backup-import">⬆️ Restore</button>
-          </div>
-          <input id="backupInput" type="file" accept="application/json,.json" hidden />
-          <p id="backupStatus" class="hint"></p>
+          <details class="settings-group">
+            <summary class="sg-head">
+              <span class="sg-heading">
+                <span class="sg-title">🔔 Reminders</span>
+                <span class="sg-sub">A nudge to post on your working days</span>
+              </span>
+              <svg class="sg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <div class="sg-body">
+              <p class="hint">Get a nudge to post on the days you're working (set those in the Work calendar).</p>
+              <label class="switch-row">
+                <span>Remind me to post</span>
+                <input type="checkbox" id="notifyEnabled" />
+              </label>
+              <label class="switch-row">
+                <span>Reminder time</span>
+                <input type="time" id="notifyTime" class="time-input" value="09:00" />
+              </label>
+              <button class="btn btn-ghost btn-sm" data-action="notify-test">Send a test reminder</button>
+              <p id="notifyStatus" class="hint"></p>
+            </div>
+          </details>
 
-          <p class="lead" style="margin-top: 28px;">🔤 App font</p>
-          <p class="hint">Pick the look for the whole app — menus, buttons, everything.</p>
-          <div id="fontChips" class="chips"></div>
+          <details class="settings-group">
+            <summary class="sg-head">
+              <span class="sg-heading">
+                <span class="sg-title">🎨 Appearance</span>
+                <span class="sg-sub">The look of the whole app</span>
+              </span>
+              <svg class="sg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <div class="sg-body">
+              <p class="lead">🔤 App font</p>
+              <p class="hint">Pick the look for the whole app — menus, buttons, everything.</p>
+              <div id="fontChips" class="chips"></div>
+            </div>
+          </details>
 
-          <p class="lead" style="margin-top: 28px;">🧭 Setup</p>
-          <p class="hint">Walk through the first-run setup again — photos and pitches. Nothing gets wiped.</p>
-          <button class="btn btn-secondary" data-action="ob-restart">Run setup again</button>
+          <details class="settings-group">
+            <summary class="sg-head">
+              <span class="sg-heading">
+                <span class="sg-title">💾 Backup &amp; setup</span>
+                <span class="sg-sub">Save your stuff, or re-run first-time setup</span>
+              </span>
+              <svg class="sg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <div class="sg-body">
+              <p class="lead">💾 Backup &amp; restore</p>
+              <p class="hint">Everything you've set — locations, hashtags, your captions, calendar, queue, post history and saved photos — lives only on this phone. Export it to one file so a new phone or a cleared browser doesn't start you from zero. (Meta credentials aren't included — reconnect those after restoring.)</p>
+              <div class="row">
+                <button class="btn btn-secondary" data-action="backup-export">⬇️ Export</button>
+                <button class="btn btn-secondary" data-action="backup-import">⬆️ Restore</button>
+              </div>
+              <input id="backupInput" type="file" accept="application/json,.json" hidden />
+              <p id="backupStatus" class="hint"></p>
 
-          <p class="lead" style="margin-top: 28px;">🚀 Auto-posting (Meta) — optional</p>
-          <p class="hint">Post straight to Instagram/Facebook without the share sheet. Needs a one-time Meta setup — see <strong>docs/META_SETUP.md</strong> for the plain-English walkthrough. Everything you paste here stays on this device.</p>
-          <div class="field">
-            <label>Page access token <small>long-lived, from your Meta app</small></label>
-            <input class="text-input" id="metaToken" type="password" autocomplete="off" placeholder="EAAG…" />
-          </div>
-          <div class="field">
-            <label>Facebook Page ID</label>
-            <input class="text-input" id="metaPageId" type="text" inputmode="numeric" placeholder="e.g. 112233445566" />
-          </div>
-          <div class="field">
-            <label>Instagram account ID <small>the linked professional account</small></label>
-            <input class="text-input" id="metaIgId" type="text" inputmode="numeric" placeholder="e.g. 1784…" />
-          </div>
-          <div class="field">
-            <label>Cloudinary cloud name <small>Instagram only — hosts the image</small></label>
-            <input class="text-input" id="metaCloud" type="text" placeholder="e.g. dq1abcxyz" />
-          </div>
-          <div class="field">
-            <label>Cloudinary upload preset <small>an unsigned preset</small></label>
-            <input class="text-input" id="metaPreset" type="text" placeholder="e.g. wingman" />
-          </div>
-          <button class="btn btn-secondary" data-action="meta-test">🔌 Test connection</button>
-          <p id="metaStatus" class="hint"></p>
+              <p class="lead">🧭 Run setup again</p>
+              <p class="hint">Walk through the first-run setup again — photos and pitches. Nothing gets wiped.</p>
+              <button class="btn btn-secondary" data-action="ob-restart">Run setup again</button>
+            </div>
+          </details>
+
+          <details class="settings-group">
+            <summary class="sg-head">
+              <span class="sg-heading">
+                <span class="sg-title">🚀 Auto-posting <span class="sg-tag">advanced</span></span>
+                <span class="sg-sub">Post to Instagram/Facebook without the share sheet</span>
+              </span>
+              <svg class="sg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <div class="sg-body">
+              <p class="hint">Post straight to Instagram/Facebook without the share sheet. Needs a one-time Meta setup — see <strong>docs/META_SETUP.md</strong> for the plain-English walkthrough. Everything you paste here stays on this device.</p>
+              <div class="field">
+                <label>Page access token <small>long-lived, from your Meta app</small></label>
+                <input class="text-input" id="metaToken" type="password" autocomplete="off" placeholder="EAAG…" />
+              </div>
+              <div class="field">
+                <label>Facebook Page ID</label>
+                <input class="text-input" id="metaPageId" type="text" inputmode="numeric" placeholder="e.g. 112233445566" />
+              </div>
+              <div class="field">
+                <label>Instagram account ID <small>the linked professional account</small></label>
+                <input class="text-input" id="metaIgId" type="text" inputmode="numeric" placeholder="e.g. 1784…" />
+              </div>
+              <div class="field">
+                <label>Cloudinary cloud name <small>Instagram only — hosts the image</small></label>
+                <input class="text-input" id="metaCloud" type="text" placeholder="e.g. dq1abcxyz" />
+              </div>
+              <div class="field">
+                <label>Cloudinary upload preset <small>an unsigned preset</small></label>
+                <input class="text-input" id="metaPreset" type="text" placeholder="e.g. wingman" />
+              </div>
+              <button class="btn btn-secondary" data-action="meta-test">🔌 Test connection</button>
+              <p id="metaStatus" class="hint"></p>
+            </div>
+          </details>
         </div>
       </section>
 

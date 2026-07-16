@@ -84,7 +84,40 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Two consistency fixes on the brief + review.** Version → v0.49.
+- 2026-07-16 (latest): **Settings grouped into collapsible sections + New Post
+  icon badges.** Owner: Settings "all a bit messy now"; New Post buttons
+  "inconsistent... maybe rounded squares". Version → v0.50.
+  - **Settings was 10 flat `.lead` sections in one long scroll.** Regrouped into
+    **6 collapsible cards** (native `<details>`/`<summary>` — accessible, zero JS
+    state, works offline): ① 📸 Photos & pitches (locations, my photos), ② ✍️
+    Captions & hashtags (best sellers, hashtags, my captions), ③ 🔔 Reminders,
+    ④ 🎨 Appearance (app font), ⑤ 💾 Backup & setup (backup/restore, run setup
+    again), ⑥ 🚀 Auto-posting (Meta). The two everyday-content groups open by
+    default; config/advanced start collapsed so the screen is short. **No JS
+    change** — `openSettings()` still renders into the same inner IDs
+    (`#locationList`, `#stashGrid`, `#menuList`, `#hashtagList`, `#userHookList`,
+    `#fontChips`, notify/meta fields); only the wrapping markup moved. The dead
+    inline `style="margin-top:28px"` per-section spacing was removed — `.sg-body
+    > .lead` handles it now.
+  - **Styling**: `.settings-group` card + `.sg-head` summary (flex; default
+    disclosure triangle hidden via `list-style:none` + `::-webkit-details-marker`)
+    with `.sg-title`/`.sg-sub` and a `.sg-chevron` that rotates 180° on `[open]`.
+    Body reveals with a gentle `sg-reveal` slide/fade (close snaps — native
+    `<details>` can't animate its own collapse without JS; a snap-shut is fine).
+    `.settings-group[open] .sg-body` added to the reduced-motion disable list.
+    `.sg-tag` is the small "advanced" pill on the Auto-posting title.
+  - **New Post tiles looked "inconsistent"** because the three emoji (🖼️ framed
+    pic / 🔲 plain square / 🎠 ornate horse) are wildly different in style and
+    visual weight — the *buttons* were already identical rounded rectangles (all
+    92px). Fix: `.tile-icon` is now a fixed **54×54 rounded-square badge**
+    (`var(--panel-2)` bg, 14px radius, centred emoji) so all three present
+    uniformly — the badge is the consistent shape, the emoji just sits inside.
+  - Verified headless (Chromium, 390×844, localhost): all 6 settings groups
+    render, every dynamic list still populates (locations 3, menu 3, hashtags
+    34, fonts 5, etc.), tapping a header toggles `[open]` and rotates the
+    chevron, no console errors; New Post tiles equal size with matching icon
+    badges (screenshotted at 390/375/320). Version → v0.50.
+- 2026-07-16: **Two consistency fixes on the brief + review.** Version → v0.49.
   - **Brief chips were centre-justified** (`.chips chips-centre`), which wrapped
     into a ragged centred block unlike every other chip screen in the app
     (Settings font picker, editor aspect picker — all left-aligned). Dropped
