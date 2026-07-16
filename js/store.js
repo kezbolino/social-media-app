@@ -41,7 +41,14 @@ const Store = (() => {
 
   /* ---- Menu items (best sellers / sauces) ---- */
   function getMenuItems() {
-    return read(K.MENU, []);
+    // First run: seed with the defaults from config (like getLocations).
+    const stored = read(K.MENU, null);
+    if (stored == null) {
+      const seed = (window.APP_CONFIG.DEFAULT_MENU || []).slice();
+      write(K.MENU, seed);
+      return seed;
+    }
+    return stored;
   }
   function setMenuItems(items) {
     write(K.MENU, items);
