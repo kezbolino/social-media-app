@@ -84,7 +84,16 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Step markers (circle + tick) on both progress bars.**
+- 2026-07-16 (latest): **Step markers: hide the upcoming (empty) circles.**
+  Owner didn't want the faint placeholder circles — a step's circle should only
+  appear once reached. `.pb-step` now defaults to `opacity:0; scale(0)`; only
+  `.current`/`.done` bring it to `opacity:1; scale(1)` (pops up via the spring
+  transition). Dropped the per-bg upcoming background overrides (the
+  `.gen-brief-track .pb-step` faint style) since upcoming is invisible; base
+  background is just `var(--orange)`. `.pb-step` added to the reduced-motion
+  `transition:none` line so reached markers appear without the pop. State logic
+  (`paintSteps`) unchanged. Version → v0.56.
+- 2026-07-16: **Step markers (circle + tick) on both progress bars.**
   Owner idea from the progress-bar work. Each bar now has a circle at every step
   stop (25/50/75/100%): faint = upcoming, orange bead + halo = current, orange +
   white ✓ = done (the tick pops in via `pb-tick`). Version → v0.55.
