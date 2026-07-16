@@ -84,7 +84,48 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Menu pivot — the stall no longer sells wings.** Owner
+- 2026-07-16 (latest): **Generate swipe deck decluttered.** Owner wanted the
+  Tinder-style deck simpler. Version → v0.46.
+  - **Like heart turned green** (was orange, `--orange`): `.swipe-btn.like`
+    now uses `#2b8a3e` — the same green already used for the `.swipe-badge.keep`
+    "KEEP" stamp and the calendar's `posted` state, so this just makes the ♥
+    button consistent with a green that was already in use elsewhere, not a
+    new brand colour. `.swipe-btn.nope` (✕, `--error` red) untouched. NB this
+    is the round ♥/✕ button pair, not the red heart-burst Lottie
+    (`assets/lottie/heart.js`, `FX.heart()`) that pops on a keep swipe — the
+    owner's ask was specifically "the heart on the tinder bit", i.e. the
+    button, and the Lottie asset's colour is baked into its animation JSON
+    (not a CSS-swappable value) so it stays red.
+  - **Removed "Swipe right to keep, left to bin — or tap the buttons."** →
+    now just "Swipe right to keep, left to bin." The ♥/✕ buttons
+    (`gen-like`/`gen-nope`) are unchanged in the DOM/JS — still the
+    reduced-motion/no-drag fallback path — only the hint sentence fragment
+    calling them out was cut.
+  - **Removed the `#genFolderRow` buttons** ("📁 Photo folder" / "🖼️ Pick
+    photos" on touch devices, per `adaptPhotoPickers`; and "🔀 New batch")
+    **and `#genPoolNote`** ("📸 N photos loaded" / "No photos loaded — add
+    some in Settings…") from the Generate screen entirely (index.html).
+    `refreshPoolUi()` (js/app.js) still updates the single/collage pickers'
+    pool notes (`#singlePoolNote`/`#collagePoolNote`) — only the Generate-
+    specific `genNote` block was dead-code-removed since its target element
+    no longer exists.
+    - **Net effect: no in-panel way to start a fresh batch or re-pick photos
+      from Generate.** `runGenerate()` still fires automatically every time
+      the Generate screen is *opened* (`openGenerate()` → nav tap, "✨
+      Generate" home button, `cal-generate`), so the workaround is nav away
+      and back. The underlying JS/DOM the buttons drove — `data-action=
+      "gen-folder"` case, `#genFolderInput` (hidden file input),
+      `onGenFolderPicked` — were deliberately left wired but now unreachable
+      from Generate (same "leave the plumbing, drop the UI" call as the
+      2026-07-12 sound-layer removal) in case the owner wants a way back in
+      later; nothing else on Generate references them.
+    - The stale code comment on `showKeepers()`'s zero-keepers branch
+      ("`#genFolderRow` already shows one on every Generate panel") was
+      removed along with the row it referred to.
+  - Verified headless (Chromium, 390×844, localhost): `#genFolderRow` and
+    `#genPoolNote` both absent from the DOM, the deck hint reads the trimmed
+    text, `.swipe-btn.like` computes to `rgb(43, 138, 62)`, no console errors.
+- 2026-07-16: **Menu pivot — the stall no longer sells wings.** Owner
   kept the "Chuckling Wings" name but stopped doing wings (too slow to cook); it
   now sells **chicken nuggets, chicken burgers and home-made sauces**, all still
   **100% gluten free**. Three linked changes, all verified in-browser. Version → v0.45.

@@ -661,12 +661,6 @@
         if (note) { note.hidden = !has; note.textContent = label; }
       }
     );
-    const genNote = $("#genPoolNote");
-    if (genNote) {
-      genNote.textContent = has
-        ? `📸 ${n} photo${n === 1 ? "" : "s"} loaded`
-        : "No photos loaded — add some in Settings → 📸 My chicken photos";
-    }
   }
 
   /* ---------- SAVED PHOTO STASH (persistent chicken photos) ---------- */
@@ -1852,7 +1846,7 @@
 
   async function runGenerate() {
     if (genBusy) return;
-    refreshPoolUi(); // keep the "N photos loaded" note current
+    refreshPoolUi(); // keep the single/collage "photos loaded" notes current
     keepers = [];
     deckCursor = 0;
     const info = $("#genInfo");
@@ -2083,8 +2077,6 @@
     $("#genInfo").textContent = "";
     const wrap = $("#genKeepers");
     if (!keepers.length) {
-      // No "New batch" button here — #genFolderRow already shows one on every
-      // Generate panel, and a second copy just read as a duplicate.
       wrap.innerHTML =
         (window.Mascot ? Mascot.html("sad", { size: "lg", className: "mascot-center" }) : "") +
         '<p class="hint" style="text-align:center">None kept this round — no worries.</p>';

@@ -1087,7 +1087,7 @@ input[type="range"] { touch-action: none; }
   transition: transform 0.3s var(--spring), background 0.15s ease;
 }
 .swipe-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(10, 35, 49, 0.12); }
-.swipe-btn.like { color: var(--orange); border-color: var(--orange); }
+.swipe-btn.like { color: #2b8a3e; border-color: #2b8a3e; }
 .swipe-btn.nope { color: var(--error); border-color: var(--error); }
 .gen-deck-hint { text-align: center; margin: 2px 0 8px; }
 .gen-pool-note { text-align: center; margin: 8px 0 0; font-size: 0.82rem; }
