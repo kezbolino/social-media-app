@@ -84,7 +84,30 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Onboarding welcome logo removed + overflow-clip fix.**
+- 2026-07-16 (latest): **Step markers (circle + tick) on both progress bars.**
+  Owner idea from the progress-bar work. Each bar now has a circle at every step
+  stop (25/50/75/100%): faint = upcoming, orange bead + halo = current, orange +
+  white ✓ = done (the tick pops in via `pb-tick`). Version → v0.55.
+  - **Markup**: 4 `.pb-step` spans added to each of the 4 onboarding
+    `.ob-progress` bars and the one `.gen-brief-track` (20 total), positioned by
+    inline `left:25/50/75/100%`. The track wrappers went `overflow:hidden →
+    position:relative; overflow:visible` so the 18px circles can sit proud of the
+    14px groove (the self-rounded fill needs no clip). Per-bg upcoming styles:
+    translucent white on the blue onboarding bar, faint blue on the light brief
+    bar; current/done are orange in both. The ✓ is a rotated-border `::after`.
+  - **State**: one shared `paintSteps(root, current)` helper toggles
+    `.done` (i<current) / `.current` (i===current). `obGo` calls it with the
+    step index; the brief's `goBriefStep` with `genBriefStep`; `briefCook` with
+    `4` so every marker ticks as the fill hits 100%. `classList.toggle` only
+    flips on change, so a just-completed marker's tick pops exactly once (no
+    replay on re-render). `.pb-step` + `.pb-step.done::after` added to the
+    reduced-motion disable list.
+  - Verified headless: brief marker states walk
+    current→done correctly across steps (`[current,up,up,up]` →
+    `[done,current,up,up]` → `[done,done,current,up]` → all `done` on cook), same
+    for onboarding; screenshotted on both the light and blue bars; no console
+    errors. Version → v0.55.
+- 2026-07-16: **Onboarding welcome logo removed + overflow-clip fix.**
   Owner: drop the Chuckling Wings logo on ob-welcome (keep just the chicken);
   also flagged the orange bar "covering" the photos on ob-photos. Version → v0.54.
   - Removed the `<img class="brand-logo ob-logo" src="assets/logo.svg">` from

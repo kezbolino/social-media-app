@@ -302,6 +302,18 @@
     return ((i + 1) / OB_STEPS.length) * 100;
   }
 
+  // Paint the circle/tick markers on a progress track: steps before `current`
+  // get a ✓ (done), the step at `current` gets the active ring, the rest stay
+  // faint (upcoming). Shared by the onboarding bar and the Generate brief. Pass
+  // a `current` past the last marker (e.g. total) to tick every step.
+  function paintSteps(root, current) {
+    if (!root) return;
+    root.querySelectorAll(".pb-step").forEach((s, i) => {
+      s.classList.toggle("done", i < current);
+      s.classList.toggle("current", i === current);
+    });
+  }
+
   function obGo(screen) {
     const i = OB_STEPS.indexOf(screen);
     if (i < 0) return;
@@ -331,6 +343,7 @@
       bar.style.transition = ""; // back to the stylesheet (none under reduced motion)
       bar.style.width = obPct(i) + "%";
     }
+    paintSteps(sec && sec.querySelector(".ob-progress"), i);
   }
 
   function obNext() {
@@ -1905,6 +1918,7 @@
     bar.style.width = briefPct(genBriefStep) + "%";
     const track = bar.parentElement;
     if (track) track.setAttribute("aria-valuenow", String(genBriefStep + 1));
+    paintSteps(track, genBriefStep);
     renderBriefStep(dir === "back");
   }
 
@@ -2029,6 +2043,8 @@
     $("#genBriefBar").style.width = "100%";
     const track = $("#genBriefBar").parentElement;
     if (track) track.setAttribute("aria-valuenow", "4");
+    paintSteps(track, 4); // fill hits 100% → every marker ticks
+
     // Wait out the bar's fill sweep (0.8s in CSS) so you actually see it reach
     // 100% before the deck starts cooking.
     setTimeout(() => runGenerate(), reduceMotion ? 0 : 850);
