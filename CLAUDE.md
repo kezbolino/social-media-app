@@ -84,7 +84,41 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-15 (latest): **Reframe/re-crop in Customise mode** (owner: "I cannot
+- 2026-07-16 (latest): **Menu pivot — the stall no longer sells wings.** Owner
+  kept the "Chuckling Wings" name but stopped doing wings (too slow to cook); it
+  now sells **chicken nuggets, chicken burgers and home-made sauces**, all still
+  **100% gluten free**. Three linked changes, all verified in-browser. Version → v0.45.
+  - **The caption/sticker generator (aka "the hook library",
+    `data/streetfood_hooks.json`) said WINGS ~48 times as the food** — 22
+    captions + 26 overlays (e.g. "NO GIMMICKS, JUST WINGS", "THE CURE IS HOT
+    WINGS"). All rewritten to **nuggets** (primary short word — mirrors the
+    all-caps punch of WINGS on stickers) with **burgers** worked into several
+    captions. Gluten-free claims (51 of them) **kept verbatim** — owner confirmed
+    the new items are all certified GF. The two "swing by" lines were NOT touched
+    (regex must exclude `swing`). Done via an explicit phrase-map script (each
+    old string asserted to appear an expected N times before replacing — no blind
+    global `WINGS→NUGGETS`, which would corrupt "swing" and could hit the brand
+    name). Script lives in the session scratchpad, not the repo.
+  - **`data/streetfood_hooks.js` is a generated mirror** (`window.HOOK_LIBRARY =
+    <the JSON>;` + a 3-line header) — regenerated from the JSON in the same
+    script. Verified byte-for-byte equal payload via `json.loads` on both.
+  - **Menu items now seed from config.** `getMenuItems()` (js/store.js) used to
+    return `[]` with no seeding; it now seeds `APP_CONFIG.DEFAULT_MENU`
+    (`["nuggets", "chicken burgers", "home-made sauces"]`, new in js/config.js)
+    on first run, exactly like `getLocations()`. These fill the `{item}`
+    placeholder — but only **6 of 130 hooks** use `{item}`, so the item list
+    barely drives captions; the wings→nuggets hook rewrite above is what actually
+    changes the output.
+  - **Seeded hashtags de-winged**: `DEFAULT_HASHTAGS` swapped `#chickenwings /
+    #wings / #wingwednesday` for `#chickennuggets / #chickenburger / #glutenfree
+    / #glutenfreelondon` (gluten-free is a strong discovery niche for him).
+  - ⚠️ **Owner's existing device keeps the OLD seeded menu/hashtags** — both seed
+    only on first run (null check), and his phone seeded long ago. The new
+    DEFAULT_MENU *will* appear for him only because menuItems was never written
+    before (it seeds on next read); but his hashtags are already stored, so the
+    old wings tags stay until he removes them in Settings by hand. New installs
+    get everything fresh.
+- 2026-07-15: **Reframe/re-crop in Customise mode** (owner: "I cannot
   reframe the images when in customise mode"). Customising a Generate keeper now
   opens the **full editor** on the RAW photo instead of the text-only editor on a
   pre-composed square, so the aspect chips (Square/Portrait/Landscape/Story),
