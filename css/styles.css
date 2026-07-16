@@ -358,11 +358,7 @@ input[type="range"] { touch-action: none; }
   background: rgba(255, 255, 255, 0.22);
   /* Inset shading so the track reads as a recessed groove the fill sits in. */
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
-  /* position + visible overflow so the step markers can be absolutely placed
-     and sit slightly proud of the 14px groove (they're bigger than the track).
-     The fill is self-rounded, so it needs no clip. */
-  position: relative;
-  overflow: visible;
+  overflow: hidden;
 }
 /* The fill is shared by both progress bars (onboarding + the Generate brief).
    Kept minimal — a flat solid orange pill (the depth comes from the recessed
@@ -375,58 +371,6 @@ input[type="range"] { touch-action: none; }
   border-radius: 999px;
   background: var(--orange);
   transition: width 0.8s var(--ease-premium);
-}
-
-/* ---- Step markers (circle + tick) on both progress bars ---- */
-/* One circle per step, centred on the fill's stop points (25/50/75/100%).
-   Faint = upcoming, orange ring = the current step, orange + white ✓ = done.
-   State classes (.current / .done) are set from JS (paintSteps). */
-.pb-step {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  box-sizing: border-box;
-  z-index: 2;
-  background: var(--orange);
-  /* Hidden until reached — a step's circle only pops in once you're on or past
-     it (no faint placeholder markers for upcoming steps). */
-  opacity: 0;
-  transition: opacity 0.25s ease, transform 0.3s var(--spring),
-    box-shadow 0.25s ease;
-}
-/* Reached: the circle appears (pops up from scale 0). */
-.pb-step.current,
-.pb-step.done {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-/* Current step — an orange bead with a soft halo, no tick yet. */
-.pb-step.current {
-  box-shadow: 0 0 0 3px rgba(245, 139, 31, 0.30);
-}
-/* Completed step — orange bead with a white checkmark that pops in. */
-.pb-step.done {
-  box-shadow: none;
-}
-.pb-step.done::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  width: 4.5px;
-  height: 8px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: translate(-50%, -50%) rotate(45deg);
-  animation: pb-tick 0.32s var(--spring) backwards;
-}
-@keyframes pb-tick {
-  0% { transform: translate(-50%, -50%) rotate(45deg) scale(0); opacity: 0; }
-  60% { transform: translate(-50%, -50%) rotate(45deg) scale(1.3); opacity: 1; }
-  100% { transform: translate(-50%, -50%) rotate(45deg) scale(1); }
 }
 /* The scrolling middle. overflow-x MUST be pinned: setting only overflow-y
    makes the x axis compute to `auto`, which hands this its own sideways
@@ -1137,8 +1081,7 @@ input[type="range"] { touch-action: none; }
   border-radius: 999px;
   background: rgba(10, 77, 161, 0.14);
   box-shadow: inset 0 1px 2px rgba(10, 77, 161, 0.2);
-  position: relative;
-  overflow: visible;
+  overflow: hidden;
   margin: 8px 0 4px;
 }
 /* Each step slides in with the premium decelerate — forward from the right,
@@ -1935,7 +1878,6 @@ input[type="range"] { touch-action: none; }
   .home .greeting, .home .btn, .greeting.fx-pop, .chip.selected, .fx-pop,
   .fx-wiggle, .screen.is-active .tile, .chips .chip, .tag-cloud .tag-chip,
   .chips .chip.selected, .gen-card, .gen-q, .settings-group[open] .sg-body,
-  .pb-step, .pb-step.done::after,
   .queue-item, .menu-item, .cal-sched-item,
   .cal-day, .cal-cell.selected, .navbtn.is-active svg, .slot.filled,
   .carousel-thumb, .home .btn-primary::after,
@@ -1948,5 +1890,5 @@ input[type="range"] { touch-action: none; }
   .back, .tile-icon, .slot, .cal-cell, .etab { transition: none; }
   .swipe-card, .swipe-btn { transition: none !important; }
   /* The progress bar still moves — it just jumps to its new width. */
-  .ob-bar, .pb-step { transition: none; }
+  .ob-bar { transition: none; }
 }

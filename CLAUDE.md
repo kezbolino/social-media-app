@@ -84,38 +84,18 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Step markers: hide the upcoming (empty) circles.**
-  Owner didn't want the faint placeholder circles — a step's circle should only
-  appear once reached. `.pb-step` now defaults to `opacity:0; scale(0)`; only
-  `.current`/`.done` bring it to `opacity:1; scale(1)` (pops up via the spring
-  transition). Dropped the per-bg upcoming background overrides (the
-  `.gen-brief-track .pb-step` faint style) since upcoming is invisible; base
-  background is just `var(--orange)`. `.pb-step` added to the reduced-motion
-  `transition:none` line so reached markers appear without the pop. State logic
-  (`paintSteps`) unchanged. Version → v0.56.
-- 2026-07-16: **Step markers (circle + tick) on both progress bars.**
-  Owner idea from the progress-bar work. Each bar now has a circle at every step
-  stop (25/50/75/100%): faint = upcoming, orange bead + halo = current, orange +
-  white ✓ = done (the tick pops in via `pb-tick`). Version → v0.55.
-  - **Markup**: 4 `.pb-step` spans added to each of the 4 onboarding
-    `.ob-progress` bars and the one `.gen-brief-track` (20 total), positioned by
-    inline `left:25/50/75/100%`. The track wrappers went `overflow:hidden →
-    position:relative; overflow:visible` so the 18px circles can sit proud of the
-    14px groove (the self-rounded fill needs no clip). Per-bg upcoming styles:
-    translucent white on the blue onboarding bar, faint blue on the light brief
-    bar; current/done are orange in both. The ✓ is a rotated-border `::after`.
-  - **State**: one shared `paintSteps(root, current)` helper toggles
-    `.done` (i<current) / `.current` (i===current). `obGo` calls it with the
-    step index; the brief's `goBriefStep` with `genBriefStep`; `briefCook` with
-    `4` so every marker ticks as the fill hits 100%. `classList.toggle` only
-    flips on change, so a just-completed marker's tick pops exactly once (no
-    replay on re-render). `.pb-step` + `.pb-step.done::after` added to the
-    reduced-motion disable list.
-  - Verified headless: brief marker states walk
-    current→done correctly across steps (`[current,up,up,up]` →
-    `[done,current,up,up]` → `[done,done,current,up]` → all `done` on cook), same
-    for onboarding; screenshotted on both the light and blue bars; no console
-    errors. Version → v0.55.
+- 2026-07-16 (latest): **Progress-bar step markers tried, then reverted.**
+  Circle+tick step markers were added to both bars (v0.55), then the empty
+  upcoming circles were hidden (v0.56) — but the owner decided against markers
+  entirely and asked for the plain bar back. Fully removed: the `.pb-step`
+  spans (index.html), the `.pb-step` CSS + the `pb-tick` keyframe, the
+  `paintSteps()` helper and its calls in `obGo`/`goBriefStep`/`briefCook`
+  (js/app.js), and the reduced-motion additions; the two track wrappers
+  (`.ob-progress`, `.gen-brief-track`) restored to `overflow:hidden`. Net state:
+  the fat, flat-orange, groove-shaded bars from v0.54 (no markers). If markers
+  are ever revisited, the implementation is in git history around v0.55.
+  Version → v0.57. **(Don't re-add step markers without an explicit ask — the
+  owner tried them and preferred without.)**
 - 2026-07-16: **Onboarding welcome logo removed + overflow-clip fix.**
   Owner: drop the Chuckling Wings logo on ob-welcome (keep just the chicken);
   also flagged the orange bar "covering" the photos on ob-photos. Version → v0.54.
