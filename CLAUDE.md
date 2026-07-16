@@ -84,7 +84,13 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Both progress bars: fatter, shaded, slower.** Owner
+- 2026-07-16 (latest): **Progress-bar fill flattened back to minimal.** Owner
+  liked the fat bar + the recessed-track shading but not the glossy gradient on
+  the fill itself. Dropped the gradient + inset highlight/shade on `.ob-bar` —
+  it's now a flat solid `var(--orange)` pill again. The track groove
+  (`.ob-progress` / `.gen-brief-track` inset `box-shadow`), the 14px height and
+  the 0.8s sweep all stay. Version → v0.53.
+- 2026-07-16: **Both progress bars: fatter, shaded, slower.** Owner
   wanted them chunkier, with shading, and a longer sweep so the animation is
   actually visible. Applies to BOTH bars (they share the `.ob-bar` fill): the
   onboarding `.ob-progress` and the Generate-brief `.gen-brief-track`. Height
