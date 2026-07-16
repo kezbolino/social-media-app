@@ -1,2 +1,7 @@
 .DS_Store
 **/.DS_Store
+
+# Local tooling only — this is a no-build app; node_modules is never shipped.
+# (Used transiently for headless verification, e.g. playwright-core.)
+node_modules/
+package-lock.json

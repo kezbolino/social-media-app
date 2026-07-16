@@ -31,17 +31,37 @@ window.APP_CONFIG = {
     INSTAGRAM: "sfp.instagram",
     QUEUE: "sfp.queue",
     WEATHER: "sfp.weatherCache",
+    ONBOARDED: "sfp.onboarded",
+    FONT: "sfp.font",
   },
+
+  // App-wide UI font choices (Settings → 🔤 App font). `id` matches the
+  // `data-font` attribute value in css/styles.css (see the --font-family
+  // overrides there) — add a matching @font-face + override block if you add
+  // an option here. "poppins" is the built-in default (no override needed).
+  FONTS: [
+    { id: "poppins", label: "Poppins", blurb: "Clean & modern (default)" },
+    { id: "fredoka", label: "Fredoka", blurb: "Round & bubbly" },
+    { id: "baloo2", label: "Baloo 2", blurb: "Bold & playful" },
+    { id: "nunito", label: "Nunito", blurb: "Soft & friendly" },
+    { id: "quicksand", label: "Quicksand", blurb: "Light & breezy" },
+  ],
 
   // Locations pre-loaded the first time the app runs. The user can add/remove
   // these in Settings.
   DEFAULT_LOCATIONS: ["Greenwich", "Crystal Palace", "Leadenhall Market"],
 
+  // Menu items ("Best sellers & sauces") pre-loaded the first time the app
+  // runs — the words that fill the {item} placeholder in captions/stickers.
+  // Despite the "Chuckling Wings" name, the stall now sells nuggets & burgers
+  // (wings took too long to cook); editable in Settings.
+  DEFAULT_MENU: ["nuggets", "chicken burgers", "home-made sauces"],
+
   // Hashtags pre-loaded the first time the app runs (editable in Settings).
-  // Curated for a London street-food / chicken-wings trader: a mix of
-  // street-food scene, London/local, wings-specific, and food-discovery tags
-  // that actually surface posts on Instagram. Keep a spread of big-reach and
-  // niche tags — niche ones are easier to rank in.
+  // Curated for a London gluten-free chicken (nuggets & burgers) street-food
+  // trader: a mix of street-food scene, London/local, chicken/gluten-free, and
+  // food-discovery tags that actually surface posts on Instagram. Keep a spread
+  // of big-reach and niche tags — niche ones are easier to rank in.
   DEFAULT_HASHTAGS: [
     // Street-food scene
     "#streetfood", "#streetfoodlondon", "#londonstreetfood", "#streetfoodmarket",
@@ -49,9 +69,9 @@ window.APP_CONFIG = {
     // London / local
     "#london", "#londonfood", "#londoneats", "#londonfoodie", "#eatlondon",
     "#timeoutlondon", "#secretlondon", "#londonlife",
-    // Wings / chicken
-    "#chickenwings", "#wings", "#friedchicken", "#chickenshop", "#wingwednesday",
-    "#loadedfries", "#comfortfood",
+    // Chicken (nuggets & burgers) / gluten free
+    "#chickennuggets", "#chickenburger", "#friedchicken", "#chickenshop",
+    "#glutenfree", "#glutenfreelondon", "#loadedfries", "#comfortfood",
     // Food discovery / engagement
     "#foodie", "#instafood", "#foodstagram", "#foodphotography", "#eeeeeats",
     "#forkyeah", "#feedfeed", "#hungry", "#supportsmallbusiness",

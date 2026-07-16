@@ -16,6 +16,7 @@ const Editor = (() => {
     "1:1": { ratio: 1, export: [1080, 1080], label: "Square" },
     "4:5": { ratio: 0.8, export: [1080, 1350], label: "Portrait" },
     "1.91:1": { ratio: 1.91, export: [1080, 566], label: "Landscape" },
+    "9:16": { ratio: 9 / 16, export: [1080, 1920], label: "Story" },
   };
 
   // Named presets. Each is a CSS filter string applied while drawing.
@@ -55,6 +56,7 @@ const Editor = (() => {
   let modeText = false; // text-only mode (used for collages: no crop/filter)
   let bgRatio = 1; // background image aspect in text-only mode
   let sampleMode = false; // eyedropper: next tap samples a colour from the photo
+  let stickerFillMode = false; // sticker colour target: false = letters, true = box fill
   let hookProvider = null; // () => next hook text, supplied by the app
   let zoom = 1; // 1..3
   let offX = 0, offY = 0; // image top-left within the frame, in CSS px
@@ -79,6 +81,7 @@ const Editor = (() => {
       txtInput: document.getElementById("txtInput"),
       txtStyles: document.getElementById("txtStyles"),
       txtSwatches: document.getElementById("txtSwatches"),
+      stickerTargetRow: document.getElementById("stickerTargetRow"),
       txtSize: document.getElementById("txtSize"),
       txtRotate: document.getElementById("txtRotate"),
       txtAlign: document.getElementById("txtAlign"),
@@ -129,14 +132,23 @@ const Editor = (() => {
       }
       if (e.target.closest("[data-more]")) {
         const ov = selectedOverlay();
-        if (ov && els.colorInput) { els.colorInput.value = toHex6(ov.color); els.colorInput.click(); }
+        if (ov && els.colorInput) { els.colorInput.value = toHex6(activeColorHex()); els.colorInput.click(); }
         return;
       }
       const b = e.target.closest("[data-swatch]");
-      if (b) setOverlayProp("color", b.dataset.swatch);
+      if (b) applyChosenColor(b.dataset.swatch);
     });
     if (els.colorInput) {
-      els.colorInput.addEventListener("input", (e) => setOverlayProp("color", e.target.value));
+      els.colorInput.addEventListener("input", (e) => applyChosenColor(e.target.value));
+    }
+    // Sticker colour target: letters vs box fill.
+    if (els.stickerTargetRow) {
+      els.stickerTargetRow.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-sticker-target]");
+        if (!b) return;
+        stickerFillMode = b.dataset.stickerTarget === "fill";
+        syncTextPanel();
+      });
     }
     els.txtSize.addEventListener("input", (e) => setOverlayProp("size", parseFloat(e.target.value)));
     els.txtRotate.addEventListener("input", (e) => setOverlayProp("rot", parseInt(e.target.value, 10)));
@@ -163,6 +175,7 @@ const Editor = (() => {
     bgRatio = src.width / src.height;
     els.screen.classList.toggle("mode-text", modeText);
     sampleMode = false;
+    stickerFillMode = false;
     if (state) {
       aspectKey = state.aspectKey || "1:1";
       zoom = state.zoom || 1;
@@ -175,12 +188,14 @@ const Editor = (() => {
       overlays = [];
     }
     if (modeText) { zoom = 1; }
-    selId = null;
+    // Optionally pre-select the first overlay (used when seeding a Generate
+    // sticker so its controls show and it's ready to drag straight away).
+    selId = opts.selectFirst && overlays.length ? overlays[0].id : null;
     ensureTextFonts().then(() => { if (src) render(); });
     els.zoom.value = zoom;
     syncAspectButtons();
     syncAdjustInputs();
-    showTab(modeText ? "text" : "filters");
+    showTab(modeText ? "text" : (opts.startTab || "filters"));
     layout();
     if (state && state.offset) { offX = state.offset.x; offY = state.offset.y; }
     else centreImage();
@@ -435,7 +450,7 @@ const Editor = (() => {
         Math.round(pt.x * dpr), Math.round(pt.y * dpr), 1, 1
       ).data;
       const hex = "#" + [d[0], d[1], d[2]].map((n) => n.toString(16).padStart(2, "0")).join("");
-      setOverlayProp("color", hex);
+      applyChosenColor(hex);
     } catch (e) { /* getImageData can fail on tainted canvases; ignore */ }
   }
   function dist(a, b) {
@@ -510,6 +525,30 @@ const Editor = (() => {
     const m = /^#([0-9a-f]{3})$/i.exec(c);
     if (m) return "#" + m[1].split("").map((h) => h + h).join("");
     return "#ffffff";
+  }
+  function hexToRgb(hex) {
+    const h = toHex6(hex).slice(1);
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+  function rgbToHex(rgb) {
+    if (!rgb || !rgb.length) return "#0a4da1";
+    return "#" + rgb.map((n) => Math.max(0, Math.min(255, n | 0)).toString(16).padStart(2, "0")).join("");
+  }
+  // Whether the chosen colour should paint the sticker's box fill (vs letters).
+  function stickerFillActive() {
+    const ov = selectedOverlay();
+    return !!(ov && ov.kind === "sticker" && stickerFillMode);
+  }
+  // The colour the swatches/picker currently act on (fill or letters).
+  function activeColorHex() {
+    const ov = selectedOverlay();
+    if (!ov) return "#ffffff";
+    return stickerFillActive() ? rgbToHex(ov.fillRGB) : (ov.color || "#ffffff");
+  }
+  // Apply a picked colour to the active target: sticker box fill, or text colour.
+  function applyChosenColor(hex) {
+    if (stickerFillActive()) setOverlayProp("fillRGB", hexToRgb(hex));
+    else setOverlayProp("color", hex);
   }
 
   function selectedOverlay() {
@@ -597,14 +636,25 @@ const Editor = (() => {
     els.txtControls.hidden = !ov;
     els.txtDelete.hidden = !ov;
     els.txtHint.hidden = !!ov;
+    const isSticker = !!ov && ov.kind === "sticker";
+    // A sticker carries the brand's own solid look, so the font-style/align/
+    // highlight controls don't apply — hide them (keep colour, size, rotate).
+    els.textPanel.classList.toggle("sticker-mode", isSticker);
+    if (!isSticker) stickerFillMode = false; // only stickers have a fill target
+    if (els.stickerTargetRow) {
+      els.stickerTargetRow.querySelectorAll("[data-sticker-target]").forEach((b) =>
+        b.classList.toggle("selected", (b.dataset.stickerTarget === "fill") === stickerFillMode));
+    }
     if (!ov) return;
     els.txtInput.value = ov.text;
     els.txtSize.value = ov.size;
     els.txtRotate.value = ov.rot;
     els.txtStyles.querySelectorAll("[data-style]").forEach((b) =>
       b.classList.toggle("selected", b.dataset.style === ov.style));
+    // Highlight the swatch matching whichever colour is being edited (letters or box fill).
+    const active = activeColorHex().toLowerCase();
     els.txtSwatches.querySelectorAll("[data-swatch]").forEach((b) =>
-      b.classList.toggle("selected", b.dataset.swatch.toLowerCase() === ov.color.toLowerCase()));
+      b.classList.toggle("selected", b.dataset.swatch.toLowerCase() === active));
     els.txtAlign.textContent = ov.align === "center" ? "↔ Centre" : ov.align === "left" ? "⇤ Left" : "⇥ Right";
     els.txtHighlight.textContent = ov.highlight === "none" ? "▢ No fill" : ov.highlight === "solid" ? "▣ Colour fill" : "▨ Shade";
   }
@@ -641,7 +691,35 @@ const Editor = (() => {
     return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? "#111111" : "#ffffff";
   }
 
+  // A Generate "sticker" overlay: same solid tilted label as the baked-on
+  // version, but movable. Rendering is delegated to Imaging.paintSticker so
+  // the draggable sticker and the exported one are pixel-identical (no drift).
+  // `size` drives the sticker scale (÷9 so the editor's default text size of 9
+  // maps to scale 1.0); `rot` is the tilt in degrees; `cx`/`cy` the centre.
+  function drawStickerOverlay(ctx, ov, W, H, selected, track) {
+    const box = Imaging.paintSticker(ctx, W, H, {
+      text: ov.text, fillRGB: ov.fillRGB, color: ov.color,
+      angle: ov.rot, scale: (ov.size || 9) / 9, cx: ov.cx, cy: ov.cy,
+    });
+    if (!box) { if (track) ov._box = null; return; }
+    if (selected) {
+      const pad = Math.round(W * 0.02);
+      ctx.save();
+      ctx.translate(ov.cx * W, ov.cy * H);
+      if (ov.rot) ctx.rotate((ov.rot * Math.PI) / 180);
+      ctx.setLineDash([6, 5]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      ctx.strokeRect(-box.boxW / 2 - pad, -box.boxH / 2 - pad, box.boxW + 2 * pad, box.boxH + 2 * pad);
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+    // Axis-aligned hit box (ignores tilt, like the text path) for tap/drag.
+    if (track) ov._box = { cx: ov.cx * W, cy: ov.cy * H, w: box.boxW, h: box.boxH };
+  }
+
   function drawTextOverlay(ctx, ov, W, H, selected, track) {
+    if (ov.kind === "sticker") return drawStickerOverlay(ctx, ov, W, H, selected, track);
     const st = TEXT_STYLES[ov.style] || TEXT_STYLES.classic;
     const fontPx = (ov.size / 100) * W;
     const raw = ov.text || "";

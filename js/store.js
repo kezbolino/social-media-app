@@ -27,9 +27,28 @@ const Store = (() => {
     }
   }
 
+  /* ---- First-run setup ---- */
+  // False/absent means the setup flow hasn't been completed on this device, so
+  // boot() opens onboarding instead of home. Only finishOnboarding() sets it —
+  // every exit from setup routes through there, including a backup restore
+  // (that phone is already set up) and skipping the photo step.
+  function getOnboarded() {
+    return read(K.ONBOARDED, false) === true;
+  }
+  function setOnboarded(v) {
+    write(K.ONBOARDED, v === true);
+  }
+
   /* ---- Menu items (best sellers / sauces) ---- */
   function getMenuItems() {
-    return read(K.MENU, []);
+    // First run: seed with the defaults from config (like getLocations).
+    const stored = read(K.MENU, null);
+    if (stored == null) {
+      const seed = (window.APP_CONFIG.DEFAULT_MENU || []).slice();
+      write(K.MENU, seed);
+      return seed;
+    }
+    return stored;
   }
   function setMenuItems(items) {
     write(K.MENU, items);
@@ -64,6 +83,9 @@ const Store = (() => {
   /* ---- Recency log: [{ hookId, dateUsed (ISO date string) }] ---- */
   function getRecencyLog() {
     return read(K.RECENCY, []);
+  }
+  function setRecencyLog(log) {
+    write(K.RECENCY, log);
   }
   function recordHookUse(hookId, date = new Date()) {
     const log = getRecencyLog();
@@ -209,9 +231,20 @@ const Store = (() => {
     return q;
   }
 
+  /* ---- App-wide UI font (Settings → 🔤 App font) ---- */
+  function getFont() {
+    return read(K.FONT, "poppins");
+  }
+  function setFont(id) {
+    write(K.FONT, id);
+  }
+
   /* ---- Saved posts: draft -> approved -> shared ---- */
   function getPosts() {
     return read(K.POSTS, []);
+  }
+  function setPosts(posts) {
+    write(K.POSTS, posts);
   }
   function savePost(post) {
     const posts = getPosts();
@@ -240,9 +273,11 @@ const Store = (() => {
     getMeta,
     setMeta,
     getRecencyLog,
+    setRecencyLog,
     recordHookUse,
     recentHookIds,
     getPosts,
+    setPosts,
     savePost,
     getUserHooks,
     setUserHooks,
@@ -255,5 +290,9 @@ const Store = (() => {
     addQueueItem,
     updateQueueItem,
     removeQueueItem,
+    getOnboarded,
+    setOnboarded,
+    getFont,
+    setFont,
   };
 })();

@@ -103,7 +103,7 @@ window.HOOK_LIBRARY = {
       "overlays": [
         "YOUR NOSE KNOWS",
         "{location} TODAY",
-        "THIS WAY FOR WINGS"
+        "THIS WAY FOR NUGGETS"
       ]
     },
     {
@@ -378,7 +378,7 @@ window.HOOK_LIBRARY = {
       ],
       "overlays": [
         "WET OUT. WARM HERE.",
-        "SHELTER + WINGS 🌧️",
+        "SHELTER + NUGGETS 🌧️",
         "{location} · STILL OPEN"
       ]
     },
@@ -392,7 +392,7 @@ window.HOOK_LIBRARY = {
         "location"
       ],
       "overlays": [
-        "CLOUDY WITH A CHANCE OF WINGS",
+        "CLOUDY WITH A CHANCE OF NUGGETS",
         "THERAPY, BUT CRISPY",
         "{location} TODAY"
       ]
@@ -438,7 +438,7 @@ window.HOOK_LIBRARY = {
       ],
       "overlays": [
         "BIT NIPPY? CURED.",
-        "THE CURE IS HOT WINGS",
+        "THE CURE IS HOT NUGGETS",
         "WARM UP HERE"
       ]
     },
@@ -708,7 +708,7 @@ window.HOOK_LIBRARY = {
       "uses": [],
       "overlays": [
         "SIMPLE AS. 🍗",
-        "NO GIMMICKS, JUST WINGS",
+        "NO GIMMICKS, JUST NUGGETS",
         "READ IT AND DROOL"
       ]
     },
@@ -875,7 +875,7 @@ window.HOOK_LIBRARY = {
       ],
       "overlays": [
         "PUT THE PHONE DOWN",
-        "DOG & BONE DOWN. WINGS UP.",
+        "DOG & BONE DOWN. NUGGETS UP.",
         "{location} NOW"
       ]
     },
@@ -906,7 +906,7 @@ window.HOOK_LIBRARY = {
         "location"
       ],
       "overlays": [
-        "SUNSHINE + WINGS ☀️",
+        "SUNSHINE + NUGGETS ☀️",
         "GET OUT HERE",
         "{location} TODAY"
       ]
@@ -1003,7 +1003,7 @@ window.HOOK_LIBRARY = {
       ],
       "overlays": [
         "🚇 THIS IS YOUR STOP",
-        "ALIGHT HERE FOR WINGS",
+        "ALIGHT HERE FOR NUGGETS",
         "{location} STATION"
       ]
     },
@@ -1035,7 +1035,7 @@ window.HOOK_LIBRARY = {
       ],
       "overlays": [
         "CLASSIC LONDON ☔",
-        "WE'VE GOT A ROOF & WINGS",
+        "WE'VE GOT A ROOF & NUGGETS",
         "{location} · STAY DRY"
       ]
     },
@@ -1051,7 +1051,7 @@ window.HOOK_LIBRARY = {
       ],
       "overlays": [
         "GUESS WHO'S BACK 🎉",
-        "RETURN OF THE WINGS",
+        "RETURN OF THE NUGGETS",
         "{location} TODAY"
       ]
     },
@@ -1112,7 +1112,7 @@ window.HOOK_LIBRARY = {
       "overlays": [
         "THE WHOLE MENU. GF.",
         "BATTER. CHIPS. THE LOT.",
-        "NO WORRY. JUST WINGS."
+        "NO WORRY. JUST NUGGETS."
       ]
     },
     {
@@ -1133,12 +1133,12 @@ window.HOOK_LIBRARY = {
       "tags": [
         "brand"
       ],
-      "text": "100% gluten free, 0% compromise. Wings that don't taste 'free from' anything.",
+      "text": "100% gluten free, 0% compromise. Nuggets and burgers that don't taste 'free from' anything.",
       "uses": [],
       "overlays": [
         "100% GF · 0% COMPROMISE",
         "DOESN'T TASTE 'FREE FROM'",
-        "PROPER WINGS"
+        "PROPER NUGGETS"
       ]
     },
     {
@@ -1159,7 +1159,7 @@ window.HOOK_LIBRARY = {
       "tags": [
         "brand"
       ],
-      "text": "Proper chicken shop energy, fully gluten free. Every wing, every chip, every sauce. Safe and smashing.",
+      "text": "Proper chicken shop energy, fully gluten free. Every nugget, every burger, every chip, every sauce. Safe and smashing.",
       "uses": [],
       "overlays": [
         "SAFE & SMASHING 🍗",
@@ -1241,12 +1241,12 @@ window.HOOK_LIBRARY = {
       "tags": [
         "location"
       ],
-      "text": "Find us at {location}. Gluten free wings, proper chips, no meal-deal sadness.",
+      "text": "Find us at {location}. Gluten free nuggets and burgers, proper chips, no meal-deal sadness.",
       "uses": [
         "location"
       ],
       "overlays": [
-        "CHEER UP, IT'S WINGS",
+        "CHEER UP, IT'S NUGGETS",
         "THE HAPPY OPTION",
         "{location} TODAY"
       ]
@@ -1273,10 +1273,10 @@ window.HOOK_LIBRARY = {
         "location"
       ],
       "location": "Greenwich",
-      "text": "Greenwich today. Tourist or local, doesn't matter - the wings are gluten free and unreal. Come find us.",
+      "text": "Greenwich today. Tourist or local, doesn't matter - the nuggets and burgers are gluten free and unreal. Come find us.",
       "uses": [],
       "overlays": [
-        "⚓ WINGS BY THE RIVER",
+        "⚓ NUGGETS BY THE RIVER",
         "EVERYONE IS WELCOME",
         "SE10'S FINEST"
       ]
@@ -1315,7 +1315,7 @@ window.HOOK_LIBRARY = {
         "location"
       ],
       "location": "Greenwich",
-      "text": "Greenwich Park earned you a proper feed. We're right here - gluten free wings that hit.",
+      "text": "Greenwich Park earned you a proper feed. We're right here - gluten free nuggets and burgers that hit.",
       "uses": [],
       "overlays": [
         "WALKED THE PARK? EAT.",
@@ -1332,7 +1332,7 @@ window.HOOK_LIBRARY = {
       "text": "Crystal Palace! Yes, we're near the dinosaurs. No, they're not gluten free - but our whole menu is.",
       "uses": [],
       "overlays": [
-        "WINGS & DINOSAURS 🦕",
+        "NUGGETS & DINOSAURS 🦕",
         "JURASSIC SNACK",
         "SOUTH LONDON'S FINEST"
       ]
@@ -1343,7 +1343,7 @@ window.HOOK_LIBRARY = {
         "location"
       ],
       "location": "Crystal Palace",
-      "text": "CP locals, your gluten free wing fix is parked up. Wave at the dinosaurs on your way over.",
+      "text": "CP locals, your gluten free nugget fix is parked up. Wave at the dinosaurs on your way over.",
       "uses": [],
       "overlays": [
         "CP, WE'VE LANDED 🦖",
@@ -1357,10 +1357,10 @@ window.HOOK_LIBRARY = {
         "location"
       ],
       "location": "Crystal Palace",
-      "text": "Only in Crystal Palace: Victorian dinosaurs AND 100% gluten free wings. What a place.",
+      "text": "Only in Crystal Palace: Victorian dinosaurs AND 100% gluten free nuggets and burgers. What a place.",
       "uses": [],
       "overlays": [
-        "DINOS + WINGS 🦕",
+        "DINOS + NUGGETS 🦕",
         "A LONDON ORIGINAL",
         "CRYSTAL PALACE SPECIAL"
       ]
@@ -1385,7 +1385,7 @@ window.HOOK_LIBRARY = {
         "location"
       ],
       "location": "Leadenhall Market",
-      "text": "Leadenhall Market - City lunch sorted. Gluten free wings that beat any sad desk salad. Beat the rush.",
+      "text": "Leadenhall Market - City lunch sorted. Gluten free nuggets and burgers that beat any sad desk salad. Beat the rush.",
       "uses": [],
       "overlays": [
         "ESCAPE THE DESK 🏃",
@@ -1417,7 +1417,7 @@ window.HOOK_LIBRARY = {
       "uses": [],
       "overlays": [
         "OI, SUITS 👔",
-        "LOOSEN THE TIE, GRAB WINGS",
+        "LOOSEN THE TIE, GRAB NUGGETS",
         "LEADENHALL LUNCH"
       ]
     },
@@ -1457,7 +1457,7 @@ window.HOOK_LIBRARY = {
       "text": "Getting married? We cater weddings - proper gluten free street food your guests will actually remember.",
       "uses": [],
       "overlays": [
-        "💍 SAY 'I DO' TO WINGS",
+        "💍 SAY 'I DO' TO NUGGETS",
         "WEDDING FOOD, DONE PROPER",
         "BOOK THE VAN"
       ]
@@ -1506,7 +1506,7 @@ window.HOOK_LIBRARY = {
       "tags": [
         "events"
       ],
-      "text": "Skip the rubber chicken and sad veg. Book us for the wedding - gluten free wings, happy guests, zero drama.",
+      "text": "Skip the rubber chicken and sad veg. Book us for the wedding - gluten free nuggets and burgers, happy guests, zero drama.",
       "uses": [],
       "overlays": [
         "WEDDING FOOD THEY'LL REMEMBER",
@@ -1559,10 +1559,10 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "sun",
-      "text": "Sun's out, wings out. Come find us before the queue does.",
+      "text": "Sun's out, nuggets out. Come find us before the queue does.",
       "uses": [],
       "overlays": [
-        "VITAMIN D + VITAMIN WING",
+        "VITAMIN D + VITAMIN NUGGET",
         "GOLDEN HOUR, GOLDEN BATTER",
         "GET OUT HERE ☀️"
       ]
@@ -1573,7 +1573,7 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "sun",
-      "text": "Proper sunny one at {location} today. Gluten free wings and a cold drink - sorted.",
+      "text": "Proper sunny one at {location} today. Gluten free nuggets and a cold drink - sorted.",
       "uses": [
         "location"
       ],
@@ -1589,11 +1589,11 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "sun",
-      "text": "Blue skies and gluten free wings. Name a better combo, we'll wait.",
+      "text": "Blue skies and gluten free nuggets. Name a better combo, we'll wait.",
       "uses": [],
       "overlays": [
         "THE PERFECT PAIRING ☀️",
-        "SKY: BLUE. WINGS: GOLD.",
+        "SKY: BLUE. NUGGETS: GOLD.",
         "MATCH MADE OUTSIDE"
       ]
     },
@@ -1633,12 +1633,12 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "cloud",
-      "text": "Grey skies? Our wings are the pop of colour your day needs.",
+      "text": "Grey skies? Our nuggets are the pop of colour your day needs.",
       "uses": [],
       "overlays": [
         "GREY SKIES? POP OF COLOUR.",
         "WE'RE THE BRIGHT BIT",
-        "CHEER UP, IT'S WINGS"
+        "CHEER UP, IT'S NUGGETS"
       ]
     },
     {
@@ -1667,7 +1667,7 @@ window.HOOK_LIBRARY = {
       "uses": [],
       "overlays": [
         "THE SKY'S SULKING. DON'T.",
-        "BRIGHT SIDE: WINGS ⛅",
+        "BRIGHT SIDE: NUGGETS ⛅",
         "CHEER'S THIS WAY"
       ]
     },
@@ -1707,10 +1707,10 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "rain",
-      "text": "It's chucking it down - duck in for hot, gluten free wings. We're not going anywhere.",
+      "text": "It's chucking it down - duck in for hot, gluten free nuggets and burgers. We're not going anywhere.",
       "uses": [],
       "overlays": [
-        "RAINCHECK? NAH. WINGS.",
+        "RAINCHECK? NAH. NUGGETS.",
         "UMBRELLA OPTIONAL ☔",
         "DIVE IN HERE"
       ]
@@ -1721,7 +1721,7 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "rain",
-      "text": "Rain at {location}? Perfect wing weather. Hot food, dry spot, come hide.",
+      "text": "Rain at {location}? Perfect nugget weather. Hot food, dry spot, come hide.",
       "uses": [
         "location"
       ],
@@ -1737,12 +1737,12 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "rain",
-      "text": "British summer doing its thing. Warm gluten free wings say it's fine, actually.",
+      "text": "British summer doing its thing. Warm gluten free nuggets say it's fine, actually.",
       "uses": [],
       "overlays": [
         "JULY, APPARENTLY ☔",
         "SUMMER? WE'VE GOT A FIX.",
-        "RAIN CAN'T STOP WINGS"
+        "RAIN CAN'T STOP NUGGETS"
       ]
     },
     {
@@ -1751,7 +1751,7 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "rain",
-      "text": "Soggy one at {location}. Treat yourself - you've earned the wings.",
+      "text": "Soggy one at {location}. Treat yourself - you've earned the nuggets.",
       "uses": [
         "location"
       ],
@@ -1781,7 +1781,7 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "cold",
-      "text": "Freezing out - warm up with gluten free wings straight off the heat.",
+      "text": "Freezing out - warm up with gluten free nuggets straight off the heat.",
       "uses": [],
       "overlays": [
         "ANTIFREEZE, EDIBLE ❄️",
@@ -1811,7 +1811,7 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "cold",
-      "text": "Cold hands, warm wings. That's the deal. Come get some.",
+      "text": "Cold hands, warm nuggets. That's the deal. Come get some.",
       "uses": [],
       "overlays": [
         "POCKET YOUR HANDS ❄️",
@@ -1825,13 +1825,13 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "cold",
-      "text": "Brass monkeys at {location}. Hot gluten free wings sort that right out.",
+      "text": "Brass monkeys at {location}. Hot gluten free nuggets sort that right out.",
       "uses": [
         "location"
       ],
       "overlays": [
         "BRASS MONKEYS OUT THERE",
-        "WINGS SORT THAT OUT ❄️",
+        "NUGGETS SORT THAT OUT ❄️",
         "{location} · WARM UP"
       ]
     },
@@ -1855,10 +1855,10 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "hot",
-      "text": "Scorcher today - grab gluten free wings and a cold one, sit in the sun.",
+      "text": "Scorcher today - grab gluten free nuggets and a cold one, sit in the sun.",
       "uses": [],
       "overlays": [
-        "HOT DAY, HOTTER WINGS 🔥",
+        "HOT DAY, HOTTER NUGGETS 🔥",
         "SUMMER SERVED CRISPY",
         "COLD DRINKS TOO 🥤"
       ]
@@ -1899,7 +1899,7 @@ window.HOOK_LIBRARY = {
         "weather"
       ],
       "weather": "hot",
-      "text": "Proper warm one at {location}. Wings, cold drink, no washing up. You're welcome.",
+      "text": "Proper warm one at {location}. Nuggets, cold drink, no washing up. You're welcome.",
       "uses": [
         "location"
       ],

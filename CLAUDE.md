@@ -31,6 +31,19 @@ static server.
 - Back buttons use `class="back"` with just the `‹` glyph (no "Back" text); they
   carry `aria-label="Back"` for screen readers and a 44px min tap target.
 - `data-back` value is the screen to return to (empty string = default/home flow).
+- Every `show(screen)` call also pushes a browser history entry (see the
+  History API gotcha below) — don't bypass `show()` to toggle `.is-active`
+  directly, or the hardware/gesture back button will desync from what's on
+  screen.
+- **History API gotcha**: this is a screen-switching SPA with no other pages,
+  so it never used to touch `history` at all — meaning only the in-app "‹"
+  arrows worked, and the phone's own back button/gesture tried to navigate
+  the browser away from the page, landing on a blank white screen (see
+  Notable changes, 2026-07-12). Fixed by having `show()` push a history entry
+  per navigation and a `popstate` listener re-show whichever screen that
+  entry belongs to. If you add a new way to change screens, route it through
+  `show()` (don't hand-roll `.is-active` toggling) or it'll reintroduce the
+  white-screen bug for that path.
 - Cross-script modules use the `const X = (()=>{})()` IIFE pattern. A top-level
   `const` in a classic `<script>` is a lexical global (reachable by bare name,
   e.g. `Store`, `Photos`) but is NOT a property of `window` — so any
@@ -43,7 +56,869 @@ static server.
     Increment the patch (v0.03 → v0.04) for a normal feature/enhancement. The owner
     should never have to ask for a version bump — it just happens.
 
+## Roadmap ideas (from a competitor review, 2026-07-12)
+A pass benchmarking this app against Buffer/Later/Planoly/Meta Business Suite/
+Canva and the 2026 food-truck marketing playbook (short-form video + Google
+Business Profile) turned up gaps + a prioritized backlog. **Built so far:**
+Story export (9:16), "Queue for later", backup/restore (see Notable changes
+below). **Not yet built, roughly in priority order:**
+- Quick wins: recurring workdays ("every Friday = Greenwich"), hashtag sets per
+  location, tag stash photos by dish (fixes Generate photo/caption mismatch),
+  static best-time-to-post nudge.
+- Medium: basic video/Reels sharing (pick a clip → caption → share sheet, no
+  editing), visual history + grid preview (the composite image is already a
+  blob at share time, just isn't saved), post insights via the Meta Graph API
+  (credentials already stored), carousel parity (per-frame edit + direct
+  publish), open-when-due auto-publish for due queue items, weather-aware
+  nudges (the pieces — weather buckets, weather-pinned hooks, reminders — all
+  exist but aren't linked), a Google Business Profile helper workflow.
+- Bigger bets: a Capacitor wrap (the code already anticipates this in
+  `notify.js`/`share.js` comments — unlocks real background reminders/
+  scheduling), real branded collage overlays (the overlay-PNG system in
+  `renderCollage` exists and is unused — all 4 templates ship `overlay: null`),
+  optional online-only AI caption assist (off by default — cuts against the
+  app's offline/human-voice design, so low priority), a menu/price board
+  generator reusing the imaging pipeline.
+- Deliberately NOT recommended: team features, cloud sync, true background
+  auto-publish, multi-account management — all need a server or a native wrap
+  disproportionate to a single trader's app.
+
 ## Notable changes
+- 2026-07-16 (latest): **"Generate more" — but only once there's nothing left
+  to act on.** Follow-up to the swipe-deck declutter below: after removing the
+  always-on "New batch" button, the owner clarified they don't want a reshuffle
+  offered while there's still a card to swipe or a kept post sitting unposted
+  in the tray — only once the batch is genuinely finished (nothing kept, or
+  everything kept has been posted). Version → v0.47.
+  - New `keptTotal` counter (js/app.js, alongside `keepers`) tracks how many
+    cards were swiped right **this batch**, independent of `keepers.length`
+    shrinking as each one gets posted (`returnToKeepers` splices the posted
+    item out). Reset to 0 in `runGenerate()`, incremented in `decideCard()`.
+  - `showKeepers()`'s zero-keepers branch (hit both when nothing was kept AND
+    after the last keeper is posted, since both leave `keepers` empty) now
+    branches on `keptTotal` for the message — "None kept this round — no
+    worries." vs "All posted — nice work! 🎉" — and both render a
+    "🔀 Generate more" button (`data-action="gen-regenerate"`, the same action
+    the old always-on button used, still wired from the previous change) inside
+    a `.gen-empty`-classed wrapper (existing empty-state styling: centred flex
+    column, auto-width button) so it doesn't stretch full width like a bare
+    `.btn` would.
+  - **Deliberately NOT shown**: mid-deck (there's always a next card to swipe,
+    the deck reshuffling itself isn't meaningful), or with unposted keepers
+    still in the tray (`keepers.length > 0` — Post/Customise/Queue are still
+    the point). Queueing a keeper does NOT remove it from `keepers` (only
+    posting does, via `returnToKeepers`), so a tray that's fully queued-but-
+    not-posted correctly stays on the action list, not the "generate more"
+    empty state — matches the owner's framing of "posts complete."
+  - Verified headless (Chromium, 390×844, localhost, real swipe-deck runs
+    against a seeded stash photo — not just DOM inspection): binning all 10
+    cards → "None kept this round — no worries." + one Generate-more button;
+    tapping it re-rolls a fresh 10-card batch; keeping 1 card → tray shows
+    "You kept 1 🎉" (no Generate-more button while it's sitting there) →
+    Post → Share → "← Back to my kept posts" → tray now shows "All posted —
+    nice work! 🎉" + Generate-more button. No console errors either pass.
+- 2026-07-16: **Generate swipe deck decluttered.** Owner wanted the
+  Tinder-style deck simpler. Version → v0.46.
+  - **Like heart turned green** (was orange, `--orange`): `.swipe-btn.like`
+    now uses `#2b8a3e` — the same green already used for the `.swipe-badge.keep`
+    "KEEP" stamp and the calendar's `posted` state, so this just makes the ♥
+    button consistent with a green that was already in use elsewhere, not a
+    new brand colour. `.swipe-btn.nope` (✕, `--error` red) untouched. NB this
+    is the round ♥/✕ button pair, not the red heart-burst Lottie
+    (`assets/lottie/heart.js`, `FX.heart()`) that pops on a keep swipe — the
+    owner's ask was specifically "the heart on the tinder bit", i.e. the
+    button, and the Lottie asset's colour is baked into its animation JSON
+    (not a CSS-swappable value) so it stays red.
+  - **Removed "Swipe right to keep, left to bin — or tap the buttons."** →
+    now just "Swipe right to keep, left to bin." The ♥/✕ buttons
+    (`gen-like`/`gen-nope`) are unchanged in the DOM/JS — still the
+    reduced-motion/no-drag fallback path — only the hint sentence fragment
+    calling them out was cut.
+  - **Removed the `#genFolderRow` buttons** ("📁 Photo folder" / "🖼️ Pick
+    photos" on touch devices, per `adaptPhotoPickers`; and "🔀 New batch")
+    **and `#genPoolNote`** ("📸 N photos loaded" / "No photos loaded — add
+    some in Settings…") from the Generate screen entirely (index.html).
+    `refreshPoolUi()` (js/app.js) still updates the single/collage pickers'
+    pool notes (`#singlePoolNote`/`#collagePoolNote`) — only the Generate-
+    specific `genNote` block was dead-code-removed since its target element
+    no longer exists.
+    - **Net effect: no in-panel way to start a fresh batch or re-pick photos
+      from Generate.** `runGenerate()` still fires automatically every time
+      the Generate screen is *opened* (`openGenerate()` → nav tap, "✨
+      Generate" home button, `cal-generate`), so the workaround is nav away
+      and back. The underlying JS/DOM the buttons drove — `data-action=
+      "gen-folder"` case, `#genFolderInput` (hidden file input),
+      `onGenFolderPicked` — were deliberately left wired but now unreachable
+      from Generate (same "leave the plumbing, drop the UI" call as the
+      2026-07-12 sound-layer removal) in case the owner wants a way back in
+      later; nothing else on Generate references them.
+    - The stale code comment on `showKeepers()`'s zero-keepers branch
+      ("`#genFolderRow` already shows one on every Generate panel") was
+      removed along with the row it referred to.
+  - Verified headless (Chromium, 390×844, localhost): `#genFolderRow` and
+    `#genPoolNote` both absent from the DOM, the deck hint reads the trimmed
+    text, `.swipe-btn.like` computes to `rgb(43, 138, 62)`, no console errors.
+- 2026-07-16: **Menu pivot — the stall no longer sells wings.** Owner
+  kept the "Chuckling Wings" name but stopped doing wings (too slow to cook); it
+  now sells **chicken nuggets, chicken burgers and home-made sauces**, all still
+  **100% gluten free**. Three linked changes, all verified in-browser. Version → v0.45.
+  - **The caption/sticker generator (aka "the hook library",
+    `data/streetfood_hooks.json`) said WINGS ~48 times as the food** — 22
+    captions + 26 overlays (e.g. "NO GIMMICKS, JUST WINGS", "THE CURE IS HOT
+    WINGS"). All rewritten to **nuggets** (primary short word — mirrors the
+    all-caps punch of WINGS on stickers) with **burgers** worked into several
+    captions. Gluten-free claims (51 of them) **kept verbatim** — owner confirmed
+    the new items are all certified GF. The two "swing by" lines were NOT touched
+    (regex must exclude `swing`). Done via an explicit phrase-map script (each
+    old string asserted to appear an expected N times before replacing — no blind
+    global `WINGS→NUGGETS`, which would corrupt "swing" and could hit the brand
+    name). Script lives in the session scratchpad, not the repo.
+  - **`data/streetfood_hooks.js` is a generated mirror** (`window.HOOK_LIBRARY =
+    <the JSON>;` + a 3-line header) — regenerated from the JSON in the same
+    script. Verified byte-for-byte equal payload via `json.loads` on both.
+  - **Menu items now seed from config.** `getMenuItems()` (js/store.js) used to
+    return `[]` with no seeding; it now seeds `APP_CONFIG.DEFAULT_MENU`
+    (`["nuggets", "chicken burgers", "home-made sauces"]`, new in js/config.js)
+    on first run, exactly like `getLocations()`. These fill the `{item}`
+    placeholder — but only **6 of 130 hooks** use `{item}`, so the item list
+    barely drives captions; the wings→nuggets hook rewrite above is what actually
+    changes the output.
+  - **Seeded hashtags de-winged**: `DEFAULT_HASHTAGS` swapped `#chickenwings /
+    #wings / #wingwednesday` for `#chickennuggets / #chickenburger / #glutenfree
+    / #glutenfreelondon` (gluten-free is a strong discovery niche for him).
+  - ⚠️ **Owner's existing device keeps the OLD seeded menu/hashtags** — both seed
+    only on first run (null check), and his phone seeded long ago. The new
+    DEFAULT_MENU *will* appear for him only because menuItems was never written
+    before (it seeds on next read); but his hashtags are already stored, so the
+    old wings tags stay until he removes them in Settings by hand. New installs
+    get everything fresh.
+- 2026-07-15: **Reframe/re-crop in Customise mode** (owner: "I cannot
+  reframe the images when in customise mode"). Customising a Generate keeper now
+  opens the **full editor** on the RAW photo instead of the text-only editor on a
+  pre-composed square, so the aspect chips (Square/Portrait/Landscape/Story),
+  zoom and pan all work — you can genuinely re-crop the original photo, not just
+  zoom into an already-squared one. Filters/Adjust come along for free too. The
+  sticker is still a movable overlay and the Text tab is where you land, so the
+  primary sticker-move gesture is unchanged.
+  - **`customiseKeeper` (js/app.js)** dropped `mode: "text"` + the
+    `renderSingle(g.rawImg, null)` pre-compose; it now passes `g.rawImg` straight
+    to `Editor.open(..., { startTab: "text", selectFirst: true })`. With no
+    editState the editor defaults to Square/zoom 1/centred, which cover-fits the
+    photo **identically to the card's default bake** (both are `drawCover` into
+    1080² = `APP_CONFIG.EXPORT` = `ASPECTS["1:1"].export`), so nothing shifts
+    until you actually reframe. Re-customise restores the full editState (aspect
+    + zoom + offset + filter + overlays), so a reframe survives a re-open.
+  - **New `opts.startTab` on `Editor.open` (js/editor.js)** — full mode now honours
+    it (`showTab(modeText ? "text" : (opts.startTab || "filters"))`); collages
+    still force text via `modeText`. Landing on the Text tab keeps `textMode()`
+    true so the seeded sticker shows selected and single-finger drags IT; to pan
+    the photo you switch to Filters/Adjust (same established single-editor UX).
+  - **Re-square bug fixed along the way**: a reframed keeper is now a non-square
+    export, but the tray's **Post** (`postKeeper` → `seedPostFromGen`) and the
+    **queue draft** (`postFromDraft`) both fed the image through `renderSingle`,
+    which cover-fits back into 1080² and would have squared a Portrait/Story post
+    on the way out. Fixed by routing already-composed images through
+    `composePostImage`'s `post.baseImage` branch (`renderPrepared`, draws at the
+    image's own size): `saveCustomiseToKeeper` sets `g.customised = true`,
+    `seedPostFromGen` does `if (g.customised && g.img) post.baseImage = g.img`,
+    and `postFromDraft` sets `post.baseImage = img` (the draft blob is ALWAYS a
+    finished composite, so drawing it as-is is strictly more correct — a default
+    square keeper is byte-identical either way). Un-customised keepers keep the
+    `renderSingle` path so the rare raw-image fallback still gets squared.
+  - Verified headless (Chromium, 390×844, localhost): Generate → keep →
+    Customise opens the full editor (aspect chips + zoom visible, `mode-text`
+    absent, Text tab active, panel in `sticker-mode`); reframing to Portrait
+    yields a 1080×1350 customise preview; Save → Post-from-tray stays 1080×1350
+    (1.25), i.e. NOT re-squared; no console errors. Version → v0.43.
+- 2026-07-15: **Font-picker follow-up: buttons weren't changing font +
+  Settings header renamed.** Owner-reported bugs from the v0.41 font picker.
+  - **Buttons/inputs/selects stayed on Arial regardless of the picked font.**
+    Root cause: browser UA stylesheets give `button`/`input`/`select` their
+    own system font rather than inheriting the page's — the v0.41 CLAUDE.md
+    note claiming "every other element already used `font-family: inherit` or
+    nothing" was wrong for form controls specifically (it held for plain text
+    elements like `<p>`/`<span>`, which really do inherit). Fixed with one
+    rule right after the `*` box-sizing reset: `button, input, select,
+    optgroup { font-family: inherit; }`. The `.font-chip` previews in the font
+    picker itself are unaffected (each sets its own font via a higher-
+    specificity inline `style`, which is the point — they preview a font
+    other than the active one).
+  - **Settings header "Menu & Settings" → "Settings"** (owner: drop "Menu").
+  - Verified headless: `getComputedStyle` on `.btn`, `<select>`, `<input>` all
+    report the active picked font (tested with Baloo 2) instead of Arial;
+    font-picker chips still preview their own font correctly; Settings header
+    reads "Settings"; no console errors. Version → v0.42.
+- 2026-07-14: **App-wide font picker** (Settings → 🔤 App font, owner
+  request for "a fun friendly Duolingo feel"). Five options: Poppins (existing
+  default), Fredoka, Baloo 2, Nunito, Quicksand — all rounded/friendly Google
+  Fonts, bundled locally as static woff2 (same offline-first reasoning as the
+  existing Poppins/Oswald/Pacifico/Space Mono @font-faces; SIL OFL, see
+  `assets/fonts/OFL.txt`). Weights fetched match what the app already uses
+  (500/600/700, +800 for Baloo 2/Nunito which have it — Fredoka/Quicksand cap
+  at 700, so a 800-weight rule just renders their 700 face, no error).
+  - **One CSS variable is the whole mechanism**: `--font-family` in `:root`
+    (default Poppins stack) is the only thing `html,body`'s `font-family`
+    reads; every other element in the app already used `font-family: inherit`
+    or nothing, so flipping this one variable reskins the entire UI with no
+    per-component changes. `html[data-font="fredoka"]` (etc.) override blocks
+    swap it; `applyFont(id)` (js/app.js) sets/clears that attribute.
+  - **Not the same font system as the editor's text tool** (Oswald/Pacifico/
+    Space Mono in `TEXT_STYLES`, `js/editor.js`) — that's per-post caption
+    styling baked into exported images; this is the live app chrome (menus,
+    buttons, headings). Deliberately kept separate; don't merge them.
+  - Settings renders `#fontChips` (`.chips`/`.chip`, the same reusable "pick
+    one" pattern as the editor's aspect-ratio chips) via `renderFontPicker()`,
+    each chip's label set in its own font via inline `style="font-family:…"`
+    — same trick `.style-chip` already used for text-style previews — so the
+    picker doubles as a live sample. Choice saved via `Store.getFont()/
+    setFont()` (key `sfp.font`, default `"poppins"`); the option list lives in
+    `APP_CONFIG.FONTS` (js/config.js) — adding a 6th font means a font entry
+    there + an `@font-face`/`html[data-font=...]` pair in styles.css.
+  - **FOUC fix**: a small inline `<script>` in `index.html`'s `<head>` (before
+    the stylesheet's owner reads anything else) reads `sfp.font` straight out
+    of `localStorage` and sets `data-font` before first paint — `Store` isn't
+    loaded yet at that point in the parse, so it can't go through the normal
+    API. `boot()` also calls `applyFont(Store.getFont())` once app.js is up,
+    so the attribute is never dependent on the inline script alone.
+  - **Deliberately left out of Backup & restore**: this is a device display
+    preference, not trader content (same class of thing as "don't sync theme
+    across devices"), so `backup.js` wasn't touched — a restore leaves
+    whatever font the new device already had.
+  - Verified headless (Chromium, 390×844, `http://localhost:5173`): all 5
+    families report `document.fonts.check(...) === true`; picking a chip
+    changes `getComputedStyle(document.body).fontFamily` immediately and
+    re-renders the whole Settings screen in the new font (screenshotted);
+    `localStorage.sfp.font` and the `data-font` attribute agree after a
+    reload, with the attribute already correct before `boot()` runs (no
+    flash); no console errors. Version → v0.41.
+- 2026-07-14 (later still): **Fixed queue/history buttons rendering unequal
+  width** (~122px each instead of the intended half-screen split) — the v0.39
+  change below wrapped them in `.row`, but `.home` is a `flex-direction:
+  column; align-items: center` container, which shrink-wraps any
+  intrinsic-width child to its content size instead of stretching it to the
+  column's full width. `.row` has no explicit width, so it shrank to fit its
+  two buttons' natural content size, and `flex:1` on the buttons only ever
+  divided up *that* shrunk space rather than the available ~half-screen
+  width. Fixed with `.home .row { width: 100%; }` — same trap `.ob-add {
+  width: 100%; }` already works around for the onboarding add-place row (see
+  the History API / flexbox gotchas above), so this is the second time it's
+  bitten a `.row` nested in a centred flex column. **Any future `.row` (or
+  other intrinsic-width flex child) dropped inside a `align-items: center`
+  flex column needs an explicit `width: 100%` or it'll silently shrink-wrap.**
+  Verified headless: both buttons now measure equal width (166px each on a
+  390px viewport, ~48.5% of the available column width). Version → v0.40.
+- 2026-07-14 (later): **Home screen: half-width queue/history buttons +
+  debug onboarding entry point.** Owner request. `🗓 Post queue` and
+  `🔁 Run it back` were both full-width `.btn-secondary` stacked; now wrapped
+  in the existing `.row` div (flex, already used elsewhere for side-by-side
+  buttons) with `.btn-sm` added, so they sit side by side at half width/
+  smaller padding. Added `🧪 View onboarding (debug)` below them — a
+  `.btn-ghost.btn-sm` reusing the **existing** `data-action="ob-restart"`
+  (same action Settings → 🧭 Setup → "Run setup again" already used, no new
+  JS), so tapping it calls `startOnboarding()` straight from home. **Owner
+  said they'll remove this later — it's a temporary test button, don't design
+  around it staying.**
+  - **Stagger gotcha hit immediately**: `.home .btn:nth-of-type(n)` (the
+    entrance-animation delays noted below) counts position among same-type
+    siblings *of the same parent* — wrapping the two buttons in `.row` resets
+    their counting to that div's children, so without a fix they'd collide
+    with new-post/generate's delays (both landing on 0.20s/0.28s) instead of
+    continuing the sequence. Added explicit `.home .row .btn:nth-of-type(1)/
+    (2)` and `.home > .btn:nth-of-type(3)` overrides so the debug button
+    stays last in the stagger. Confirms the existing gotcha note below is
+    real and not just theoretical.
+  - Verified headless (Chromium, 390×844, `file://`): queue/history render
+    side by side at half width, debug button reaches `ob-welcome` with no
+    console errors, screenshot confirms layout. Version → v0.39.
+- 2026-07-14: **Stall scene on the onboarding "Where do you trade?" step**
+  (owner-supplied `chicken-stall.svg` → `assets/mascot/stall.svg`, replacing the
+  `walk` pose). Registered as `stall` in js/mascot.js `POSES`/`ALT`. Version → v0.36.
+  - **It's a SCENE, not a pose, and that changes three things:**
+    - **Sized by width** via a new `.ob-scene` class, not `.mascot`. The artwork
+      is landscape (247x186, aspect 1.33) and `.mascot` sizes by *height*
+      (`height:140px; width:auto`), which rendered the whole stall — logo, text
+      and all — as a ~139x104 thumbnail. `.ob-scene` uses `width: min(300px, 86%)`.
+    - **Deliberately unanimated.** Every mascot animation is a whole-image
+      transform (the SVG parts aren't grouped), and a rigid gazebo that sways,
+      breathes or bobs is wrong physics. The waving chicken inside carries it.
+    - viewBox cropped to the artwork (26% of its height was empty) — same
+      `getBBox()`-vs-viewBox check as the `camera` pose. Owner's source is
+      untouched at the repo root.
+  - **Optimised 134.8KB → 76.4KB (43%)**, rendering unchanged. The export was an
+    **auto-traced raster**, not hand-drawn vectors — the tell is 199 distinct
+    fills across 337 paths, where clusters like `#062035/#072033/#082134/…` are
+    eight names for one navy (the flat poses use 4–8 brand colours). Pipeline,
+    in order: drop `display:none` leftovers (one invisible path was shipping its
+    full `d` data); quantise fills within 8/255 to one representative (199 → 73);
+    merge **consecutive** same-fill sibling paths only (337 → 232 — merging
+    non-adjacent ones would hoist a path over whatever sits between and change
+    z-order); then `npx svgo@3 --multipass -p 2`.
+    - **Where the win actually comes from**: SVGO alone gets 41% — the bulk is
+      path coordinate data, so the colour work is worth only ~3KB. Its real
+      value is cleanliness, not bytes.
+    - Verified by pixel-diffing both against each other on the real background:
+      SVGO's change is 0.007% of pixels (edge antialiasing), the quantiser's is
+      1.05% but bounded at delta ≤7/255 by construction, and path-merging adds
+      exactly zero. **Check SVGO keeps the viewBox** — it's cropped here and a
+      rewrite would silently rescale the art.
+  - **The stall is the same blue as the screen it sits on — fixed in CSS.**
+    Measured: stall body/canopy `rgb(9,76,160)` vs the `.ob` gradient's
+    `rgb(10,77,161)` — one value per channel apart, i.e. identical (the trace
+    approximated `--blue` #0a4da1 and missed). The canopy and counter dissolved
+    into the backdrop and the tent's peak was invisible entirely. Fixed with
+    **four zero-blur `drop-shadow()`s on `.ob-scene`** that trace the alpha
+    silhouette into a white "sticker" outline, plus one soft shadow to lift it.
+    Works off the alpha channel, so it survives an SVG→PNG swap. Lesson for any
+    future art on the onboarding gradient: check the fill palette against
+    `--blue` before dropping it on there.
+  - **If this art is ever re-exported, ship the RASTER, not a trace.** Measured
+    at the 288px display size: traced SVG 74.6KB, vs 3x PNG (900x681) 69.4KB and
+    3x WebP 35.2KB — the raster is *smaller than the trace and pixel-exact to the
+    original*, since the trace is a lossy approximation that invented 199
+    colours. Tracing a raster to "get a vector" is a net loss here.
+- 2026-07-14: **First-run onboarding** (`ob-welcome → ob-photos → ob-places →
+  ob-done`, order driven by `OB_STEPS` in js/app.js). Fixes the first-run cliff:
+  home's shiniest button is ✨ Generate, which with an empty stash dead-ended on
+  "go to Settings → 📸 My chicken photos" — a screen the user hadn't found yet.
+  - **Scope was set by measuring the hook library, not guessing**: photos are the
+    only real unlock (Generate is dead without them); `{location}` drives 72/130
+    hooks so pitches are worth a step (framed as *confirm* — they're already
+    seeded from `DEFAULT_LOCATIONS`); `{item}` drives only 5/130 (4%), so best
+    sellers did NOT earn a screen. Hashtags ship 30 seeded, Meta needs a token +
+    Cloudinary + a doc, and reminders only fire while the app is open — all
+    deliberately left out.
+  - **Photos step is soft-gated**: Next enables at ≥1 photo, "Skip for now" is
+    always live. Ends on "✨ Make my first posts" → straight into a working
+    Generate (the payoff, not a "done" pat on the head).
+  - **ob-welcome offers "I've got a backup file"** — new-phone path, reuses
+    `#backupInput`/`Backup.restoreFile`, then marks onboarded and skips to home.
+  - `Store.getOnboarded()/setOnboarded()` (key `sfp.onboarded`) gate it; only
+    `finishOnboarding()` ever sets the flag, and every exit routes through it, so
+    nobody can be stranded with `onboarded=false`. Settings → 🧭 Setup → "Run
+    setup again" re-runs it (also how you test it).
+  - **Gotchas hit, worth not re-learning:**
+    - `boot()`'s `replaceState` must tag the entry with whichever screen actually
+      opens — hardcoding `"home"` desyncs the back button on a first run (the
+      documented History API trap). Onboarding also has to `show()` *before*
+      `await Hooks.init()`, or home paints first and setup snaps over it.
+    - **`.ob-body` needs explicit `overflow-x: hidden`** — setting only
+      `overflow-y` makes the x axis compute to `auto`, handing it a sideways
+      scrollbar the html/body lock can't reach (same trap as `.editor-scroll`).
+    - **`.ob` uses `height`, not `min-height`** — with min-height the section
+      grows on a short screen and the "pinned" bar/actions drift off it.
+    - **`.ob-add .btn` needs `width: auto`** — `.btn` is `width:100%`, and with
+      `flex: 0 0 auto` that becomes an unshrinkable 100% basis that shoves Add
+      off a 320px screen (where `overflow-x:hidden` then clips it out of reach
+      rather than scrolling to it). `min-width:0` on the input is not enough.
+    - **Progress bar**: each step owns its own `.ob-bar`, and a width set while
+      the section is `display:none` lands with no transition — so `obGo` parks
+      the bar at the previous step's width, `show()`s, forces a reflow
+      (`void bar.offsetWidth`), then sets the target. Deliberately not rAF: that
+      makes the *correct final width* depend on frames running (it silently
+      stuck on the old step in a throttled tab).
+    - Both openers of `#backupInput` must set `obRestoring` explicitly —
+      cancelling a file picker fires no event, so a flag only cleared on success
+      stays set and hijacks the next restore.
+    - The confirm-skip on restore is gated on `!Store.getOnboarded()` (a genuine
+      first run), **not** on `obRestoring` — "Run setup again" walks a loaded
+      phone back to the same restore button, and that device has real data.
+  - Mascot poses per step: `wave` (mascot-wave), **`camera`** (mascot-breathe),
+    `walk` (**mascot-sway**, not bob — bob is a translateY hover that reads as
+    floating, wrong physics under a walking pose), `excited` (mascot-win, which
+    hands off to breathe inside the class). All four already in the
+    reduced-motion disable list.
+  - **New 16th pose `camera`** (owner-supplied `chicken-camera.svg`, a winking
+    chicken taking a photo) — added to `POSES` + `ALT` in js/mascot.js and used
+    on ob-photos, where it invites the action instead of the `thinking` pose
+    pondering it. `assets/mascot/camera.svg` is a straight copy of the owner's
+    re-export (viewBox `0 0 250 250`); the source stays at the repo root.
+  - **Two gotchas from that pose worth remembering for future art drops:**
+    - The first export's canvas was 1333x1180 around only 542x728 of artwork
+      (59% empty width), so it rendered small and shoved left — `.mascot` sizes
+      by height with `width:auto`, so an oversized canvas silently shrinks the
+      pose. **Check `getBBox()` against the viewBox on any new pose.**
+    - The eyeball's white was *transparent*, which nothing catches on the light
+      screens — but onboarding is on the blue gradient, so the page showed
+      through and the eye rendered as a solid blue disc. **Any pose used on a
+      dark/coloured background needs its whites actually filled**, not left as
+      holes. Both were fixed by the owner in the re-export.
+  - Reviewed by Fable, which caught the confirm-skip hole, the dead progress-bar
+    transition and the walk/bob physics. Version → v0.35.
+- 2026-07-14 (later): **Keeper date box tightened + post dot done properly.**
+  Version → v0.33.
+  - **Keeper date field** is now content-sized (`flex: 0 0 auto`) instead of
+    stretching to fill the row, which had left dead space right of "15/7". Hiding
+    the native input also hid its built-in picker indicator, so the field draws
+    its own calendar glyph (`KEEPER_DATE_ICON`, the bottom-nav outline icon
+    rather than a second 🗓 next to the button's). Net width barely moved
+    (72→71px) — the icon reclaimed the dead space; it's now tight against
+    icon+gap+text+padding, so it can't shrink much further while keeping an icon.
+    `.keeper-date-icon` is `pointer-events:none` so taps still reach the input.
+  - **Post-button dot, final rule** (this superseded the v0.31 bullet below —
+    the owner *does* want a dot, just only when on the post screen):
+    `show()` hand-toggles `is-active` on `.navbtn:not([data-nav])` when
+    `screen === "type"`. Why that's the whole rule: the bottom nav only renders
+    on `HUB_SCREENS`, and **`type` is the only post-flow screen in that set** —
+    single/editor/collage/quiz/details/caption/review all hide the nav entirely,
+    so there's nowhere else a post dot could show and no ambiguity with the
+    Generate→Customise→editor path. Three revisions total: always-on (wrong —
+    claimed "you are here" everywhere) → removed → lit on `type` only.
+- 2026-07-14: **Five small fixes** (nav dot, calendar confetti, heart length,
+  keeper tray). Version → v0.31.
+  - **Post-button dot**: ⚠️ superseded by the v0.33 entry above — the dot is now
+    lit on the `type` screen. What was removed here was the v0.24 "standing
+    accent" rule (`.navbtn:not([data-nav])::after`), which lit the post dot
+    unconditionally so it read as "you are here" on every screen. The dot is the
+    you-are-here marker (`.navbtn.is-active::after`); `show()` matches
+    `.navbtn[data-nav]` against the screen, and the post button has no
+    `data-nav` (it launches a flow), so it needs setting by hand — it is NOT
+    true that it can never be active.
+  - **No confetti when setting a day's pitch**: `celebrateWorkday` →
+    `bounceWorkdayCell`, `FX.sparkle` → `FX.pop`. NB `sparkle()` = a quiet
+    confetti puff **plus** `pop()`, so dropping to `pop` keeps the cell's
+    tap-acknowledgement and loses only the celebration. Both callers
+    (`pickCalLocation`, `addCalDayLocation`) share the helper.
+  - **Heart trimmed** ~3.0s → ~1.6s: the source Lottie is 181f@60fps — heart
+    pops, bursts (~f45), particles gone by ~f75, then it **holds a static heart
+    to f118** where an *outline* heart fades in and lingers to the end. `heart()`
+    now loads with `initialSegment: [0, HEART_END_FRAME]` (84) + a 200ms fade-out,
+    killing the outline **and** the dead hold. `HEART_END_FRAME` is the one dial
+    (anything ≤117 stays clear of the outline).
+  - **Keeper tray had two "New batch" buttons**: `#genFolderRow` (index.html) is
+    outside all the gen panels so it shows on *every* Generate state and already
+    carries one — `showKeepers` injected a second. Removed the injected copies.
+    Don't re-add one to a gen panel.
+  - **Keeper date truncated → now "15/7"**: the card body is only ~240px (an
+    84px thumb eats the rest); the queue button was `flex: 0 0 auto` at 149px,
+    starving the date to 83px so it clipped ("2026/"). Same flexbox trap as the
+    calendar add-place input — see the `min-width: 0` note above.
+    **A native `<input type="date">` renders in the browser/OS locale and cannot
+    be reformatted or restyled**, so the visible text is now our own
+    `fmtKeeperDate(iso)` → `d/M` label, with the real input `position:absolute;
+    inset:0; opacity:0` on top inside a `<label class="keeper-date-field">`.
+    That keeps the native picker (overlay, not `showPicker()` — the latter needs
+    newer iOS) and `.keeper-date`.value, so `queueKeeper` is untouched. A
+    `change` listener resyncs the label. Year is dropped deliberately (owner) —
+    a date queued into another year reads ambiguously; the picker still shows it.
+  - **Gotcha (cost real time twice)**: `npm start`/`python http.server` send **no
+    cache headers**, so browsers heuristically cache `js/*.js` and silently run
+    **stale code** — a fix can look broken when it isn't. Tell: the resource's
+    `transferSize` is 0 in `performance.getEntriesByType("resource")`. Clear with
+    `fetch(url, {cache:"reload"})` over every `script[src]`/stylesheet, then
+    reload. Preview-only; the live site is network-first via the SW.
+  - **Gotcha**: the in-app preview tab is `visibility: hidden` with rAF fully
+    paused (0 ticks/500ms), so Lottie/confetti/CSS-transition timing never run
+    there — `flyOff` only advances because it uses `setTimeout`, not
+    `transitionend`. Verify animation by asserting bounds/config, not by watching.
+- 2026-07-13: **Swipe-right "like" heart (owner Lottie).** A red heart pops +
+  bursts, centred, when a Generate card is kept (swiped/tapped right). Same
+  Lottie setup as the confetti: `assets/lottie/heart.js` wraps the animation
+  JSON as `window.HEART_LOTTIE` (loads over file://), `<script>` after the
+  confetti data. `FX.heart()` (js/fx.js) mounts a `.fx-heart` centred overlay
+  (240px, `pointer-events:none` so swiping continues underneath), `loop:false`,
+  self-destroys on `complete` + 4s safety timeout; skipped under reduced motion.
+  Fired from `decideCard` on the right decision alongside `FX.buzz(6)`. Version
+  → v0.26.
+- 2026-07-13: Home white (secondary) buttons lost their blue 2px border
+  (`.home .btn-secondary { border: none }`) — owner: "the grey ones shouldn't
+  have a dark outline"; the grey bottom shadow gives the depth now. Version →
+  v0.25.
+- 2026-07-13: **Service-worker cache fix (stale-version bug) + bigger nav dot.**
+  The owner kept seeing old builds after a deploy. Root cause: the SW's
+  network-first `fetch(request)` still used the browser HTTP cache, so it could
+  serve a stale-but-"network" file. Fixes: SW now fetches with
+  `cache: "no-store"` (truly fresh), cache name `v2`→`v3`; registration uses
+  `updateViaCache: "none"` so `sw.js` itself is never HTTP-cached; and a
+  `controllerchange` listener in index.html reloads the page once when a new SW
+  takes control, so a deploy swaps in without a manual hard-refresh. Also
+  bumped the bottom-nav dot 4px→6px so the (already-correct) orange post-button
+  dot is actually visible. Version → v0.24. (If a user is still stuck, it's a
+  device/PWA that needs a full close-reopen once to pick up the new SW.)
+- 2026-07-13: **Home declutter, chunkier home buttons, rounded post icon,
+  Lottie confetti.**
+  - **Home mascot removed** (owner: too cluttered). Deleted the `#homeMascot`
+    `<img>` from index.html; no JS referenced it, and it's an `<img>` not a
+    `.btn`, so the `.home .btn:nth-of-type` stagger is unaffected.
+  - **Home button edges more pronounced**: `.home .btn` box-shadow 4px → 6px,
+    with a darker-orange edge (`#b0590a`) under the orange primary/accent
+    buttons and a grey edge (`#a9b2bf`) under the white secondary ones; press
+    seats to `translateY(6px)`. (Values are a best guess — owner referenced a
+    button image that didn't upload; tweak to match when it arrives.)
+  - **Bottom-nav post button**: icon swapped from a plus-in-a-circle to a
+    plus-in-a-rounded-square (`<rect rx=5>`), and its orange dot is now always
+    lit — `.navbtn:not([data-nav])::after { background: var(--orange) }` (the
+    post button is the only navbtn without `data-nav`, since it launches a flow
+    rather than a hub screen).
+  - **Lottie confetti** (owner-supplied `DC_Confetti.lottie`): this reverses
+    the old "no Lottie/Rive" stance **for confetti only**. Vendored
+    `lottie-web` light SVG build → `js/vendor/lottie.min.js` (fetched via `npm
+    pack lottie-web`, since unpkg is proxy-blocked but `registry.npmjs.org`
+    isn't). The `.lottie` is a zip (manifest + bodymovin JSON); unpacked the
+    animation JSON and wrapped it as `window.CONFETTI_LOTTIE` in
+    `assets/lottie/confetti.js` so it loads over `file://` with no fetch. Both
+    are `<script>`-loaded before `js/fx.js`. `FX.confetti()` now plays the
+    Lottie full-screen (`.fx-lottie` overlay, `loop:false`, self-destroys on
+    `complete` + an 8s safety timeout) for the **big win only** (`!opts.quiet`);
+    the small localized `sparkle()` puffs and the quiet keeper-tray burst keep
+    the canvas confetti (a full-screen Lottie can't originate from a tapped
+    element). Falls back to the canvas burst if the runtime/data isn't loaded.
+  - Verified headless: page loads clean (lottie + data present, no errors),
+    mascot gone, post icon is a `<rect>`, post dot computes to the orange, home
+    orange/white edges are the darker-orange/grey at 6px, and `FX.confetti()`
+    mounts a `.fx-lottie` overlay that renders an animating SVG. Version → v0.23.
+- 2026-07-13: **Sticker box-fill colour + horizontal scroll hard-lock.**
+  - **Box fill colour (Customise sticker)**: sticker overlays now have a
+    Letters/Box-fill target toggle (`#stickerTargetRow`, `data-sticker-target`,
+    `.sticker-only` — shown only in `sticker-mode`). `editor.js` routes every
+    colour source (swatch, 🎯 eyedropper `sampleColourAt`, 🎨 custom
+    `colorInput`) through `applyChosenColor(hex)`, which sets `ov.fillRGB`
+    (via `hexToRgb`) when the fill target is active, else `ov.color`.
+    `stickerFillActive()`/`activeColorHex()` gate it; `syncTextPanel` highlights
+    the swatch matching whichever colour is being edited and resets the target
+    to Letters for non-sticker overlays / on `open()`. Both colours flow into
+    `Imaging.paintSticker` (fillRGB = box, color = letters) so the draggable and
+    exported stickers stay identical.
+  - **Horizontal scroll hard-lock** (owner: dragging the size/rotate sliders
+    panned the page like a web browser): `input[type="range"] { touch-action:
+    none }` so a slider drag moves its thumb instead of scrolling, plus
+    `html,body { overflow-x: hidden; overscroll-behavior-x: none }` to forbid
+    sideways drift/rubber-band globally. The intentional horizontal-scroll rows
+    (filter row, style chips, carousel thumbs) keep their own `overflow-x:auto`
+    — no `pan-y` on body, which would have broken them.
+  - Verified headless: box-fill toggle recolours the sticker box (green box +
+    blue letters screenshot) while Letters still recolours the text; slider
+    `touch-action` computes to `none`; body `overflow-x` is `hidden`; full
+    customise→save flow clean. Version → v0.22.
+- 2026-07-13: **Customise = edit-in-place → back to the tray, + SW cache bump.**
+  Owner's desired flow for a kept Generate post: *Customise → editor → caption →
+  Review (preview) → back to the keepers tray, then post/schedule from there* —
+  i.e. Customise is purely an EDIT step now, not a path to sharing.
+  - `buildReview` gained a **customise-preview mode**: when `post.fromGenerate`
+    is set, it hides the share controls (now wrapped in `#reviewShareControls`),
+    shows a **"✓ Save & back to my posts"** button (`#saveCustomise`,
+    action `save-customise`) and titles the screen "Preview". Also stashes the
+    composed preview as `post.finalDataUrl` (used for the keeper thumbnail).
+  - `saveCustomiseToKeeper` writes the customised result back into the keeper
+    object `g`: `g.img` = the raw photo + repositioned/recoloured sticker
+    (`post.baseImage`), `g.dataUrl` = `post.finalDataUrl` (tray thumb / queue
+    draft), `g.filledText` = the full edited caption with `g.hashtags = ""`
+    (so `seedPostFromGen` reconstructs the same text), and `g.editState` =
+    `post.editState`. Then returns to the tray (`showKeepers`). The keeper
+    STAYS in the tray (unlike post-share `returnToKeepers`, which removes it) —
+    you then tap Post/Queue on the now-customised card.
+  - **Re-customise resumes**: `customiseKeeper` opens the editor from
+    `g.editState` when present (sticker where you left it), else seeds a fresh
+    default sticker. Background is always `renderSingle(g.rawImg, null)` — the
+    clean photo — so the sticker is never double-baked.
+  - **Colour swatches were the missing piece the owner hit**: they only ship in
+    v0.20 (v0.19 hid `.text-swatches` in `sticker-mode`). Bumped the service-
+    worker cache `wingman-cache-v1` → `v2` so stale clients purge old assets and
+    actually pick up new versions (network-first already, this is belt-and-braces).
+  - Verified headless: Customise → recolour + drag sticker → caption edit →
+    Preview (share hidden, Save shown) → Save returns to tray with the
+    thumbnail + caption updated and the keeper still present; Post-from-tray
+    gives the normal share Review; re-customise reopens in sticker-mode. No
+    console errors. Version → v0.21.
+- 2026-07-13: **Sticker text colour + one app-wide easing + return-to-keepers.**
+  - **Sticker text colour (Customise)**: the editor's colour swatches are no
+    longer hidden in `sticker-mode` (css) — tapping one sets `ov.color`, which
+    `drawStickerOverlay` feeds to `Imaging.paintSticker` as the text colour, so
+    the owner can recolour the sticker's letters. Font-style/align/highlight
+    stay hidden (the brand shape is fixed); eyedropper + custom-colour picker
+    work too since they route through the same `setOverlayProp("color")`.
+  - **One easing for the whole app** (owner wanted consistency, willing to
+    revert): `--spring` and `--spring-smooth` now just alias `--ease-premium`
+    (`cubic-bezier(0.22,1,0.36,1)`), so every transition/animation uses the one
+    premium decelerate instead of the old bouncy `linear()` springs. Done by
+    redefining the three tokens in `:root` — the 28+ `var(--spring)` use-sites
+    are untouched, so **reverting is a one-block change**: restore the old
+    `linear()` curves in `:root` (see git history) and nothing else moves.
+    Swipe reveal duration trimmed 0.5s → 0.32s ("make it quicker").
+  - **Return to keepers after posting** (the "clunky" post-customise workflow):
+    sharing/publishing a Generate keeper used to dump you Home via "Done — back
+    to start", and reopening Generate re-rolls a fresh batch — so the other
+    kept posts were effectively lost. Now `seedPostFromGen` tags the live post
+    with `keeperRef`; after a successful share/publish, `showDoneButton` offers
+    "← Back to my kept posts" (`#doneKeepers`) instead of Home for keeper
+    posts. `returnToKeepers` drops the just-posted keeper from `keepers` (no
+    double-post) and re-shows the tray with the rest intact. Non-keeper posts
+    still get "Done — back to start". Version → v0.20.
+- 2026-07-12: **Repositionable Generate sticker + premium swipe reveal.**
+  - **Movable sticker (Customise)**: previously `buildGeneratedPosts` baked the
+    overlay line into the card image immediately (`renderSingle`), so by the
+    time you liked a post the text was just pixels — unmovable. Now each card
+    also keeps `rawImg` (the photo *without* the sticker) and its per-card
+    jittered `style`. **Post** is byte-identical to before (shares the default
+    bake, `g.dataUrl`/`g.img`); **✏️ Customise** now opens the photo in the
+    editor's text-only mode with the sticker as a *movable overlay* so it can
+    be dragged off the subject, then continues to the caption screen.
+  - **One source of truth for the sticker look**: `drawCaptionSticker` was
+    refactored into `Imaging.paintSticker(ctx, W, H, opts)` — position-
+    parameterised (`opts.cx/cy` as fractions; defaults to the classic bottom-
+    centre) and returns `{cx, cy, boxW, boxH}`. Both the baked-on sticker and
+    the editor's draggable one render through it, so they're pixel-identical
+    (no drift, unlike reusing the editor's generic text style — which draws one
+    pill *per line* and force-recolours text). `drawCaptionSticker` is now a
+    thin wrapper over it.
+  - **Editor sticker overlay**: `editor.js` gained a `kind:"sticker"` overlay
+    branch (`drawStickerOverlay`) that delegates rendering to
+    `Imaging.paintSticker`; `size` drives the sticker scale (÷9 so the editor's
+    default text size 9 = scale 1.0), `rot` the tilt, `cx/cy` the centre — so
+    the existing drag/pinch/size/rotate machinery works on it for free. A
+    `sticker-mode` class hides the style/colour/align/highlight controls (the
+    brand look is fixed); text/size/rotate stay. `Editor.open` gained a
+    `selectFirst` opt to pre-select the seeded sticker.
+  - **Double-hashtag trap avoided** (Fable flagged this): the customise flow
+    uses a new `post.fromGenerate` flag, NOT `fromHistory` — `editorNext`
+    branches on it straight to the caption screen *without* re-running
+    `applyHashtags` (which would append a second hashtag block, since
+    `seedPostFromGen` already set caption+hashtags). Caption back-target is
+    `editor` so the sticker can be re-dragged. Older keepers with no
+    `rawImg`/`style` (e.g. a restored session) fall back to the old caption-
+    only customise path (`customiseKeeperCaption`).
+  - **Premium swipe reveal**: the swipe deck used to fully rebuild on every
+    decision (`renderDeck` → `innerHTML=""`), so the next card *snapped* in at
+    full size. New `advanceDeck` instead REUSES the card elements and promotes
+    them up one depth class — because each card keeps its identity, the depth
+    change animates its `transform`, so the new top card scales up from the
+    stacked size into place. Uses a new `--ease-premium`
+    (`cubic-bezier(0.22,1,0.36,1)`) confident decelerate rather than the
+    bouncier default `--spring`. `renderDeck` still does the full build for the
+    first render / "New batch"; `buildSwipeCard` is the shared card factory.
+    Skipped under reduced motion.
+  - Verified headless (Chromium, 390×844, `file://`): Generate → keep →
+    Customise opens the editor in sticker-mode with the sticker selected at the
+    default position; dragging it then continuing yields a caption with exactly
+    ONE hashtag block and a working Review; Post still uses the default bake;
+    the swipe reveal reuses+promotes the same card element with the premium
+    inline transition; a full keep/nope run through all 10 cards reaches the
+    keepers tray; reduced-motion buttons-only path still advances. No console
+    errors. Version → v0.19.
+- 2026-07-12: **Fixed the "back button white-screens the app" bug.** Root
+  cause: the app is a pure client-side screen-switcher (`show(screen)` just
+  toggles `.is-active`) that never touched the History API, so it never
+  pushed any entries — only the in-app "‹" arrows (`data-back` + `handleBack`)
+  worked. The phone's own back button/gesture tried to navigate the browser
+  itself *away* from the page (there's nothing else to navigate to), landing
+  on a blank document. Verified headless with `page.goBack()`: before the fix,
+  a single browser-back from any mid-flow screen (e.g. Review) immediately
+  blanked the page; confirmed this reproduced the bug, not just a hunch.
+  - Fix (js/app.js): `show()` now also calls `history.pushState({screen},
+    "", "")` on every navigation (guarded by a `suppressHistoryPush` flag). A
+    new `popstate` listener re-shows whichever screen the popped entry
+    belongs to, so hardware/gesture back now does exactly what the in-app
+    arrow does — confirmed the two mechanisms resolve to the same screen at
+    every step, including the dynamic Review-screen back targets (`generate`/
+    `queue`/`caption` — these fall out naturally: pushState always records
+    whichever screen was actually shown right before, so it doesn't need its
+    own copy of that logic). `boot()` tags the page's existing initial entry
+    as `{screen:"home"}` via `replaceState` so the very first popstate has
+    something to resolve to. Pressing back from Home now correctly exits the
+    app (there's nothing to suppress there) — matches normal back-button
+    expectations, not a regression.
+  - Verified headless: walked a full New Post flow to Review, then pressed
+    the *real* browser back 9 times in a row — each step landed on the exact
+    previous screen in order (review→caption→details→quiz→editor→single→
+    type→home), and only the 9th (back *from* home) exited, as expected. Also
+    re-verified the Generate-keeper and Queue-draft flows' dynamic back
+    targets under a real browser-back, and cross-checked the in-app arrow
+    still resolves the same way afterward. No console errors in any run.
+  - **Sounds turned off for now** (owner feedback: not quite right yet).
+    `<script src="js/sound.js">` removed from index.html so nothing plays;
+    the Settings "🔊 Sounds" toggle removed too (would've been a dead
+    control with the module unloaded). `js/sound.js` and `assets/sounds/*`
+    are untouched in the repo — re-add the `<script>` tag (and the Settings
+    toggle markup + its two small wireEvents/openSettings lines, see git
+    history around this commit) to bring it back once the clips are revised.
+    Version → v0.18.
+- 2026-07-12: Fixed a recurring-annoyance bug: photos picked via **"📁 Use a
+  folder"** (single/collage) or **"📁 Photo folder"** (Generate) only ever
+  lived in the session `photoPool` — never saved, so they vanished on every
+  reload and the owner had to re-pick a folder each time they opened the app.
+  `onFolderPicked` and `onGenFolderPicked` (js/app.js) now also call
+  `Photos.add(files)` to persist picked photos into the same stash Settings'
+  "📸 Add photos" uses, so any photo source now sticks around for next time.
+  Trade-off: re-picking the same folder in a later session adds duplicates to
+  the stash (no de-dupe by content) — the existing Settings "Clear all"/✕
+  per-photo remove handles that if it happens. Verified headless: picked a
+  folder, reloaded the whole page, confirmed the photos were still in the
+  stash and the pool note showed them loaded with no re-pick. Version → v0.17.
+- 2026-07-12: **Backup & restore**, the third item off the competitor-
+  benchmarking pass and the one closing the app's biggest data-loss risk
+  (everything lived only in one browser profile, no export).
+  - New `js/backup.js` (`window.Backup`, loaded after imaging.js since it
+    needs `Imaging.dataUrlToBlob`): `build()` gathers every `Store` list
+    (locations, hashtags, user hooks, menu items, schedule, notify, recency
+    log, queue, posts), the Photos stash, and any Drafts referenced by queue
+    items, into one JSON-serialisable object — blobs inlined as base64 data
+    URLs (no zip lib here, and it keeps the backup a single file).
+    `exportFile()` downloads it as `wingman-backup-YYYY-MM-DD.json` via a
+    throwaway `<a download>`. `restoreFile(file)` parses it back, applies
+    every `Store` field with (new) bulk setters, and calls `Photos.clear()` /
+    `Drafts.clear()` before re-adding so a restore is a full replace, not a
+    merge — Drafts keep their **original IDs** (`Drafts.save` upserts by
+    `id`) since queue items reference `draftId` directly; Photos don't need
+    ID stability so `Photos.add` just re-generates them.
+  - **Meta (Facebook/Instagram) credentials are deliberately excluded** — the
+    access token is meant to stay device-only (see store.js's own comment on
+    `getMeta`), and a backup file might get emailed or dropped in cloud
+    storage. The owner re-enters those after a restore; Settings says so.
+  - `Store` gained `setRecencyLog()` and `setPosts()` bulk setters (js/store.js)
+    purely for this — everything else already had a matching `setX` for its
+    `getX`. `Drafts` gained `clear()` (js/drafts.js), mirroring `Photos.clear()`.
+  - Settings screen: new "💾 Backup & restore" section (between Post reminders
+    and the Meta section) with Export/Restore buttons, a hidden file input
+    (`#backupInput`, `accept="application/json"`), and a status line
+    (`#backupStatus`). Restore runs through a native `confirm()` first (same
+    pattern as `clearStash`) since it overwrites everything on the device;
+    on success it calls `openSettings()` again so every list on screen
+    reflects the restored data immediately, no reload needed.
+  - Verified headless (Chromium, `file://`): exported a backup with a seeded
+    location/hashtag/queue-item/stash-photo, wiped `localStorage` + both
+    IndexedDB stores to simulate a cleared browser, restored, and confirmed
+    everything came back (including the Settings UI re-rendering live). Also
+    verified the harder path — a **Queue-for-later item with a real Drafts
+    image** — round-trips with the same `draftId` and a working queue
+    thumbnail after restore. No console errors either run. Version → v0.16.
+- 2026-07-12: **Story export + "Queue for later"**, the first two items off a
+  competitor-benchmarking pass (Buffer/Later/Planoly/Meta Business Suite/food-
+  truck marketing playbooks) that also produced a longer backlog — see "Ideas
+  not yet built" below.
+  - **Story mode**: `Editor.ASPECTS` (js/editor.js) gained `"9:16"` (1080×1920,
+    label "Story"), with a matching `📱 Story` chip in `#editorAspect`
+    (index.html). No new rendering path needed — the editor's crop/filter/text
+    tools and `getResult()` already worked off `ASPECTS[aspectKey]`, so Story is
+    just another aspect choice. Fixed a latent side-effect this exposed: the
+    review/caption preview boxes (`.preview-wrap`) are hardcoded `aspect-ratio:
+    1/1` in CSS, which let a tall Story export shrink to a sliver inside a
+    square box. New `fitPreviewBox(imgEl, w, h)` in app.js sets the wrap's own
+    `aspect-ratio` inline to match the actual composed image; called from both
+    `renderCaptionPreview` and `buildReview`. Benefits Landscape (1.91:1) too,
+    which had the same pre-existing letterboxing issue.
+  - **Queue for later**: each keeper card in the Generate tray (`showKeepers`)
+    now has a date input + `🗓 Queue for later` button alongside Post/Customise.
+    Unlike the plain `queueAdd` flow (date/location/text note only), this saves
+    the fully composed image (caption already baked on, same bytes `Post` would
+    use) so the queue item is a ready post, not just a reminder.
+  - New `js/drafts.js` — an IndexedDB blob store (`wingman-drafts` DB, same
+    pattern as `js/photos.js`) for these saved images, since localStorage can't
+    hold blobs and a base64 data URL would bloat it ~33% for no reason. Loaded
+    in index.html right after `js/photos.js`.
+  - New `Imaging.dataUrlToBlob()` (js/imaging.js) — manual atob decode (not
+    `fetch()`) so a generated card's `dataUrl` can become IndexedDB-storable
+    bytes without depending on `fetch()` supporting the `data:` scheme on every
+    engine.
+  - Queue items (`Store.getQueue()`) gained optional fields: `hashtags`,
+    `hookId`, `draftId` (the Drafts record's key). `renderQueue` (app.js) is now
+    async: it resolves each item's draft blob to an object-URL thumbnail
+    (`.queue-thumb`), revoking the previous batch on every re-render (same
+    `queueUrls` pattern as the existing `stashUrls` for the photo stash). A
+    queued item with an image shows a `📤 Post` button instead of `Make`; the
+    calendar day panel (`renderCalDaySchedule`) shows "📸 ready to post" next to
+    it.
+  - `makeFromQueue` branches on `item.draftId`: a plain note-only item still
+    goes through the full photo/caption flow as before; a queued-for-later
+    keeper calls the new `postFromDraft`, which loads the saved blob straight
+    into `post.singleImage` and jumps to Review (falls back to the notes-only
+    flow if the draft ever went missing, e.g. cleared storage).
+  - Deleting a queue item (`data-q-del`) now also calls `Drafts.remove()` on
+    its `draftId` so no orphaned blobs accumulate in IndexedDB.
+  - Verified headless (Chromium, 390×844, `file://`): Story chip resizes the
+    editor canvas to the correct 9:16 ratio; a full Generate → swipe-keep →
+    Queue for later → Queue screen (thumbnail renders) → Post → Review round
+    trip carries the right image/caption/hashtags through; deleting the queue
+    item removes the draft blob too (verified via `Drafts.get`); no console
+    errors. Version → v0.15.
+- 2026-07-12: The keeper tray's **📤 Post** button (`postKeeper` in app.js) now
+  plays `swipe-keep` too — same chime as swiping right on the deck, since
+  posting a keeper is the same "keep it" gesture one step later. Version →
+  v0.14.
+- 2026-07-12: **Sound layer scaled back to sparing use.** The full delegated
+  click-sound system (tap/nav-switch/toggle/back/small-win on nearly every
+  button) was overkill, so `js/sound.js` now only exposes `play()` for two
+  triggers, both still called explicitly from `js/app.js`: `big-win` when a
+  post is shared (`markPostShared`) and `swipe-keep`/`swipe-nope` on Generate
+  swipe decisions (`decideCard`). Removed: the capture-phase delegated click
+  listener, `ACTION_SOUND`/`ACTION_SILENT`/`pickForEvent`, the `tap`/
+  `small-win` groups, the settings toggle-preview ping, and the two `error`
+  dings (queue-add with no date, caption details with no match) — those now
+  just wiggle (`FX.wiggle`) with no sound. Mute toggle (`#soundEnabled`)
+  behavior unchanged. Version → v0.13.
+- 2026-07-11: **Mascot motion pass** (CSS animations, authored by the Fable
+  model). Replaced the placeholder motions with a physics-minded v2 set in
+  `css/styles.css`, all whole-image transforms (SVG parts aren't grouped) with
+  grounded pivots + gesture-then-rest timing:
+  - `mascot-wave` (home hero) — two quick tilt-pulses toward the raised wing +
+    a tiny hop, then a ~2.4s rest (not a constant metronome sway). Positive
+    rotate leans toward the raised wing (viewer's right in `wave.svg`).
+  - `mascot-jog` (Generate loading, `run` pose) — fast 0.62s cadence, launch
+    decelerates / fall accelerates, contact-squash + forward lean.
+  - `mascot-win` (`#celebrateMascot`) — 0.85s burst-from-below w/ overshoot →
+    land-squash → rebound → settle, then hands off to infinite `mascot-breathe`
+    so the win stays alive under the confetti. **Also removed the `FX.pop(cm)`
+    call in `markPostShared`** — it fought `mascot-win` (two scale anims); the
+    class now owns the entrance.
+  - `mascot-breathe` — volume-preserving squash/stretch (reads as breathing).
+  - `mascot-snooze` (sleep) / `mascot-mope` (sad) — `mascotEmpty()` in app.js
+    now picks anim by mood (`{sleeping:"snooze", sad:"mope"}[state]||"float"`)
+    instead of always floating.
+  - All five new classes added to the `prefers-reduced-motion` disable list.
+  - Verified headless (Chromium 390×844, `file://`): wave animates (7 distinct
+    transforms/1.3s) and is frozen under reduced-motion (1 transform), win
+    mascot runs win+breathe, no console errors, no horizontal overflow.
+    Version → v0.12.
+- 2026-07-11: **Mascot art swapped PNG → SVG** (owner-supplied vector poses).
+  `assets/mascot/*.png` (12 sprite-sheet slices) removed; replaced with **15
+  crisp vector poses** in `assets/mascot/*.svg`: `main, run, thinking, excited,
+  sleep, happy, laughing, surprised, wink, sad, jump, wave, angry, dance, walk`
+  (Adobe Illustrator exports, flat `<path>` sets, brand palette — `#F98904`
+  orange / `#FDCE0A` yellow / `#EB4527` red / `#2E2D2B` outline). `js/mascot.js`
+  now serves `.svg` and keeps back-compat via an **ALIAS map** so the app's
+  semantic state names still resolve: idle→main, loading→run, celebrate→excited,
+  sleeping→sleep, relaxing→happy, singing→laughing, confused→surprised,
+  thumbsup→wink, waving→wave (thinking/excited/sad match a pose 1:1). Unknown
+  states fall back to `main`. `#homeMascot` → `wave.svg`, `#celebrateMascot` →
+  `excited.svg` (index.html). The 3 extra poses (`angry`, `dance`, `walk`) are
+  now available too.
+  - **Animation is pure CSS** (no Lottie/Rive — those need a runtime/binary
+    editor and would break the no-build, offline-first, file:// model; and a
+    from-scratch Lottie would throw away this art). SVG animates smoothly via
+    CSS transforms on the `<img>`. NB the SVG parts aren't grouped/id'd, so only
+    **whole-image** transforms are possible (no isolated wing/leg rigging).
+    Added a `mascot-breathe` keyframe (grounded squash-stretch) alongside the
+    existing bob/float/sway/spin/pop; all gated under `prefers-reduced-motion`.
+  - Verified headless (Chromium, 390×844): home shows `wave.svg` (loaded),
+    every alias resolves to the right file, bogus state → `main`, Generate
+    empty-state renders `happy.svg`, no console errors, no horizontal overflow.
+    Version → v0.11. (Motion polish per Fable's review may follow.)
+- 2026-07-11: **UI sound layer** (`js/sound.js`, loaded before app.js; exposes
+  `window.Sound`). Plays a 19-clip pack in `assets/sounds/` (`tap-1..3`,
+  `small-win-1..3`, `big-win`, `error`, `swipe-keep/nope-1..2`, `nav-switch`,
+  `back`, `slot-fill`, `toggle`, `panel-open`, `gen-start`, `empty-state`).
+  - **These clips are locally-synthesised WAVs** (pure-Python additive synth of
+    marimba/kalimba/wood-block/bell tones — script in the session scratchpad,
+    not the repo), a placeholder for the ElevenLabs Sound-Effects pack. The
+    real takes come from `tools/sound-pack-generator/generate.mjs` on the
+    `claude/eleven-labs-sound-pack-3pnsru` branch once `api.elevenlabs.io` is
+    allow-listed in the environment's network settings (egress is blocked in
+    session; the generator can't run here). Swap same-named files into
+    `assets/sounds/` to upgrade — no code change needed. WAV not MP3 because
+    there's no ffmpeg/lame here; `Audio` plays WAV everywhere incl. `file://`.
+  - `Sound` uses HTML5 `Audio` (not fetch+WebAudio) so it works off `file://`;
+    caches one base `Audio` per clip and clones per play for overlap; mute is
+    persisted (`sfp.soundMuted`) and independent of reduced-motion. A
+    **capture-phase** delegated click listener maps controls → sounds (buttons
+    →`tap`, `[data-back]`→`back`, `.navbtn`→`nav-switch`, switch-rows→`toggle`,
+    add-* actions→`small-win`, `gen-regenerate`→`gen-start`); it ignores
+    synthetic clicks (`e.isTrusted`) so programmatic `input.click()` file-picker
+    opens stay silent. `gen-like`/`gen-nope` are excluded there and sounded in
+    `decideCard` instead, so drag-swipes and the ♥/✕ buttons both fire
+    `swipe-keep`/`swipe-nope`. `markPostShared`→`big-win`; validation failures
+    →`error`. Groups (`tap`, `small-win`, `swipe-keep/nope`) pick a random
+    variant per play. Settings has a "🔊 Sounds" mute toggle (`#soundEnabled`).
+  - Verified headless (Chromium, 390×844): module loads, all clips decode over
+    `file://`, clicks fire the right sounds, mute silences them, no console
+    errors, no horizontal overflow. Version → v0.10.
 - 2026-07-11: Dropped the orange accent line from the generate caption stickers
   (`CAPTION_STYLES` in app.js — all `accent` now null). The `accent` support in
   `drawCaptionSticker`/`drawCaptionPanel` stays for the manual/collage banner.

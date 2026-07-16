@@ -1,48 +1,92 @@
 /*
  * mascot.js — the Chuckling Wings chicken's many moods.
  *
- * A tiny helper around a set of transparent PNG poses in assets/mascot/ (sliced
- * from the owner's sprite sheet). It's pure presentation: hand back an <img> (or
- * its HTML) for a named state so the rest of the app can drop a bit of character
- * into loading spinners, empty screens and win moments without repeating markup.
+ * A tiny helper around a set of vector poses (SVG) in assets/mascot/. It's pure
+ * presentation: hand back an <img> (or its HTML) for a named state so the rest
+ * of the app can drop a bit of character into loading spinners, empty screens
+ * and win moments without repeating markup.
  *
- * States: idle, loading, thinking, celebrate, sleeping, relaxing, singing,
- *         confused, thumbsup, sad, excited, waving.
+ * The art is 15 crisp vector poses (owner-supplied SVGs). We keep TWO sets of
+ * names:
+ *   - POSES: the canonical pose names, one per SVG file.
+ *   - ALIAS: the app's older semantic state names (idle, loading, celebrate…)
+ *     mapped onto a pose, so existing callers keep working unchanged.
+ * `url()` resolves either kind.
+ *
  * Animation classes (CSS, all tamed under prefers-reduced-motion): bob, float,
- * sway, spin, pop.
+ * sway, spin, pop, breathe.
  *
- * Offline-safe: the images are local files, no network, no deps.
+ * Offline-safe: the images are local SVG files, no network, no deps. SVG scales
+ * crisply at any size and animates smoothly via CSS transforms on the <img>.
  */
 const Mascot = (() => {
   const BASE = "assets/mascot/";
-  const STATES = [
-    "idle", "loading", "thinking", "celebrate", "sleeping", "relaxing",
-    "singing", "confused", "thumbsup", "sad", "excited", "waving",
+
+  // Canonical pose files (assets/mascot/<pose>.svg).
+  const POSES = [
+    // "stall" is a scene (the branded gazebo with Wingman behind the counter),
+    // not a mood — it's landscape, so it's sized by width via .ob-scene rather
+    // than by height like the poses. Registered here to keep the art in one place.
+    "camera", "stall",
+    "main", "run", "thinking", "excited", "sleep", "happy", "laughing",
+    "surprised", "wink", "sad", "jump", "wave", "angry", "dance", "walk",
   ];
-  // Friendly, screen-reader-appropriate descriptions.
-  const ALT = {
-    idle: "Wingman the chicken, standing by",
-    loading: "Wingman cooking up posts on a laptop",
-    thinking: "Wingman having an idea",
-    celebrate: "Wingman celebrating",
-    sleeping: "Wingman fast asleep",
-    relaxing: "Wingman relaxing with a drink",
-    singing: "Wingman singing happily",
-    confused: "Wingman looking puzzled",
-    thumbsup: "Wingman giving a thumbs up",
-    sad: "Wingman looking a bit glum",
-    excited: "Wingman looking thrilled",
-    waving: "Wingman waving hello",
+
+  // App's semantic state names → a canonical pose. Keeps old call-sites working.
+  const ALIAS = {
+    idle: "main",
+    loading: "run",
+    celebrate: "excited",
+    sleeping: "sleep",
+    relaxing: "happy",
+    singing: "laughing",
+    confused: "surprised",
+    thumbsup: "wink",
+    waving: "wave",
+    // thinking, excited, sad already match a pose name 1:1
   };
 
+  // Friendly, screen-reader-appropriate descriptions (keyed by canonical pose).
+  const ALT = {
+    main: "Wingman the chicken, standing by",
+    run: "Wingman dashing about",
+    thinking: "Wingman having a think",
+    excited: "Wingman thrilled and wide-eyed",
+    sleep: "Wingman fast asleep",
+    happy: "Wingman looking happy",
+    laughing: "Wingman laughing away",
+    surprised: "Wingman looking surprised",
+    wink: "Wingman winking with a thumbs up",
+    sad: "Wingman looking a bit glum",
+    jump: "Wingman jumping for joy",
+    wave: "Wingman waving hello",
+    angry: "Wingman looking cross",
+    dance: "Wingman having a dance",
+    walk: "Wingman strolling along",
+    camera: "Wingman ready with a camera",
+    stall: "Wingman waving from the Chuckling Wings stall",
+  };
+
+  // Resolve any state (pose or alias) → canonical pose, defaulting to "main".
+  function pose(state) {
+    if (POSES.includes(state)) return state;
+    if (ALIAS[state]) return ALIAS[state];
+    return "main";
+  }
+
   function url(state) {
-    return BASE + (STATES.includes(state) ? state : "idle") + ".png";
+    return BASE + pose(state) + ".svg";
+  }
+
+  function altFor(state, opts) {
+    if (opts && opts.alt != null) return opts.alt;
+    return ALT[pose(state)] || "Chuckling Wings mascot";
   }
 
   // Build the class list from options: { anim, size, className }.
   function classes(opts = {}) {
     const cls = ["mascot"];
-    if (opts.anim) cls.push("mascot-" + opts.anim); // bob | float | sway | spin | pop
+    if (opts.anim) cls.push("mascot-" + opts.anim); // bob|float|sway|spin|pop | wave|breathe|jog|win|snooze|mope
     if (opts.size) cls.push("mascot-" + opts.size); // sm | lg
     if (opts.className) cls.push(opts.className);
     return cls.join(" ");
@@ -50,9 +94,8 @@ const Mascot = (() => {
 
   // HTML string — handy when composing an innerHTML block.
   function html(state, opts = {}) {
-    const alt = opts.alt != null ? opts.alt : (ALT[state] || "Chuckling Wings mascot");
     return (
-      `<img class="${classes(opts)}" src="${url(state)}" alt="${alt}" ` +
+      `<img class="${classes(opts)}" src="${url(state)}" alt="${altFor(state, opts)}" ` +
       `loading="lazy" decoding="async" draggable="false" />`
     );
   }
@@ -62,7 +105,7 @@ const Mascot = (() => {
     const img = new Image();
     img.className = classes(opts);
     img.src = url(state);
-    img.alt = opts.alt != null ? opts.alt : (ALT[state] || "Chuckling Wings mascot");
+    img.alt = altFor(state, opts);
     img.loading = "lazy";
     img.decoding = "async";
     img.draggable = false;
@@ -72,10 +115,13 @@ const Mascot = (() => {
   // Swap the pose on an existing <img> (selector or element).
   function set(target, state) {
     const img = typeof target === "string" ? document.querySelector(target) : target;
-    if (img) { img.src = url(state); if (ALT[state]) img.alt = ALT[state]; }
+    if (img) { img.src = url(state); img.alt = altFor(state); }
     return img;
   }
 
-  window.Mascot = { STATES, url, html, el, set };
+  // STATES exposes everything callable (canonical poses + semantic aliases).
+  const STATES = POSES.concat(Object.keys(ALIAS));
+
+  window.Mascot = { STATES, POSES, url, html, el, set };
   return window.Mascot;
 })();

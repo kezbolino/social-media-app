@@ -12,6 +12,8 @@
   let photoPool = [];
   let folderTarget = "single"; // which screen asked to load a folder
   let stashUrls = []; // object URLs for stash thumbnails, revoked on re-render
+  let obUrls = []; // same, for the onboarding photo grid
+  let obRestoring = false; // true while #backupInput was opened from onboarding
 
   // The post currently being built.
   let post = freshPost();
@@ -38,9 +40,12 @@
       captionText: "",
       hashtagBlock: "", // the appended hashtag block, if any
       fromHistory: false, // seeded from a past post / queue item (skip the quiz)
+      fromGenerate: false, // customising a Generate keeper (sticker already placed in editor)
+      keeperRef: null, // the Generate keeper this post came from (to return to the tray)
       status: "draft",
       finalBlob: null, // the (first) exported image
       finalBlobs: null, // all exported images (carousel); single => [finalBlob]
+      finalDataUrl: null, // the composed preview as a data URL (for keeper thumbs)
       created: new Date().toISOString(),
     };
   }
@@ -58,6 +63,15 @@
   // Direction of the next screen wipe: "back" slides in from the left, anything
   // else from the right. Set by handleBack / go-home just before they show().
   let navDir = "fwd";
+  // The app never navigates the browser itself (no other pages exist), so it
+  // never pushed any history entries — meaning the phone's own back button/
+  // gesture (as opposed to the in-app "‹" arrows) tried to navigate *away*
+  // from the page and left a blank white screen. Every show() now also pushes
+  // a history entry mirroring the screen, and a popstate listener (below)
+  // re-shows whichever screen that entry belongs to, so the hardware back
+  // button behaves exactly like the in-app back arrow instead of exiting.
+  let suppressHistoryPush = false;
+
   function show(screen) {
     const app = $("#app");
     app.classList.toggle("nav-back", navDir === "back");
@@ -69,9 +83,26 @@
     $$(".navbtn[data-nav]").forEach((b) =>
       b.classList.toggle("is-active", b.dataset.nav === screen)
     );
+    // The post button has no data-nav (it starts a flow rather than opening a
+    // hub screen), so it needs marking active by hand. "type" is the flow's
+    // first screen and the only one of its screens in HUB_SCREENS — the rest
+    // hide the bottom nav altogether, so there's nowhere else a dot could show.
+    const postBtn = $(".navbtn:not([data-nav])");
+    if (postBtn) postBtn.classList.toggle("is-active", screen === "type");
     if (screen === "home") rollGreeting();
     window.scrollTo(0, 0);
+    if (!suppressHistoryPush) {
+      try { history.pushState({ screen }, "", ""); } catch (e) { /* ignore */ }
+    }
   }
+
+  // The phone's back button/gesture fires this instead of unloading the page.
+  window.addEventListener("popstate", (e) => {
+    navDir = "back";
+    suppressHistoryPush = true;
+    show((e.state && e.state.screen) || "home");
+    suppressHistoryPush = false;
+  });
 
   // Drop a fresh random greeting onto the home screen.
   function rollGreeting() {
@@ -88,7 +119,9 @@
     if (!el) return;
     el.classList.add("mascot-empty");
     el.innerHTML = "";
-    if (window.Mascot) el.appendChild(Mascot.el(state, { anim: "float", size: "lg" }));
+    // Match the motion to the mood: sleepers snooze, sad droops, rest floats.
+    const anim = { sleeping: "snooze", sad: "mope" }[state] || "float";
+    if (window.Mascot) el.appendChild(Mascot.el(state, { anim, size: "lg" }));
     const span = document.createElement("span");
     span.className = "mascot-empty-msg";
     span.textContent = text;
@@ -98,6 +131,22 @@
 
   /* ---------- boot ---------- */
   async function boot() {
+    // Tag the page's own initial history entry with whichever screen actually
+    // opens (replace, not push — it already exists) so the very first popstate
+    // has a screen to resolve. Hardcoding "home" here would desync the back
+    // button on a first run, where onboarding is what's on screen.
+    const firstRun = !Store.getOnboarded();
+    try {
+      history.replaceState({ screen: firstRun ? "ob-welcome" : "home" }, "", "");
+    } catch (e) { /* ignore */ }
+    // Swap to onboarding BEFORE the awaits below: home is is-active in the
+    // static HTML, so waiting until after Hooks.init() lets a slow phone paint
+    // home first and then snap setup over the top of it.
+    if (firstRun) {
+      suppressHistoryPush = true;
+      startOnboarding();
+      suppressHistoryPush = false;
+    }
     try {
       await Hooks.init();
       // Prefer the embedded templates (runs from a plain file); fall back to
@@ -115,6 +164,7 @@
       return;
     }
     wireEvents();
+    applyFont(Store.getFont());
     rollGreeting();
     adaptPhotoPickers();
     loadPhotoStash();
@@ -151,6 +201,12 @@
       const kEdit = e.target.closest("[data-keeper-edit]");
       if (kEdit) return customiseKeeper(+kEdit.dataset.keeperEdit);
 
+      const kQueue = e.target.closest("[data-keeper-queue]");
+      if (kQueue) {
+        const dateInput = kQueue.closest(".keeper-queue").querySelector(".keeper-date");
+        return queueKeeper(+kQueue.dataset.keeperQueue, dateInput ? dateInput.value : "", kQueue);
+      }
+
       const stashRemove = e.target.closest("[data-stash-remove]");
       if (stashRemove) return removeStashPhoto(stashRemove.dataset.stashRemove);
 
@@ -163,11 +219,19 @@
       const calLoc = e.target.closest("[data-cal-loc]");
       if (calLoc) return pickCalLocation(calLoc.dataset.calLoc);
 
+      const fontOpt = e.target.closest("[data-font-option]");
+      if (fontOpt) return pickFont(fontOpt.dataset.fontOption);
+
       const qMake = e.target.closest("[data-q-make]");
       if (qMake) return makeFromQueue(Store.getQueue().find((x) => x.id === qMake.dataset.qMake));
 
       const qDel = e.target.closest("[data-q-del]");
-      if (qDel) { Store.removeQueueItem(qDel.dataset.qDel); return renderQueue(); }
+      if (qDel) {
+        const it = Store.getQueue().find((x) => x.id === qDel.dataset.qDel);
+        if (it && it.draftId && window.Drafts) Drafts.remove(it.draftId);
+        Store.removeQueueItem(qDel.dataset.qDel);
+        return renderQueue();
+      }
 
       const loc = e.target.closest("[data-loc]");
       if (loc) return pickChip("location", loc.dataset.loc);
@@ -204,6 +268,11 @@
     });
     $("#genFolderInput").addEventListener("change", onGenFolderPicked);
     $("#stashInput").addEventListener("change", onStashPicked);
+    $("#backupInput").addEventListener("change", onBackupPicked);
+    $("#obPhotoInput").addEventListener("change", onObPhotosPicked);
+    $("#obPlaceInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); addObPlace(); }
+    });
     saveMetaField("#metaToken", "accessToken");
     saveMetaField("#metaPageId", "pageId");
     saveMetaField("#metaIgId", "igUserId");
@@ -224,6 +293,150 @@
     show(target);
   }
 
+  /* ---------- ONBOARDING (first run) ---------- */
+  // The order of setup. Screens are in index.html; none are in HUB_SCREENS, so
+  // the bottom nav stays hidden for the whole flow.
+  const OB_STEPS = ["ob-welcome", "ob-photos", "ob-places", "ob-done"];
+
+  function obPct(i) {
+    return ((i + 1) / OB_STEPS.length) * 100;
+  }
+
+  function obGo(screen) {
+    const i = OB_STEPS.indexOf(screen);
+    if (i < 0) return;
+    const cur = $(".screen.is-active");
+    const from = OB_STEPS.indexOf(cur ? cur.dataset.screen : "");
+    const sec = $(`.screen[data-screen="${screen}"]`);
+    const bar = sec && sec.querySelector(".ob-bar");
+    // Each step owns its own bar, and a width set while the section is still
+    // display:none lands with no transition — so park it at the PREVIOUS step's
+    // width, reveal the screen, then move it. Without the park the fill never
+    // animates, it only ever appears at its final width.
+    if (bar) {
+      bar.style.transition = "none";
+      bar.style.width = (from >= 0 ? obPct(from) : obPct(i)) + "%";
+    }
+    if (screen === "ob-photos") renderObPhotos();
+    if (screen === "ob-places") renderObPlaces();
+    show(screen);
+    if (bar) {
+      // Reading offsetWidth once the screen is visible forces a synchronous
+      // reflow, so the parked width is the painted "from" value and the line
+      // below has something to transition out of. Deliberately NOT rAF: that
+      // would leave the bar stuck on the old step whenever frames are paused
+      // (background tab), making the correct value depend on an animation
+      // callback. This way the final width is always set, animation or not.
+      void bar.offsetWidth;
+      bar.style.transition = ""; // back to the stylesheet (none under reduced motion)
+      bar.style.width = obPct(i) + "%";
+    }
+  }
+
+  function obNext() {
+    const cur = $(".screen.is-active");
+    const i = OB_STEPS.indexOf(cur ? cur.dataset.screen : "");
+    const next = OB_STEPS[i + 1];
+    if (next) obGo(next);
+    else finishOnboarding("home");
+  }
+
+  function startOnboarding() {
+    obGo("ob-welcome");
+  }
+
+  // Every exit from setup runs through here, so the flag can't be missed and
+  // strand someone in onboarding on every launch.
+  function finishOnboarding(target) {
+    Store.setOnboarded(true);
+    obUrls.forEach((u) => URL.revokeObjectURL(u));
+    obUrls = [];
+    if (target === "generate") openGenerate(null);
+    else show("home");
+  }
+
+  async function renderObPhotos() {
+    const grid = $("#obPhotoGrid");
+    const note = $("#obPhotoNote");
+    const next = $("#obPhotosNext");
+    if (!grid) return;
+    obUrls.forEach((u) => URL.revokeObjectURL(u));
+    obUrls = [];
+    if (!window.Photos || !Photos.supported) {
+      // No IndexedDB — the stash can't work, so don't gate setup on it.
+      grid.innerHTML = "";
+      if (note) note.textContent = "This phone can't save photos in the app — you can still pick one per post.";
+      if (next) next.disabled = false;
+      return;
+    }
+    const items = await Photos.all();
+    grid.innerHTML = items
+      .map((it) => {
+        const url = URL.createObjectURL(it.blob);
+        obUrls.push(url);
+        return `<div class="stash-thumb"><img src="${url}" alt="" /></div>`;
+      })
+      .join("");
+    if (note) note.textContent = items.length ? `${items.length} photo${items.length === 1 ? "" : "s"} saved. 📸` : "";
+    // Soft gate: Next needs one photo, but "Skip for now" is always live.
+    if (next) next.disabled = items.length === 0;
+  }
+
+  async function onObPhotosPicked(e) {
+    const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith("image/"));
+    e.target.value = "";
+    if (!files.length) return;
+    const note = $("#obPhotoNote");
+    if (note) note.textContent = "Saving…";
+    await Photos.add(files);
+    await loadPhotoStash();
+    await renderObPhotos();
+    const btn = $('[data-action="ob-add-photos"]');
+    if (window.FX && FX.sparkle && btn) FX.sparkle(btn);
+  }
+
+  function renderObPlaces() {
+    const list = $("#obPlaceList");
+    if (!list) return;
+    const items = Store.getLocations();
+    list.innerHTML = "";
+    if (!items.length) {
+      list.innerHTML = '<p class="ob-hint">No pitches saved — add one below.</p>';
+      return;
+    }
+    items.forEach((item, i) => {
+      const row = document.createElement("div");
+      row.className = "ob-place";
+      const span = document.createElement("span");
+      span.textContent = item;
+      const del = document.createElement("button");
+      del.textContent = "✕";
+      del.setAttribute("aria-label", "Remove " + item);
+      del.addEventListener("click", () => {
+        const next = Store.getLocations();
+        next.splice(i, 1);
+        Store.setLocations(next);
+        renderObPlaces();
+      });
+      row.appendChild(span);
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function addObPlace() {
+    const input = $("#obPlaceInput");
+    const val = input.value.trim();
+    if (!val) {
+      if (window.FX) FX.wiggle(input);
+      return;
+    }
+    Store.addLocation(val);
+    input.value = "";
+    renderObPlaces();
+    if (window.FX) FX.pop($("#obPlaceList").lastElementChild);
+  }
+
   function handleAction(action, el) {
     switch (action) {
       case "new-post": post = freshPost(); show("type"); break;
@@ -241,6 +454,19 @@
       case "gen-folder": $("#genFolderInput").click(); break;
       case "stash-add": $("#stashInput").click(); break;
       case "stash-clear": clearStash(); break;
+      case "ob-next": obNext(); break;
+      case "ob-skip": obNext(); break;
+      case "ob-add-photos": $("#obPhotoInput").click(); break;
+      case "ob-add-place": addObPlace(); break;
+      case "ob-finish": finishOnboarding("generate"); break;
+      case "ob-home": finishOnboarding("home"); break;
+      case "ob-restart": startOnboarding(); break;
+      case "ob-restore": obRestoring = true; $("#backupInput").click(); break;
+      case "backup-export": exportBackup(el); break;
+      // Both openers of #backupInput must state which one they are: cancelling
+      // a file picker fires no event, so a flag that's only cleared on success
+      // would stay set and hijack the next restore (skipping its confirm).
+      case "backup-import": obRestoring = false; $("#backupInput").click(); break;
       case "gen-regenerate": runGenerate(); break;
       case "gen-like": flyOff("right"); break;
       case "gen-nope": flyOff("left"); break;
@@ -273,6 +499,8 @@
       case "caption-next": buildReview(); break;
       case "share": doShare(); break;
       case "go-home": navDir = "back"; post = freshPost(); show("home"); break;
+      case "back-to-keepers": returnToKeepers(); break;
+      case "save-customise": saveCustomiseToKeeper(); break;
       case "add-menu": addMenuItem(); break;
     }
   }
@@ -370,6 +598,18 @@
     } catch (e) {
       post.baseImage = null; // fall back if anything fails
     }
+    // Customising a Generate keeper: caption + hashtags are already set (by
+    // seedPostFromGen), so go straight to the caption screen WITHOUT re-running
+    // applyHashtags (which would append a second hashtag block). Back returns to
+    // the editor so the sticker can be re-dragged.
+    if (post.fromGenerate) {
+      $("#captionText").value = post.captionText;
+      updateHashtagBtnLabel();
+      const back = document.querySelector('[data-screen="caption"] .back');
+      if (back) back.dataset.back = "editor";
+      renderCaptionPreview();
+      return show("caption");
+    }
     // Seeded from a past post / queue item: the line is already chosen, so skip
     // the quiz and drop straight onto the caption screen (still shuffleable).
     if (post.fromHistory && post.captionText) return goToSeededCaption("editor");
@@ -400,6 +640,10 @@
     }
     photoPool = files;
     refreshPoolUi();
+    // Also save these into the permanent stash so they're still here next
+    // time the app opens — a folder pick alone only lasts this session
+    // (browsers won't let a web app keep a live link to a device folder).
+    if (window.Photos && Photos.supported) Photos.add(files);
     // Immediately drop random photos in so they see it work.
     if (folderTarget === "single") shuffleSinglePhoto();
     else shuffleCollagePhotos();
@@ -417,12 +661,6 @@
         if (note) { note.hidden = !has; note.textContent = label; }
       }
     );
-    const genNote = $("#genPoolNote");
-    if (genNote) {
-      genNote.textContent = has
-        ? `📸 ${n} photo${n === 1 ? "" : "s"} loaded`
-        : "No photos loaded — add some in Settings → 📸 My chicken photos";
-    }
   }
 
   /* ---------- SAVED PHOTO STASH (persistent chicken photos) ---------- */
@@ -466,6 +704,63 @@
     photoPool = [];
     refreshPoolUi();
     await renderStash();
+  }
+
+  async function exportBackup(btn) {
+    const status = $("#backupStatus");
+    status.textContent = "Building your backup…";
+    try {
+      const data = await Backup.exportFile();
+      const n = data.photos.length + data.drafts.length;
+      status.textContent =
+        `Downloaded — ${data.store.posts.length} posts, ${data.store.queue.length} queued, ` +
+        `${n} photo${n === 1 ? "" : "s"} saved. Keep that file somewhere safe. 💾`;
+      if (window.FX && btn) FX.sparkle(btn, { count: 12 });
+    } catch (e) {
+      status.textContent = "Couldn't build a backup — try again.";
+      if (window.FX) FX.wiggle(status);
+    }
+  }
+
+  async function onBackupPicked(e) {
+    const file = e.target.files[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    // Restoring from onboarding writes to the welcome screen's own status line.
+    const status = obRestoring ? $("#obRestoreStatus") : $("#backupStatus");
+    // The confirm is skipped ONLY on a genuine first run, where there's nothing
+    // but seeded defaults to lose. It can't hang off obRestoring alone: "Run
+    // setup again" walks an already-loaded phone back to the same restore
+    // button, and that device has months of queue, history and photos to wipe.
+    const firstRunRestore = obRestoring && !Store.getOnboarded();
+    if (!firstRunRestore && !confirm(
+      "Restoring will overwrite your current locations, hashtags, captions, calendar, queue, " +
+      "post history and saved photos on this phone with what's in that file. Continue?"
+    )) { obRestoring = false; return; }
+    status.textContent = "Restoring…";
+    try {
+      const summary = await Backup.restoreFile(file);
+      status.textContent =
+        `Restored — ${summary.posts} posts, ${summary.queue} queued, ${summary.photos} photo${summary.photos === 1 ? "" : "s"} back on this phone. 🎉`;
+      photoPool = [];
+      await loadPhotoStash();
+      refreshPoolUi(); // loadPhotoStash skips this when the stash is empty
+      if (obRestoring) {
+        // A restored phone is already set up — no point walking them through it.
+        obRestoring = false;
+        finishOnboarding("home");
+        // sparkle, not confetti: the full-screen Lottie is reserved for the big
+        // win (sharing a post), and this matches the Settings restore's feedback.
+        if (window.FX) FX.sparkle(status, { count: 16 });
+      } else {
+        openSettings(); // re-render every list on this screen from the restored data
+        if (window.FX) FX.sparkle(status, { count: 16 });
+      }
+    } catch (err) {
+      status.textContent = err.message || "That file couldn't be restored.";
+      if (window.FX) FX.wiggle(status);
+      obRestoring = false;
+    }
   }
 
   async function renderStash() {
@@ -821,6 +1116,14 @@
     if (window.FX) FX.wiggle(err); // a friendly "oi, look here" shimmy
   }
 
+  // The preview boxes default to a square via CSS; a non-square export (e.g.
+  // a 9:16 Story) would otherwise get letterboxed tiny inside that square.
+  // Set the box's own ratio to match the actual image so it fills properly.
+  function fitPreviewBox(imgEl, w, h) {
+    const wrap = imgEl && imgEl.closest(".preview-wrap");
+    if (wrap && w && h) wrap.style.aspectRatio = w + " / " + h;
+  }
+
   // Compose the post image (with the location/day text overlaid) for the
   // live preview on the caption screen.
   async function renderCaptionPreview() {
@@ -828,7 +1131,7 @@
     try {
       await Imaging.ensureFonts();
       const canvas = await composePostImage();
-      if (canvas) img.src = Imaging.toDataURL(canvas);
+      if (canvas) { img.src = Imaging.toDataURL(canvas); fitPreviewBox(img, canvas.width, canvas.height); }
       else img.removeAttribute("src");
     } catch (e) {
       /* preview is best-effort */
@@ -989,14 +1292,20 @@
         post.finalBlobs.push(await Imaging.toBlob(c));
       }
       post.finalBlob = post.finalBlobs[0];
-      $("#reviewImage").src = Imaging.toDataURL(coverCanvas);
+      const coverUrl = Imaging.toDataURL(coverCanvas);
+      post.finalDataUrl = coverUrl;
+      $("#reviewImage").src = coverUrl;
+      fitPreviewBox($("#reviewImage"), coverCanvas.width, coverCanvas.height);
       badge.hidden = false;
       badge.textContent = `1 / ${post.finalBlobs.length}`;
     } else {
       const canvas = await composePostImage();
       post.finalBlob = await Imaging.toBlob(canvas);
       post.finalBlobs = [post.finalBlob];
-      $("#reviewImage").src = Imaging.toDataURL(canvas);
+      const url = Imaging.toDataURL(canvas);
+      post.finalDataUrl = url;
+      $("#reviewImage").src = url;
+      fitPreviewBox($("#reviewImage"), canvas.width, canvas.height);
       badge.hidden = true;
     }
     post.status = "approved";
@@ -1005,8 +1314,17 @@
     $("#shareNote").hidden = true;
     $("#publishNote").hidden = true;
     $("#doneHome").hidden = true;
+    $("#doneKeepers").hidden = true;
     const cm = $("#celebrateMascot");
     if (cm) cm.hidden = true; // reset the win mascot until this post is shared
+    // Customise-preview mode (a Generate keeper being edited): the endpoint is
+    // "save back to my posts", not share — sharing/scheduling happens from the
+    // keepers tray. Everything else keeps the normal share controls.
+    const customising = !!post.fromGenerate;
+    $("#reviewShareControls").hidden = customising;
+    $("#saveCustomise").hidden = !customising;
+    const rvTitle = document.querySelector('[data-screen="review"] h2');
+    if (rvTitle) rvTitle.textContent = customising ? "Preview" : "Ready to share";
     renderPublishButtons();
     show("review");
   }
@@ -1015,9 +1333,10 @@
   // Used by both the share sheet and the direct Meta publish buttons.
   function markPostShared(via) {
     post.status = "shared";
+    if (window.Sound) Sound.play("big-win"); // 🔊 the fanfare
     if (window.FX) FX.confetti(); // 🎉 the win
     const cm = $("#celebrateMascot"); // the mascot joins the party
-    if (cm) { cm.hidden = false; if (window.FX) FX.pop(cm); }
+    if (cm) cm.hidden = false; // its own .mascot-win handles the pop+settle
     if (post.caption) Store.recordHookUse(post.caption.hook.id);
     Store.savePost({
       id: post.id,
@@ -1033,6 +1352,14 @@
       via: via || "share-sheet",
       created: post.created,
     });
+  }
+
+  // After a post is shared/published, offer the right "what next" button:
+  // a keeper returns to its tray (so the rest can be posted); anything else
+  // goes back to the start.
+  function showDoneButton() {
+    if (post.keeperRef) $("#doneKeepers").hidden = false;
+    else $("#doneHome").hidden = false;
   }
 
   async function doShare() {
@@ -1051,7 +1378,7 @@
             ? "Caption copied & image downloaded — paste the caption into Instagram or Facebook."
             : "Image downloaded — copy your caption above into Instagram or Facebook.")
         : "Shared! Pick Instagram or Facebook to finish posting.";
-    $("#doneHome").hidden = false;
+    showDoneButton();
   }
 
   /* ---------- DIRECT PUBLISH (Meta) ---------- */
@@ -1079,7 +1406,7 @@
       else await Publish.postToFacebook(post.finalBlob, post.captionText);
       markPostShared(kind === "ig" ? "instagram-api" : "facebook-api");
       note.textContent = kind === "ig" ? "Posted to Instagram ✅" : "Posted to Facebook ✅";
-      $("#doneHome").hidden = false;
+      showDoneButton();
     } catch (e) {
       note.textContent = "Couldn't post: " + e.message;
     }
@@ -1130,6 +1457,7 @@
     renderUserHooks();
     renderNotifySettings();
     renderMetaSettings();
+    renderFontPicker();
     show("settings");
   }
 
@@ -1421,7 +1749,8 @@
     for (const q of queued) {
       const loc = q.location ? ` · ${escapeAttr(q.location)}` : "";
       const cap = q.caption ? `<div class="cal-sched-cap">${escapeAttr(q.caption)}</div>` : "";
-      html += `<div class="cal-sched-item"><div class="cal-sched-when">🗓 Queued${loc}</div>${cap}</div>`;
+      const ready = q.draftId ? " · 📸 ready to post" : "";
+      html += `<div class="cal-sched-item"><div class="cal-sched-when">🗓 Queued${loc}${ready}</div>${cap}</div>`;
     }
     for (const p of posted) {
       const loc = p.location ? ` · ${escapeAttr(p.location)}` : "";
@@ -1444,7 +1773,7 @@
     if (selectedDate) {
       Store.setWorkday(selectedDate, val);
       selectCalDay(selectedDate);
-      celebrateWorkday(selectedDate);
+      bounceWorkdayCell(selectedDate);
     }
   }
 
@@ -1452,15 +1781,16 @@
     if (!selectedDate) return;
     Store.setWorkday(selectedDate, loc);
     selectCalDay(selectedDate);
-    celebrateWorkday(selectedDate);
+    bounceWorkdayCell(selectedDate);
   }
 
-  // Marking a working day is a small win — the day's cell gets a quiet
-  // sparkle-burst + bounce (the big confetti stays reserved for sharing).
-  function celebrateWorkday(key) {
+  // Setting a day's pitch is routine admin, not a win — the cell just bounces
+  // to acknowledge the tap. No confetti here (owner's call); the sparkle/
+  // confetti stay for the things worth celebrating, like sharing a post.
+  function bounceWorkdayCell(key) {
     if (!window.FX) return;
     const cell = document.querySelector(`.cal-cell[data-date="${key}"]`);
-    if (cell) FX.sparkle(cell, { count: 18 });
+    if (cell) FX.pop(cell);
   }
   function clearCalDay() {
     if (!selectedDate) return;
@@ -1473,6 +1803,7 @@
   let genDeck = [];        // the whole generated batch
   let deckCursor = 0;      // index of the current top card
   let keepers = [];        // items swiped right
+  let keptTotal = 0;       // how many were kept this batch, even once posted out of `keepers`
   const binnedHookIds = new Set(); // captions binned this session — don't resurface
   let genBusy = false;
   let genLocation = "";
@@ -1516,8 +1847,9 @@
 
   async function runGenerate() {
     if (genBusy) return;
-    refreshPoolUi(); // keep the "N photos loaded" note current
+    refreshPoolUi(); // keep the single/collage "photos loaded" notes current
     keepers = [];
+    keptTotal = 0;
     deckCursor = 0;
     const info = $("#genInfo");
     if (!photoPool.length) {
@@ -1531,7 +1863,7 @@
     genBusy = true;
     info.textContent = "";
     $("#genLoading").innerHTML =
-      (window.Mascot ? Mascot.html("loading", { anim: "bob", size: "lg", className: "mascot-center" }) : "") +
+      (window.Mascot ? Mascot.html("loading", { anim: "jog", size: "lg", className: "mascot-center" }) : "") +
       '<p class="hint" style="text-align:center">Cooking up posts…</p>';
     genShow("loading");
     genDeck = await buildGeneratedPosts();
@@ -1600,6 +1932,8 @@
       try { composite = await Imaging.loadImageFromUrl(dataUrl); } catch (e) { /* fall back to raw */ }
       out.push({
         img: composite,
+        rawImg: img, // the photo WITHOUT the sticker (for repositioning in Customise)
+        style,       // the per-card jittered sticker style (to re-seed the overlay)
         dataUrl,
         overlayText,
         filledText: picked.filledText,
@@ -1611,6 +1945,18 @@
   }
 
   /* ---- swipe deck ---- */
+  function buildSwipeCard(g, depth) {
+    const card = document.createElement("div");
+    card.className = "swipe-card depth-" + depth;
+    card.innerHTML =
+      `<img src="${g.dataUrl}" alt="Generated post with caption" draggable="false" />` +
+      `<div class="swipe-cap">${escapeAttr(g.filledText + " " + (g.hashtags || "").trim())}</div>` +
+      `<span class="swipe-badge keep">KEEP</span>` +
+      `<span class="swipe-badge nope">NOPE</span>`;
+    return card;
+  }
+
+  // Full (re)build — used on the first render and "New batch".
   function renderDeck() {
     const deck = $("#genDeck");
     deck.innerHTML = "";
@@ -1620,18 +1966,36 @@
     // Render up to three stacked cards; appended last = on top.
     const end = Math.min(total, deckCursor + 3);
     for (let i = end - 1; i >= deckCursor; i--) {
-      const g = genDeck[i];
-      const depth = i - deckCursor;
-      const card = document.createElement("div");
-      card.className = "swipe-card depth-" + depth;
-      card.innerHTML =
-        `<img src="${g.dataUrl}" alt="Generated post with caption" draggable="false" />` +
-        `<div class="swipe-cap">${escapeAttr(g.filledText + " " + (g.hashtags || "").trim())}</div>` +
-        `<span class="swipe-badge keep">KEEP</span>` +
-        `<span class="swipe-badge nope">NOPE</span>`;
+      const card = buildSwipeCard(genDeck[i], i - deckCursor);
       deck.appendChild(card);
-      if (depth === 0) attachDrag(card);
+      if (i - deckCursor === 0) attachDrag(card);
     }
+  }
+
+  // After a swipe decision: instead of tearing the deck down and rebuilding it
+  // (which snaps the next card in at full size), reuse the existing card
+  // elements and PROMOTE them up one level. Because each promoted card keeps
+  // its identity, changing its depth class animates its transform — so the new
+  // top card scales up from the stacked size into place with premium easing.
+  function advanceDeck() {
+    const deck = $("#genDeck");
+    const total = genDeck.length;
+    const gone = deck.querySelector(".swipe-card.depth-0");
+    const d1 = deck.querySelector(".swipe-card.depth-1");
+    const d2 = deck.querySelector(".swipe-card.depth-2");
+    if (gone) gone.remove();
+    if (deckCursor >= total) return showKeepers();
+    $("#genProgress").textContent = `${deckCursor + 1} / ${total}`;
+    if (!d1) return renderDeck(); // fewer than 2 were showing — safe rebuild
+    if (d2) d2.className = "swipe-card depth-1";
+    d1.className = "swipe-card depth-0";
+    // Premium scale-up reveal (skipped under reduced motion — the class-driven
+    // transform change would otherwise use the bouncier default spring).
+    if (!reduceMotion) d1.style.transition = "transform 0.32s var(--ease-premium)";
+    attachDrag(d1);
+    // Bring a fresh card in at the back (first child = furthest back) if any left.
+    const backIndex = deckCursor + 2;
+    if (backIndex < total) deck.insertBefore(buildSwipeCard(genDeck[backIndex], 2), deck.firstChild);
   }
 
   function attachDrag(card) {
@@ -1678,10 +2042,36 @@
   function decideCard(dir) {
     const g = genDeck[deckCursor];
     if (!g) return;
-    if (dir === "right") { keepers.push(g); if (window.FX) FX.buzz(6); }
+    if (window.Sound) Sound.play(dir === "right" ? "swipe-keep" : "swipe-nope");
+    if (dir === "right") { keepers.push(g); keptTotal++; if (window.FX) { FX.buzz(6); FX.heart(); } }
     else { binnedHookIds.add(g.hook.id); }
     deckCursor++;
-    renderDeck();
+    advanceDeck();
+  }
+
+  // A native <input type="date"> always renders in the browser/OS locale and
+  // always includes the year — that's not restylable, so the keeper cards show
+  // our own short "15/7" label with the real input sitting invisibly on top of
+  // it (which keeps the native picker and the value). Queueing is a near-term
+  // thing, so the year is noise (owner's call); the picker still shows it.
+  // Hiding the native input also hid its built-in calendar indicator, so the
+  // field draws its own — same outline glyph as the bottom-nav calendar rather
+  // than a second 🗓 emoji next to the queue button's.
+  const KEEPER_DATE_ICON =
+    '<svg class="keeper-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" ' +
+    'd="M7 3v3M17 3v3M3.5 9.5h17M5 6h14a1.5 1.5 0 0 1 1.5 1.5V19A1.5 1.5 0 0 1 19 20.5H5A1.5 ' +
+    '1.5 0 0 1 3.5 19V7.5A1.5 1.5 0 0 1 5 6Z"/></svg>';
+
+  function fmtKeeperDate(iso) {
+    const [y, m, d] = String(iso || "").split("-").map(Number);
+    if (!y || !m || !d) return "Pick a day";
+    return `${d}/${m}`;
+  }
+  function syncKeeperDateLabel(inp) {
+    const field = inp.closest(".keeper-date-field");
+    const label = field && field.querySelector(".keeper-date-label");
+    if (label) label.textContent = fmtKeeperDate(inp.value);
   }
 
   function showKeepers() {
@@ -1689,14 +2079,23 @@
     $("#genInfo").textContent = "";
     const wrap = $("#genKeepers");
     if (!keepers.length) {
+      // Only offer a fresh batch once there's nothing left to act on — either
+      // nothing was kept this round, or everything kept has now been posted.
+      const message = keptTotal
+        ? "All posted — nice work! 🎉"
+        : "None kept this round — no worries.";
       wrap.innerHTML =
+        `<div class="gen-empty">` +
         (window.Mascot ? Mascot.html("sad", { size: "lg", className: "mascot-center" }) : "") +
-        '<p class="hint" style="text-align:center">None kept this round — no worries.</p>' +
-        '<button class="btn btn-accent" data-action="gen-regenerate">🔀 New batch</button>';
+        `<p class="hint">${message}</p>` +
+        `<button class="btn btn-accent" data-action="gen-regenerate">🔀 Generate more</button>` +
+        `</div>`;
       return;
     }
+    const today = Notify.todayStr();
+    const tomorrow = Notify.todayStr(new Date(Date.now() + 86400000));
     let html = `<p class="lead">You kept ${keepers.length} 🎉</p>` +
-      `<p class="hint">Post one now, or tweak it first.</p><div class="keeper-list">`;
+      `<p class="hint">Post one now, tweak it, or queue it for a day at the pitch.</p><div class="keeper-list">`;
     keepers.forEach((g, i) => {
       const cap = (g.filledText || "").split("\n")[0];
       html +=
@@ -1706,11 +2105,39 @@
         `<div class="keeper-actions">` +
         `<button class="btn btn-primary btn-sm" data-keeper-post="${i}">📤 Post</button>` +
         `<button class="btn btn-secondary btn-sm" data-keeper-edit="${i}">✏️ Customise</button>` +
+        `</div>` +
+        `<div class="keeper-queue">` +
+        `<label class="keeper-date-field">` +
+        KEEPER_DATE_ICON +
+        `<span class="keeper-date-label" aria-hidden="true">${fmtKeeperDate(tomorrow)}</span>` +
+        `<input type="date" class="keeper-date" min="${today}" value="${tomorrow}" aria-label="Queue for date" />` +
+        `</label>` +
+        `<button class="btn btn-secondary btn-sm" data-keeper-queue="${i}">🗓 Queue for later</button>` +
         `</div></div></div>`;
     });
-    html += `</div><button class="btn btn-accent" data-action="gen-regenerate" style="margin-top:14px">🔀 New batch</button>`;
+    html += `</div>`;
     wrap.innerHTML = html;
+    // The invisible native input supplies the picker + value; our own label is
+    // what's actually read, so keep it in step with whatever day they pick.
+    wrap.querySelectorAll(".keeper-date").forEach((inp) =>
+      inp.addEventListener("change", () => syncKeeperDateLabel(inp))
+    );
     if (window.FX) FX.confetti({ quiet: true });
+  }
+
+  // After sharing a keeper, come back to the tray to handle the rest (the
+  // just-posted one is dropped so it doesn't invite a double-post). Keeps the
+  // other keepers intact — reopening Generate would re-roll a fresh batch.
+  function returnToKeepers() {
+    const ref = post.keeperRef;
+    if (ref) {
+      const idx = keepers.indexOf(ref);
+      if (idx >= 0) keepers.splice(idx, 1);
+    }
+    post = freshPost();
+    navDir = "back";
+    show("generate");
+    showKeepers();
   }
 
   // Seed the live `post` from a generated item (shared by Post & Customise).
@@ -1718,17 +2145,86 @@
     post = freshPost();
     post.type = "single";
     post.singleImage = g.img;
+    // A customised keeper's g.img is the editor's finished export (already the
+    // right aspect — it may have been reframed to Portrait/Story). Feed it in as
+    // the prepared base so composePostImage draws it AS-IS instead of re-cropping
+    // it back to a square via renderSingle. Default (un-customised) keepers keep
+    // the renderSingle path so the rare raw-image fallback still gets squared.
+    if (g.customised && g.img) post.baseImage = g.img;
     post.tag = "location";
     post.location = genLocation;
     post.day = genDay;
     post.caption = { hook: g.hook, filledText: g.filledText, item: null };
     post.captionText = g.filledText + (g.hashtags || "");
     post.hashtagBlock = g.hashtags || "";
+    post.keeperRef = g; // so Review can offer "back to my kept posts" after sharing
   }
 
-  function customiseKeeper(i) {
+  // Customise a kept post: open the RAW photo in the FULL editor with the
+  // sticker as a MOVABLE overlay (not baked on). The owner can drag/recolour the
+  // sticker AND reframe the photo — the aspect chips (Square/Portrait/Landscape/
+  // Story), zoom and pan crop the original photo, so this is a real re-crop, not
+  // a zoom into an already-squared image (which is why the background is the raw
+  // photo here, not a pre-composed square). Filters/adjust come along too. We
+  // land on the Text tab so the sticker stays the primary focus; the crop
+  // controls sit right above it. On "Save", the customised image + caption go
+  // back into the keeper (see saveCustomiseToKeeper) and you return to the tray
+  // to post/schedule from there. Falls back to the plain caption screen for
+  // older keepers that predate rawImg/style (e.g. a restored session).
+  async function customiseKeeper(i) {
     const g = keepers[i];
     if (!g) return;
+    if (!g.rawImg || !g.style) return customiseKeeperCaption(g);
+    seedPostFromGen(g);
+    post.fromGenerate = true;
+    await Imaging.ensureFonts();
+    setEditorChrome("generate", "Customise post");
+    show("editor"); // show first so the editor can measure its real width
+    // Background = the raw photo itself (no baked sticker). With no state the
+    // editor defaults to Square / zoom 1 / centred, which cover-fits the photo
+    // identically to the card's default bake, so nothing shifts until you reframe.
+    if (g.editState) {
+      // Re-customising: restore the sticker AND the last reframe exactly.
+      Editor.open(g.rawImg, g.editState, { hookProvider: makeHookProvider(), selectFirst: true, startTab: "text" });
+      return;
+    }
+    // First customise: seed the sticker overlay at the EXACT default bake
+    // position by measuring it once off-screen, so it opens where the card showed it.
+    const mctx = document.createElement("canvas").getContext("2d");
+    const pos = Imaging.paintSticker(mctx, 1080, 1080, {
+      text: g.overlayText, fillRGB: g.style.fillRGB, color: g.style.color,
+      angle: g.style.angle, scale: g.style.sizeScale,
+    });
+    const seed = {
+      id: "ov_sticker", kind: "sticker", text: g.overlayText,
+      fillRGB: g.style.fillRGB, color: g.style.color,
+      cx: pos ? pos.cx : 0.5, cy: pos ? pos.cy : 0.82,
+      size: 9 * (g.style.sizeScale || 1), rot: g.style.angle || 0,
+    };
+    Editor.open(g.rawImg, { overlays: [seed] }, { hookProvider: makeHookProvider(), selectFirst: true, startTab: "text" });
+  }
+
+  // "✓ Save & back to my posts" on the customise-preview Review: write the
+  // customised image + caption (and the editor state, so a later re-customise
+  // resumes where you left off) back into the keeper, then return to the tray.
+  function saveCustomiseToKeeper() {
+    const g = post.keeperRef;
+    if (g) {
+      if (post.baseImage) g.img = post.baseImage; // reframed photo + repositioned sticker
+      if (post.finalDataUrl) g.dataUrl = post.finalDataUrl; // tray thumbnail / queue draft
+      g.customised = true; // g.img is now a finished export (possibly non-square) — post it as-is
+      g.filledText = post.captionText; // full edited caption…
+      g.hashtags = "";                 // …with hashtags already folded in
+      if (post.editState) g.editState = post.editState;
+    }
+    post = freshPost();
+    navDir = "back";
+    show("generate");
+    showKeepers();
+  }
+
+  // The old customise path — straight to the caption screen (no repositioning).
+  function customiseKeeperCaption(g) {
     seedPostFromGen(g);
     $("#captionText").value = post.captionText;
     updateHashtagBtnLabel();
@@ -1741,11 +2237,44 @@
   async function postKeeper(i) {
     const g = keepers[i];
     if (!g) return;
+    if (window.Sound) Sound.play("swipe-keep");
     seedPostFromGen(g);
     $("#captionText").value = post.captionText; // buildReview reads the textarea
     await buildReview();
     const rb = document.querySelector('[data-screen="review"] .back');
     if (rb) rb.dataset.back = "generate";
+  }
+
+  // Park a keeper on the calendar for a future day — unlike the notes-only
+  // queue-add flow (queueAdd), this saves the fully composed image (caption
+  // already baked on, same as Post) as a Blob in Drafts so "Make" on the
+  // queue/calendar can hand back a ready-to-share post, not just a reminder.
+  async function queueKeeper(i, dateStr, btn) {
+    const g = keepers[i];
+    const row = btn && btn.closest(".keeper-queue");
+    if (!g || !dateStr) {
+      if (window.FX && row) FX.wiggle(row);
+      return;
+    }
+    let draftId = null;
+    if (window.Drafts && Drafts.supported) {
+      draftId = "d_" + Date.now() + "_" + Math.random().toString(36).slice(2, 9);
+      const ok = await Drafts.save({ id: draftId, blob: Imaging.dataUrlToBlob(g.dataUrl), type: "image/png" });
+      if (!ok) draftId = null;
+    }
+    Store.addQueueItem({
+      id: "q_" + Date.now(),
+      date: dateStr,
+      location: genLocation || "",
+      caption: g.filledText,
+      hashtags: g.hashtags || "",
+      hookId: g.hook.id,
+      draftId,
+      created: new Date().toISOString(),
+      done: false,
+    });
+    if (btn) { btn.disabled = true; btn.textContent = "✓ Queued"; }
+    if (window.FX && btn) FX.sparkle(btn, { count: 10 });
   }
 
   function shuffleArr(a) {
@@ -1763,6 +2292,8 @@
     if (!files.length) { alert("That folder didn't have any photos in it."); return; }
     photoPool = files;
     refreshPoolUi();
+    // Also save these into the permanent stash — see onFolderPicked.
+    if (window.Photos && Photos.supported) Photos.add(files);
     runGenerate();
   }
 
@@ -1845,30 +2376,44 @@
     show("queue");
   }
 
-  function renderQueue() {
+  let queueUrls = []; // object URLs for queue thumbnails, revoked on re-render
+
+  async function renderQueue() {
     const today = Notify.todayStr();
     const items = Store.getQueue().slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
     const list = $("#queueList");
     const empty = $("#queueEmpty");
+    queueUrls.forEach((u) => URL.revokeObjectURL(u));
+    queueUrls = [];
     list.innerHTML = "";
     if (!items.length) {
       mascotEmpty(empty, "sleeping", "Nothing queued yet — add one below.");
       return;
     }
     empty.hidden = true;
-    items.forEach((it) => {
+    for (const it of items) {
       const row = document.createElement("div");
       const due = it.date && it.date <= today;
       row.className = "queue-item" + (due ? " is-due" : "");
       const loc = it.location ? ` · <span class="queue-loc">${escapeAttr(it.location)}</span>` : "";
       const cap = it.caption ? `<div class="queue-cap">${escapeAttr(it.caption)}</div>` : "";
+      let thumb = "";
+      if (it.draftId && window.Drafts) {
+        const rec = await Drafts.get(it.draftId);
+        if (rec && rec.blob) {
+          const url = URL.createObjectURL(rec.blob);
+          queueUrls.push(url);
+          thumb = `<img class="queue-thumb" src="${url}" alt="Queued post" />`;
+        }
+      }
       row.innerHTML =
+        thumb +
         `<div class="queue-body"><div class="queue-when">${fmtQueueDate(it.date)}${due ? " · today" : ""}${loc}</div>${cap}</div>` +
         `<div class="queue-actions">` +
-        `<button class="btn btn-primary btn-sm" data-q-make="${it.id}">Make</button>` +
+        `<button class="btn btn-primary btn-sm" data-q-make="${it.id}">${it.draftId ? "📤 Post" : "Make"}</button>` +
         `<button class="queue-x" data-q-del="${it.id}" aria-label="Remove">✕</button></div>`;
       list.appendChild(row);
-    });
+    }
   }
 
   function queueAdd(btn) {
@@ -1893,10 +2438,13 @@
     if (window.FX && btn) FX.sparkle(btn, { count: 14 }); // little reward puff
   }
 
-  // Turn a queued item into a live post: seed location/day (+ its note as the
-  // caption, if any) and jump to the photo step.
-  function makeFromQueue(item) {
+  // Turn a queued item into a live post. A plain note-only item still goes
+  // through the full photo/caption flow; a keeper queued with "Queue for
+  // later" already has a composed image saved in Drafts, so it jumps
+  // straight to review instead — the whole point of queuing it that way.
+  async function makeFromQueue(item) {
     if (!item) return;
+    if (item.draftId) return postFromDraft(item);
     post = freshPost();
     post.fromHistory = true;
     post.location = item.location || "";
@@ -1905,6 +2453,44 @@
     post.captionText = item.caption || "";
     post.caption = null;
     startSingle();
+  }
+
+  async function postFromDraft(item) {
+    const rec = window.Drafts && (await Drafts.get(item.draftId));
+    if (!rec || !rec.blob) {
+      // The draft vanished (cleared storage, etc.) — fall back to the
+      // notes-only flow so the queue item still isn't a dead end.
+      post = freshPost();
+      post.fromHistory = true;
+      post.location = item.location || "";
+      post.tag = item.location ? "location" : "brand";
+      post.day = weekdayName(item.date);
+      post.captionText = item.caption || "";
+      post.caption = null;
+      startSingle();
+      return;
+    }
+    const url = URL.createObjectURL(rec.blob);
+    let img;
+    try { img = await Imaging.loadImageFromUrl(url); } finally { URL.revokeObjectURL(url); }
+    post = freshPost();
+    post.type = "single";
+    post.singleImage = img;
+    // The draft blob is already a finished, composed post (caption/sticker baked
+    // on, at whatever aspect it was reframed to) — draw it AS-IS rather than
+    // letting composePostImage re-crop it back to a square via renderSingle.
+    post.baseImage = img;
+    post.fromHistory = true;
+    post.tag = item.location ? "location" : "brand";
+    post.location = item.location || "";
+    post.day = weekdayName(item.date);
+    post.caption = item.hookId ? { hook: { id: item.hookId }, filledText: item.caption, item: null } : null;
+    post.captionText = (item.caption || "") + (item.hashtags || "");
+    post.hashtagBlock = item.hashtags || "";
+    $("#captionText").value = post.captionText;
+    await buildReview();
+    const rb = document.querySelector('[data-screen="review"] .back');
+    if (rb) rb.dataset.back = "queue";
   }
 
   /* ---------- QUICK ACTIONS (review) ---------- */
@@ -1945,6 +2531,35 @@
     note.hidden = false;
     note.textContent = blobs.length > 1 ? `Saved ${blobs.length} images to your downloads. ⬇️` : "Image saved to your downloads. ⬇️";
     if (window.FX) FX.pop(note);
+  }
+
+  /* ---------- APP FONT ---------- */
+  // Swaps the `data-font` attribute on <html>, which flips --font-family in
+  // css/styles.css — every element inherits from html,body, so this one
+  // attribute change reskins the whole app. "poppins" is the built-in
+  // default (no override rule needed, so clearing the attribute is enough).
+  function applyFont(id) {
+    if (id && id !== "poppins") document.documentElement.setAttribute("data-font", id);
+    else document.documentElement.removeAttribute("data-font");
+  }
+
+  function renderFontPicker() {
+    const wrap = $("#fontChips");
+    if (!wrap) return;
+    const current = Store.getFont();
+    wrap.innerHTML = (window.APP_CONFIG.FONTS || [])
+      .map(
+        (f) =>
+          `<button type="button" class="chip font-chip${f.id === current ? " selected" : ""}" data-font-option="${f.id}" style="font-family:'${f.label}'" title="${f.blurb}">${f.label}</button>`
+      )
+      .join("");
+  }
+
+  function pickFont(id) {
+    Store.setFont(id);
+    applyFont(id);
+    renderFontPicker();
+    if (window.FX) FX.pop($(`[data-font-option="${id}"]`));
   }
 
   /* ---------- NOTIFY SETTINGS ---------- */

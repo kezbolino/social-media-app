@@ -59,6 +59,83 @@
     el.classList.add("fx-pop");
   }
 
+  /* ---- Lottie confetti (owner's DC confetti) for the big win ---- */
+  // Played full-screen once on a real win (sharing a post). Falls back to the
+  // canvas burst below if the runtime or animation data isn't loaded. The small
+  // localized `sparkle()` puffs keep using the canvas — a full-screen Lottie
+  // can't originate from a tapped element.
+  let lottieAnim = null;
+  function playLottieConfetti() {
+    if (!window.lottie || !window.CONFETTI_LOTTIE) return false;
+    try {
+      // Tear down any in-flight burst so rapid wins don't stack overlays.
+      if (lottieAnim) { try { lottieAnim.destroy(); } catch (_) {} lottieAnim = null; }
+      const prev = document.querySelector(".fx-lottie");
+      if (prev) prev.remove();
+      const host = document.createElement("div");
+      host.className = "fx-lottie";
+      document.body.appendChild(host);
+      lottieAnim = window.lottie.loadAnimation({
+        container: host,
+        renderer: "svg",
+        loop: false,
+        autoplay: true,
+        animationData: window.CONFETTI_LOTTIE,
+      });
+      const cleanup = () => {
+        try { lottieAnim && lottieAnim.destroy(); } catch (_) {}
+        lottieAnim = null;
+        host.remove();
+      };
+      lottieAnim.addEventListener("complete", cleanup);
+      // Safety net in case "complete" never fires.
+      setTimeout(cleanup, 8000);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /* ---- swipe-right "like" heart (owner's Lottie) ---- */
+  // A quick heart pop + burst, centred on screen, played once when a Generate
+  // card is swiped/kept right. Best-effort: does nothing if the runtime or the
+  // animation data isn't loaded, or under reduced motion.
+  //
+  // The source file runs 181 frames @60fps (3.0s), but we only want the front
+  // half: the heart pops, bursts (~frame 45), and the particles are gone by
+  // ~frame 75 — after which it holds a static heart, then swaps to an outline
+  // heart at frame 118 that lingers to the end. Stopping at HEART_END_FRAME
+  // drops both the dead hold and the outline heart (owner's call), and we fade
+  // the overlay out so it leaves rather than snapping off.
+  const HEART_END_FRAME = 84;
+  const HEART_FADE_MS = 200;
+  function heart() {
+    if (reduceMotion || !window.lottie || !window.HEART_LOTTIE) return;
+    try {
+      const prev = document.querySelector(".fx-heart");
+      if (prev) prev.remove();
+      const host = document.createElement("div");
+      host.className = "fx-heart";
+      document.body.appendChild(host);
+      const anim = window.lottie.loadAnimation({
+        container: host,
+        renderer: "svg",
+        loop: false,
+        autoplay: true,
+        animationData: window.HEART_LOTTIE,
+        initialSegment: [0, HEART_END_FRAME],
+      });
+      const cleanup = () => { try { anim.destroy(); } catch (_) {} host.remove(); };
+      const fadeOut = () => {
+        host.style.transition = `opacity ${HEART_FADE_MS}ms linear`;
+        host.style.opacity = "0";
+        setTimeout(cleanup, HEART_FADE_MS + 40);
+      };
+      anim.addEventListener("complete", fadeOut);
+      setTimeout(cleanup, 2500); // safety net if "complete" never fires
+    } catch (_) {}
+  }
+
   /* ---- confetti burst ---- */
   let canvas, ctx;
   function ensureCanvas() {
@@ -75,6 +152,9 @@
     buzz(opts.quiet ? 10 : 18);
     if (!opts.quiet) chime(); // the win sound — plays even if motion is reduced
     if (reduceMotion) return;
+    // The big win uses the owner's DC confetti Lottie; quiet/localized sparkles
+    // stay on the canvas (a full-screen Lottie can't fire from an element).
+    if (!opts.quiet && playLottieConfetti()) return;
     ensureCanvas();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const W = (canvas.width = window.innerWidth * dpr);
@@ -171,5 +251,5 @@
     { passive: true }
   );
 
-  window.FX = { confetti, sparkle, pop, wiggle, buzz };
+  window.FX = { confetti, sparkle, pop, wiggle, buzz, heart };
 })();

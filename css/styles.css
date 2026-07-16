@@ -54,6 +54,107 @@
   src: url("../assets/fonts/spacemono-700.woff2") format("woff2");
 }
 
+/* App-wide font options (Settings → 🔤 App font) — bundled locally so they
+   work offline, same reasoning as Poppins above. All SIL OFL (see OFL.txt). */
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/fredoka-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/fredoka-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Fredoka";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/fredoka-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Baloo 2";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/baloo2-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Baloo 2";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/baloo2-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Baloo 2";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/baloo2-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Baloo 2";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../assets/fonts/baloo2-800.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/nunito-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/nunito-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/nunito-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../assets/fonts/nunito-800.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Quicksand";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/quicksand-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Quicksand";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/quicksand-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Quicksand";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/quicksand-700.woff2") format("woff2");
+}
+
 :root {
   --blue: #0a4da1;
   --blue-press: #083f85;
@@ -69,9 +170,32 @@
   --error: #c0362c;
   --radius: 16px;
   --navh: 54px;
+
+  /* App-wide UI font (Settings → 🔤 App font). A `data-font` attribute on
+     <html> (set by applyFont() in app.js) swaps --font-family; every element
+     inherits it from html,body below rather than hardcoding "Poppins", so
+     this is the one place a new option needs a stack added. */
+  --font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+html[data-font="fredoka"] {
+  --font-family: "Fredoka", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+html[data-font="baloo2"] {
+  --font-family: "Baloo 2", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+html[data-font="nunito"] {
+  --font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+html[data-font="quicksand"] {
+  --font-family: "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+/* Form controls don't inherit font-family from the page by default (browser
+   UA stylesheets give button/input/select their own system font) — without
+   this, the font picker would restyle every screen except its own buttons. */
+button, input, select, optgroup { font-family: inherit; }
 
 /* The `hidden` attribute must always win, even over elements that set their
    own display (e.g. .filter-row/.preview-img use display:flex/block). */
@@ -82,9 +206,18 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--font-family);
   font-weight: 500;
+  /* Hard-lock the page to vertical scrolling only — no sideways drift or
+     rubber-band, even when a gesture starts on a control. */
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
+
+/* Range sliders (size/rotate/zoom/adjust) must move their thumb on a drag,
+   never let the drag turn into a page scroll. Without this, dragging a slider
+   sideways pans the page like a web page. */
+input[type="range"] { touch-action: none; }
 
 #app {
   max-width: 520px;
@@ -148,6 +281,13 @@ html, body {
   background: linear-gradient(160deg, #0a4da1 0%, #0a4da1 45%, #0d59b8 100%);
   color: #fff;
 }
+/* .home is a centred flex column (align-items: center), which shrink-wraps
+   any child of intrinsic width to its content instead of the full column
+   width — the .row here (no explicit width) was shrinking to fit its two
+   buttons' natural size, so flex:1 only ever divided up that shrunk space
+   (~122px each) rather than the available ~half-screen width. Same trap the
+   .ob-add width fix above works around. */
+.home .row { width: 100%; }
 .brand-mark { font-size: 60px; line-height: 1; }
 .brand-logo { width: min(340px, 92%); height: auto; display: block; margin: 0 auto 4px; }
 .tagline {
@@ -191,7 +331,148 @@ html, body {
   letter-spacing: 0.06em;
 }
 
+/* ---- Onboarding (first run) ----
+   A self-contained flow on the home gradient, so "you're in setup" reads at a
+   glance. Progress bar pinned top, mascot + copy in the middle, actions pinned
+   bottom. Screens live in index.html; OB_STEPS in app.js drives the order. */
+/* Beats `.screen.is-active { display: block }` on specificity, not source order. */
+.screen.ob.is-active {
+  display: flex;
+  flex-direction: column;
+}
+.ob {
+  /* height, not min-height: the bar is pinned top and the actions pinned
+     bottom, so the section must be exactly the viewport and let .ob-body take
+     the overflow. With min-height the section just grows on a short screen and
+     both "pinned" ends drift off it (same approach as the editor screen). */
+  height: 100vh;
+  height: 100dvh;
+  padding: max(14px, env(safe-area-inset-top)) 20px max(18px, env(safe-area-inset-bottom));
+  background: linear-gradient(160deg, #0a4da1 0%, #0a4da1 45%, #0d59b8 100%);
+  color: #fff;
+}
+.ob-progress {
+  flex: 0 0 auto;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+}
+.ob-bar {
+  display: block;
+  height: 100%;
+  width: 25%;
+  border-radius: 999px;
+  background: var(--orange);
+  transition: width 0.45s var(--ease-premium);
+}
+/* The scrolling middle. overflow-x MUST be pinned: setting only overflow-y
+   makes the x axis compute to `auto`, which hands this its own sideways
+   scrollbar that the html/body lock can't reach (same trap as .editor-scroll). */
+.ob-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  padding: 14px 0;
+}
+.ob-logo { width: min(240px, 74%); margin-bottom: -6px; }
+/* A landscape scene (the stall), unlike the portrait mascot poses — so it's
+   sized by WIDTH. .mascot's height:108px/width:auto would render it as a
+   ~139x104 thumbnail with unreadable branding. */
+.ob-scene {
+  width: min(300px, 86%);
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  /* The stall is painted brand blue — rgb(9,76,160) against this screen's
+     rgb(10,77,161), i.e. the same colour — so its canopy and counter dissolved
+     into the backdrop and the tent's peak was invisible entirely.
+     Four zero-blur drop-shadows trace the alpha silhouette to draw a white
+     outline (a "sticker" edge, which suits the app's look), and the fifth lifts
+     it off the background. This works on the alpha channel, so it behaves the
+     same if this asset is ever swapped from SVG to PNG. */
+  filter:
+    drop-shadow(1.5px 0 0 #fff)
+    drop-shadow(-1.5px 0 0 #fff)
+    drop-shadow(0 1.5px 0 #fff)
+    drop-shadow(0 -1.5px 0 #fff)
+    drop-shadow(0 8px 14px rgba(0, 0, 0, 0.3));
+}
+.ob-title { margin: 2px 0 0; font-size: 1.5rem; }
+.ob-hint {
+  margin: 0;
+  max-width: 24rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+.ob-note {
+  margin: 4px 0 0;
+  min-height: 1.2em;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--orange);
+}
+.ob-actions { flex: 0 0 auto; }
+.ob-actions .btn { margin: 8px 0 0; }
+.ob .btn-ghost { color: rgba(255, 255, 255, 0.9); }
+.ob .btn-sm { width: 100%; }
+/* Photo thumbs sit on blue here, not the light settings panel. */
+.ob-grid { width: 100%; }
+.ob .stash-thumb {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+}
+.ob-places { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.ob-place {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+  font-weight: 600;
+  text-align: left;
+}
+.ob-place button {
+  flex: 0 0 auto;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.ob-add { width: 100%; }
+/* Without min-width:0 a flex child won't shrink below its content, so the
+   Add button gets shoved off-screen on a narrow phone. */
+.ob-add .text-input { min-width: 0; }
+/* width:auto is load-bearing: .btn sets width:100%, and with flex:0 0 auto that
+   becomes an unshrinkable 100%-of-the-row basis, pushing Add off a 320px screen
+   (where overflow-x:hidden then clips it out of reach rather than scrolling). */
+.ob-add .btn { margin: 0; flex: 0 0 auto; width: auto; }
+
 /* ---- Buttons ---- */
+/* Sizing rules that keep every button the same height (see .btn-secondary and
+   .btn-sm below — the three work as a set):
+   - line-height is pinned, NOT `normal`. With `normal` the line box is sized by
+     the tallest font in the string, so an emoji label rendered 3px taller than
+     a plain one ("Next" 51px vs "📸 Next" 54px).
+   - min-height is the floor for short/compact variants and the 44px tap target. */
 .btn {
   display: block;
   width: 100%;
@@ -199,6 +480,8 @@ html, body {
   border-radius: var(--radius);
   padding: 16px;
   font-size: 1.05rem;
+  line-height: 1.2;
+  min-height: 52px;
   font-weight: 700;
   cursor: pointer;
   margin: 10px 0;
@@ -210,19 +493,33 @@ html, body {
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-primary { background: var(--blue); color: #fff; }
 .btn-primary:active { background: var(--blue-press); }
+/* padding is 14px, not .btn's 16px, to pay for the 2px border. Height here is
+   content-driven, so border-box does NOT absorb the border — without this the
+   white button renders 4px taller than the blue/orange one beside it. Don't
+   swap the border for an inset box-shadow: box-shadow already carries the 3D
+   edge (--btn-edge) and .home .btn overrides it. */
 .btn-secondary {
   background: var(--panel);
   color: var(--blue);
   border: 2px solid var(--blue);
+  padding: 14px;
 }
 .btn-accent { background: var(--orange); color: #1a1208; }
 .btn-accent:active { background: var(--orange-press); }
 .btn-ghost { background: transparent; color: var(--blue); font-weight: 600; }
 .btn-xl { padding: 20px; font-size: 1.2rem; }
-.btn-sm { width: auto; padding: 8px 12px; font-size: 0.9rem; margin: 0; }
+/* min-height overrides .btn's 52px and sets the 44px tap-target floor. Its own
+   padding also overrides .btn-secondary's 14px, but the border is absorbed here
+   because min-height (unlike an auto height) does include it under border-box. */
+.btn-sm { width: auto; padding: 8px 12px; font-size: 0.9rem; margin: 0; min-height: 44px; }
 
 .row { display: flex; gap: 10px; align-items: center; }
 .row .btn { margin: 10px 0; flex: 1; }
+/* A compact ghost link (e.g. "Clear all") sharing a horizontal .row with a
+   full-height button stretches to match it, so the pair sits level. Ghost
+   styling still marks it as the lesser action — the tier is carried by weight,
+   not height. Doesn't touch the vertically-stacked .ob-actions links. */
+.row > .btn-sm { align-self: stretch; }
 
 /* Sticky forward-action bar so the primary CTA stays in thumb reach while the
    content above scrolls behind a soft fade. */
@@ -309,6 +606,11 @@ html, body {
 
 /* ---- Chips (saved locations / days) ---- */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+/* Same pinned line-height + min-height as .btn, and for the same reason: with
+   line-height:normal the emoji chips (⬛ Square, 📱 Story) rendered 34px while
+   the geometric-glyph ones (▮ Portrait, ▬ Landscape) rendered 24px, in one row.
+   NB .tag-chip and .style-chip are deliberately NOT covered — the hashtag cloud
+   is a dense list where a 44px floor would balloon the Settings screen. */
 .chip {
   border: 1px solid var(--line);
   background: var(--panel);
@@ -316,11 +618,18 @@ html, body {
   border-radius: 999px;
   padding: 9px 14px;
   font-size: 0.95rem;
+  line-height: 1.2;
+  min-height: 44px;
   font-weight: 600;
   cursor: pointer;
 }
 .chip.selected { background: var(--orange); border-color: var(--orange); color: #1a1208; }
 .chip-add { color: var(--muted); border-style: dashed; }
+
+/* ---- Font picker (Settings → 🔤 App font) — each chip previews its own
+   font via an inline font-family style set in app.js, same trick as the
+   editor's .style-chip text-style picker. */
+.font-chip { font-size: 1.05rem; }
 
 /* ---- Photo editor (Instagram-style) ---- */
 /* The editor fills the screen: header on top, the photo pinned, and the
@@ -343,7 +652,17 @@ html, body {
 .editor-scroll {
   flex: 1 1 auto;
   overflow-y: auto;
+  /* Vertical only. This is its own scroll container nested inside .pad, so the
+     html/body horizontal lock can't reach it — and setting overflow-y alone
+     would make overflow-x compute to `auto`, giving it a sideways scroll. */
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
   min-height: 0;
+  /* Carry .pad's 16px side inset ourselves so the sticky .actionbar's
+     edge-to-edge bleed (margin: 0 -16px) lands on OUR padding box instead of
+     overflowing past it — which is what created the sideways scroll. */
+  margin-inline: -16px;
+  padding-inline: 16px;
   -webkit-overflow-scrolling: touch;
 }
 .editor-scroll .actionbar { margin-bottom: 0; }
@@ -383,6 +702,7 @@ html, body {
   font-weight: 700;
   font-size: 0.95rem;
   padding: 9px;
+  min-height: 44px;
   border-radius: 999px;
   cursor: pointer;
 }
@@ -462,6 +782,18 @@ html, body {
 .text-row .chip { flex: 1; text-align: center; }
 .swatch-tool { box-shadow: none; background: var(--panel-2) !important; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .text-tip { margin: 2px 0 8px; font-size: 0.8rem; }
+/* Generate "sticker" overlay: the brand shape/style is fixed, so hide the
+   font-style / align / highlight controls — but keep the colour swatches
+   (they set the letters OR box fill) plus text, size and rotate. */
+.text-panel.sticker-mode .text-styles,
+.text-panel.sticker-mode .text-tip,
+.text-panel.sticker-mode .text-row { display: none; }
+/* Sticker-only extras: the Letters/Box-fill colour-target toggle + its hint.
+   Hidden by default; shown only when a sticker overlay is selected. */
+.sticker-only { display: none; }
+.text-panel.sticker-mode .sticker-target-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.text-panel.sticker-mode .sticker-tip { display: block; }
+.sticker-target-row .chip { flex: 1; text-align: center; }
 #editorCanvas.sampling { cursor: crosshair; }
 
 /* Text-only editor mode (collage captions): hide crop + filter/adjust UI. */
@@ -553,7 +885,9 @@ html, body {
 /* ---- Work calendar ---- */
 .cal-head { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 10px; }
 .cal-title { font-weight: 700; color: var(--blue); font-size: 1.1rem; }
-.cal-head .btn-sm { font-size: 1.3rem; padding: 4px 14px; }
+/* min-width pairs with .btn-sm's min-height for a 44px target — these month
+   arrows were 35x32 and get tapped repeatedly. */
+.cal-head .btn-sm { font-size: 1.3rem; padding: 4px 14px; min-width: 44px; }
 .cal-weekdays, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .cal-weekdays { margin-bottom: 6px; }
 .cal-weekdays span { text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--muted); }
@@ -753,7 +1087,7 @@ html, body {
   transition: transform 0.3s var(--spring), background 0.15s ease;
 }
 .swipe-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(10, 35, 49, 0.12); }
-.swipe-btn.like { color: var(--orange); border-color: var(--orange); }
+.swipe-btn.like { color: #2b8a3e; border-color: #2b8a3e; }
 .swipe-btn.nope { color: var(--error); border-color: var(--error); }
 .gen-deck-hint { text-align: center; margin: 2px 0 8px; }
 .gen-pool-note { text-align: center; margin: 8px 0 0; font-size: 0.82rem; }
@@ -773,6 +1107,37 @@ html, body {
 }
 .keeper-actions { display: flex; gap: 8px; }
 .keeper-actions .btn { flex: 1; }
+/* The keeper card's body is only ~240px wide on a phone (an 84px thumbnail eats
+   the rest). A native date field can't fit there alongside the queue button —
+   it shrank to ~83px and clipped its own text. Showing just "15/7" (see
+   fmtKeeperDate) makes it fit again; flex-wrap stays as a safety net in case a
+   locale or font renders the button wider than expected. */
+.keeper-queue { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+/* Sized to its content ("🗓 15/7") — flex: 0 0 auto stops it stretching to fill
+   the row, which left dead space to the right of the date. The queue button
+   takes the slack instead. */
+.keeper-date-field {
+  position: relative; flex: 0 0 auto;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--text);
+  font-size: 0.85rem; cursor: pointer;
+}
+.keeper-date-label { pointer-events: none; }
+.keeper-date-icon {
+  width: 15px; height: 15px; flex: 0 0 auto;
+  color: var(--muted); pointer-events: none;
+}
+/* The real input lies invisible across the whole field: tapping anywhere opens
+   the OS date picker (no showPicker() needed, so it works on older iOS too)
+   while `.keeper-date` stays in the DOM for reading .value. */
+.keeper-date {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; border: none; padding: 0; margin: 0; background: none;
+  font-family: inherit; cursor: pointer;
+}
+.keeper-date-field:focus-within { outline: none; border-color: var(--blue); }
+.keeper-queue .btn { flex: 1 1 auto; }
 
 /* ---- Weather mode ---- */
 .weather-note {
@@ -863,6 +1228,7 @@ html, body {
   margin-bottom: 10px;
 }
 .queue-item.is-due { border-left-color: #2b8a3e; }
+.queue-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; flex: 0 0 auto; border: 1px solid var(--line); }
 .queue-body { flex: 1; min-width: 0; }
 .queue-when { font-weight: 700; color: var(--blue); font-size: 0.95rem; }
 .queue-when .queue-loc { color: var(--orange-press); font-weight: 600; }
@@ -934,14 +1300,18 @@ html, body {
 }
 .navbtn::after {
   content: "";
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: transparent;
   transition: background 0.15s ease;
 }
 .navbtn.is-active { color: var(--blue); }
 .navbtn.is-active svg { stroke-width: 2; }
+/* The dot marks where you are, so it follows is-active and nothing else. The
+   post button gets is-active from show() on the "type" screen (it has no
+   data-nav to match on) — never lit unconditionally, or it reads as "you are
+   here" on every screen. */
 .navbtn.is-active::after { background: var(--orange); }
 /* Light press feedback: the icon dips down then springs back via the
    bouncy easing on release — same feel as the rest of the app's buttons. */
@@ -973,12 +1343,17 @@ html, body {
    two-point cubic-bezier fake. --spring is bouncy (buttons/pops/chips);
    --spring-smooth settles with one gentle overshoot (screen wipes). */
 :root {
-  --spring: linear(0, 0.3177, 0.8813, 1.2533, 1.3082, 1.1606, 0.9887, 0.9025,
-    0.9121, 0.9678, 1.0164, 1.0331, 1.0231, 1.0044, 0.9918, 0.9897, 0.9945,
-    1.0002, 1.0032, 1.003, 1.0011, 0.9995, 0.9989, 1);
-  --spring-smooth: linear(0, 0.0885, 0.2855, 0.5115, 0.7174, 0.8787, 0.9888,
-    1.0525, 1.0798, 1.0822, 1.0703, 1.0523, 1.0337, 1.0178, 1.006, 0.9984,
-    0.9944, 0.9931, 0.9934, 0.9947, 0.9963, 0.9977, 0.9989, 1);
+  /* ONE app-wide easing: a confident "premium" decelerate (fast start, long
+     smooth settle, no bounce). Everything animates through the three tokens
+     below, which now all alias this single curve, so the whole app feels
+     consistent.
+     ↩ TO REVERT to the old playful bounce: restore the two linear() curves
+       that used to live here (see git history — `--spring` was a springy
+       overshoot, `--spring-smooth` a gentler one) and point them back at
+       those instead of `--ease-premium`. Nothing else needs to change. */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: var(--ease-premium);
+  --spring-smooth: var(--ease-premium);
 }
 
 /* ---- Chunky 3D buttons: a solid colour "edge" underneath that the button
@@ -1004,6 +1379,15 @@ html, body {
 }
 .btn-ghost:active { transform: translateY(2px); }
 .btn:disabled { box-shadow: 0 4px 0 var(--btn-edge); }
+
+/* Home buttons: a chunkier, more pronounced edge (owner request) — a darker
+   orange under the orange buttons, a grey under the white (secondary) ones. */
+.home .btn { box-shadow: 0 6px 0 var(--btn-edge); }
+.home .btn-primary, .home .btn-accent { --btn-edge: #b0590a; }
+/* The white home buttons: grey edge, and NO blue border (owner: the grey
+   ones shouldn't have a dark outline) — the grey shadow gives the depth. */
+.home .btn-secondary { --btn-edge: #a9b2bf; border: none; }
+.home .btn:active { transform: translateY(6px); box-shadow: 0 0 0 var(--btn-edge); }
 
 /* The hero CTA gently breathes to invite the first tap. */
 .btn-xl { animation: fx-breathe 2.6s ease-in-out infinite; }
@@ -1039,6 +1423,12 @@ html, body {
 .home .btn:nth-of-type(2) { animation-delay: 0.28s; }
 .home .btn:nth-of-type(3) { animation-delay: 0.36s; }
 .home .btn:nth-of-type(4) { animation-delay: 0.44s; }
+/* .row wraps the queue/run-it-back pair, which resets nth-of-type counting to
+   that div's own children — override explicitly so the stagger stays in
+   visual order instead of doubling up with new-post/generate. */
+.home .row .btn:nth-of-type(1) { animation-delay: 0.36s; }
+.home .row .btn:nth-of-type(2) { animation-delay: 0.40s; }
+.home > .btn:nth-of-type(3) { animation-delay: 0.44s; }
 @keyframes fx-drop-in {
   from { opacity: 0; transform: translateY(-18px) scale(0.94); }
   to { opacity: 1; transform: translateY(0) scale(1); }
@@ -1185,12 +1575,35 @@ html, body {
   pointer-events: none;
   z-index: 9999;
 }
+/* Full-screen Lottie confetti overlay (owner's DC confetti). The SVG fills the
+   viewport; the animation's own 9:16 canvas is scaled to cover. */
+.fx-lottie {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+.fx-lottie svg { width: 100% !important; height: 100% !important; }
+/* Swipe-right "like" heart — a centred pop, sized to a chunk of the screen,
+   above everything and non-interactive so swiping continues underneath. */
+.fx-heart {
+  position: fixed;
+  top: 42%;
+  left: 50%;
+  width: 240px;
+  height: 240px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9999;
+}
 
 /* =========================================================================
-   Mascot — the Chuckling Wings chicken's moods (assets/mascot/*.png).
+   Mascot — the Chuckling Wings chicken's moods (assets/mascot/*.svg).
    Dropped into loading spinners, empty screens and win moments for a bit of
-   Duolingo-style character. Sized by height with auto width so the varied
-   pose aspect ratios never distort. All motion tamed under reduced-motion.
+   Duolingo-style character. Crisp vector art, sized by height with auto width
+   so the varied pose aspect ratios never distort. All motion tamed under
+   reduced-motion.
    ========================================================================= */
 .mascot {
   display: block;
@@ -1260,6 +1673,73 @@ html, body {
   100% { opacity: 1; transform: scale(1); }
 }
 
+/* ---- Mascot motions v2 — gesture + rest, grounded pivots, real physics ---- */
+
+/* HOME wave: two quick tilt-pulses toward the raised wing (viewer's right) with
+   a tiny hop, then a long rest so it reads as a greeting, not a metronome.
+   Pivot at the feet. Positive rotate = leans right = toward the raised wing. */
+.mascot-wave { animation: mascot-wave 4s ease-in-out infinite; transform-origin: 50% 88%; }
+@keyframes mascot-wave {
+  0%, 40%, 100% { transform: rotate(0deg) translateY(0); }
+  6%  { transform: rotate(-3deg) translateY(-1px); }  /* wind-up, opposite way */
+  14% { transform: rotate(7deg)  translateY(-4px); }  /* hello! */
+  21% { transform: rotate(2deg)  translateY(-2px); }
+  28% { transform: rotate(6deg)  translateY(-4px); }  /* second wave, slightly smaller */
+  40% { transform: rotate(0deg)  translateY(0); }     /* settle, then rest ~2.4s */
+}
+
+/* Idle breathe: inhale = stretch up + narrow, exhale = settle. Volume-
+   preserving counter-scale is what makes it read as breathing, not zooming.
+   Slightly longer exhale (peak at 40%) so it feels organic. */
+.mascot-breathe { animation: mascot-breathe 3.8s ease-in-out infinite; transform-origin: 50% 94%; }
+@keyframes mascot-breathe {
+  0%, 100% { transform: scale(1.01, 0.99); }
+  40%      { transform: scale(0.985, 1.03); }
+}
+
+/* LOADING jog (run pose): fast cadence, launch decelerates, fall accelerates,
+   squash on contact + a slight forward lean. Grounded at the feet. */
+.mascot-jog { animation: mascot-jog 0.62s infinite; transform-origin: 50% 92%; }
+@keyframes mascot-jog {
+  0% { transform: translateY(0) rotate(3deg) scale(1.05, 0.93);
+       animation-timing-function: cubic-bezier(0.2, 0.6, 0.35, 1); }  /* contact squash → launch */
+  42% { transform: translateY(-10px) rotate(1.5deg) scale(0.98, 1.04);
+        animation-timing-function: cubic-bezier(0.65, 0, 0.85, 0.4); } /* apex, stretched */
+  100% { transform: translateY(0) rotate(3deg) scale(1.05, 0.93); }    /* gravity wins */
+}
+
+/* WIN (excited pose): burst in from below with overshoot, land with a squash,
+   one small rebound, then keep breathing so the moment stays alive while the
+   confetti falls. One class does both via comma-chained animations. */
+.mascot-win {
+  animation:
+    mascot-win 0.85s cubic-bezier(0.33, 0, 0.3, 1) backwards,
+    mascot-breathe 3.8s ease-in-out 0.85s infinite;
+  transform-origin: 50% 92%;
+}
+@keyframes mascot-win {
+  0%   { opacity: 0; transform: translateY(22px) scale(0.4, 0.7); }
+  45%  { opacity: 1; transform: translateY(-8px) scale(1.1, 0.96) rotate(-2deg); } /* overshoot */
+  62%  { transform: translateY(0)   scale(1.06, 0.92) rotate(1deg); }              /* land, squash */
+  80%  { transform: translateY(-3px) scale(0.98, 1.03) rotate(0deg); }             /* small rebound */
+  100% { transform: translateY(0)   scale(1, 1); }
+}
+
+/* SLEEP: the slowest thing in the app. Deep slow breath + a barely-there
+   lean, pivoting at the ground. If it's perceptible at a glance, it's too big. */
+.mascot-snooze { animation: mascot-snooze 5s ease-in-out infinite; transform-origin: 50% 95%; }
+@keyframes mascot-snooze {
+  0%, 100% { transform: rotate(-1deg) scale(1.01, 0.99); }
+  55%      { transform: rotate(0.5deg) scale(0.99, 1.03); }
+}
+
+/* SAD: a slow, heavy slump-and-sigh. Sinks rather than floats. */
+.mascot-mope { animation: mascot-mope 5.5s ease-in-out infinite; transform-origin: 50% 94%; }
+@keyframes mascot-mope {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1, 1); }
+  60%      { transform: translateY(2px) rotate(-1.5deg) scale(1.015, 0.985); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn, .btn-xl, .screen.is-active, .home .brand-logo, .home .tagline,
   .home .greeting, .home .btn, .greeting.fx-pop, .chip.selected, .fx-pop,
@@ -1267,10 +1747,14 @@ html, body {
   .chips .chip.selected, .gen-card, .queue-item, .menu-item, .cal-sched-item,
   .cal-day, .cal-cell.selected, .navbtn.is-active svg, .slot.filled,
   .carousel-thumb, .home .btn-primary::after,
-  .mascot-bob, .mascot-float, .mascot-sway, .mascot-spin, .mascot-pop {
+  .mascot-bob, .mascot-float, .mascot-sway, .mascot-spin, .mascot-pop,
+  .mascot-breathe, .mascot-wave, .mascot-jog, .mascot-win, .mascot-snooze,
+  .mascot-mope {
     animation: none !important;
   }
   .btn { transition: background 0.15s ease; }
   .back, .tile-icon, .slot, .cal-cell, .etab { transition: none; }
   .swipe-card, .swipe-btn { transition: none !important; }
+  /* The progress bar still moves — it just jumps to its new width. */
+  .ob-bar { transition: none; }
 }

@@ -10,21 +10,112 @@
     <link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
     <title>Chuckling Wings · Wingman</title>
     <link rel="stylesheet" href="css/styles.css" />
+    <script>
+      // Apply the saved UI font before first paint, so switching it in
+      // Settings doesn't flash the default font on the next launch. Reads
+      // localStorage directly (Store isn't loaded yet at this point).
+      (function () {
+        try {
+          var f = JSON.parse(localStorage.getItem("sfp.font") || '"poppins"');
+          if (f && f !== "poppins") document.documentElement.setAttribute("data-font", f);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="app" class="has-bottomnav">
+      <!-- ===== ONBOARDING (first run) =====
+           Four steps, driven by OB_STEPS in js/app.js. None of these are in
+           HUB_SCREENS, so the bottom nav hides itself while setup runs. -->
+      <section class="screen ob" data-screen="ob-welcome">
+        <div class="ob-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="Setup progress">
+          <span class="ob-bar"></span>
+        </div>
+        <div class="ob-body">
+          <img class="brand-logo ob-logo" src="assets/logo.svg" alt="Chuckling Wings" />
+          <img class="mascot mascot-lg mascot-center mascot-wave" src="assets/mascot/wave.svg" alt="Wingman waving hello" decoding="async" draggable="false" />
+          <h2 class="ob-title">Alright boss.</h2>
+          <p class="ob-hint">Wingman turns your pics into posts — caption written, pitch and day filled in, ready to share. Two minutes and you're away.</p>
+          <p id="obRestoreStatus" class="ob-note"></p>
+        </div>
+        <div class="ob-actions">
+          <button class="btn btn-accent" data-action="ob-next">Let's go</button>
+          <button class="btn btn-ghost btn-sm" data-action="ob-restore">I've got a backup file</button>
+        </div>
+      </section>
+
+      <section class="screen ob" data-screen="ob-photos">
+        <div class="ob-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="2" aria-label="Setup progress">
+          <span class="ob-bar"></span>
+        </div>
+        <div class="ob-body">
+          <img class="mascot mascot-lg mascot-center mascot-breathe" src="assets/mascot/camera.svg" alt="Wingman ready with a camera" decoding="async" draggable="false" />
+          <h2 class="ob-title">Show us your food</h2>
+          <p class="ob-hint">Wingman picks from these every time it builds a post. Add a few now — they're saved on this phone, so it works with no internet.</p>
+          <input id="obPhotoInput" type="file" accept="image/*" multiple hidden />
+          <button class="btn btn-secondary" data-action="ob-add-photos">📸 Add photos</button>
+          <div id="obPhotoGrid" class="stash-grid ob-grid"></div>
+          <p id="obPhotoNote" class="ob-note"></p>
+        </div>
+        <div class="ob-actions">
+          <button class="btn btn-accent" id="obPhotosNext" data-action="ob-next" disabled>Next ›</button>
+          <button class="btn btn-ghost btn-sm" data-action="ob-skip">Skip for now</button>
+        </div>
+      </section>
+
+      <section class="screen ob" data-screen="ob-places">
+        <div class="ob-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="3" aria-label="Setup progress">
+          <span class="ob-bar"></span>
+        </div>
+        <div class="ob-body">
+          <!-- The stall is a landscape SCENE, not a pose: sized by width via
+               .ob-scene (the .mascot height sizing would shrink it to a
+               thumbnail), and deliberately unanimated — every mascot transform
+               is whole-image, and a rigid gazebo that sways, breathes or bobs
+               is just wrong physics. The waving chicken carries it. -->
+          <img class="ob-scene" src="assets/mascot/stall.svg" alt="Wingman waving from the Chuckling Wings stall" decoding="async" draggable="false" />
+          <h2 class="ob-title">Where do you trade?</h2>
+          <p class="ob-hint">Most captions name the spot, so these earn their keep. We've started you off with a few — bin any that are wrong.</p>
+          <div id="obPlaceList" class="ob-places"></div>
+          <div class="row ob-add">
+            <input id="obPlaceInput" class="text-input" type="text" placeholder="e.g. Greenwich Market" />
+            <button class="btn btn-secondary" data-action="ob-add-place">Add</button>
+          </div>
+        </div>
+        <div class="ob-actions">
+          <button class="btn btn-accent" data-action="ob-next">Next ›</button>
+        </div>
+      </section>
+
+      <section class="screen ob" data-screen="ob-done">
+        <div class="ob-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="4" aria-label="Setup progress">
+          <span class="ob-bar"></span>
+        </div>
+        <div class="ob-body">
+          <img class="mascot mascot-lg mascot-center mascot-win" src="assets/mascot/excited.svg" alt="Wingman thrilled and wide-eyed" decoding="async" draggable="false" />
+          <h2 class="ob-title">You're all set.</h2>
+          <p class="ob-hint">Wingman's got your photos, your pitches and a pile of ready-written captions. Let's make some posts.</p>
+        </div>
+        <div class="ob-actions">
+          <button class="btn btn-accent" data-action="ob-finish">✨ Make my first posts</button>
+          <button class="btn btn-ghost btn-sm" data-action="ob-home">I'll have a look around first</button>
+        </div>
+      </section>
+
       <!-- ===== HOME ===== -->
       <section class="screen is-active" data-screen="home">
         <div class="home">
           <img class="brand-logo" src="assets/logo.svg" alt="Chuckling Wings" />
           <div class="tagline">Wingman</div>
-          <img class="mascot mascot-greeting mascot-sway" id="homeMascot" src="assets/mascot/waving.png" alt="Wingman waving hello" draggable="false" />
           <p class="greeting" id="homeGreeting">Alright Boss man?</p>
           <button class="btn btn-primary" data-action="new-post">+ New Post</button>
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
-          <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
-          <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
-          <p class="app-version" id="appVersion">v0.09</p>
+          <div class="row">
+            <button class="btn btn-secondary btn-sm" data-action="open-queue">🗓 Post queue</button>
+            <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" data-action="ob-restart">🧪 View onboarding (debug)</button>
+          <p class="app-version" id="appVersion">v0.47</p>
         </div>
       </section>
 
@@ -66,8 +157,8 @@
           <input id="folderInput" type="file" accept="image/*" multiple webkitdirectory hidden />
           <button class="btn btn-secondary" data-action="pick-single">📷 Choose photo</button>
           <div class="photo-tools">
-            <button class="btn btn-secondary" data-action="pick-folder-single">📁 Use a folder</button>
-            <button class="btn btn-accent" id="singleShuffle" data-action="shuffle-single" disabled>🔀 Shuffle photo</button>
+            <button class="btn btn-secondary" data-action="pick-folder-single">📁 Folder</button>
+            <button class="btn btn-accent" id="singleShuffle" data-action="shuffle-single" disabled>🔀 Shuffle</button>
           </div>
           <p id="singlePoolNote" class="pool-note" hidden></p>
           <div class="actionbar">
@@ -91,6 +182,7 @@
             <button class="chip selected" data-aspect="1:1">⬛ Square</button>
             <button class="chip" data-aspect="4:5">▮ Portrait</button>
             <button class="chip" data-aspect="1.91:1">▬ Landscape</button>
+            <button class="chip" data-aspect="9:16">📱 Story</button>
           </div>
           <div class="zoom-row">
             <span class="zoom-ico">🔍</span>
@@ -111,9 +203,14 @@
             <div id="txtControls" hidden>
               <textarea id="txtInput" class="text-entry" rows="2" placeholder="Type your text…"></textarea>
               <div id="txtStyles" class="text-styles"></div>
+              <div id="stickerTargetRow" class="sticker-target-row sticker-only">
+                <button class="chip selected" data-sticker-target="text">Aa Letters</button>
+                <button class="chip" data-sticker-target="fill">▧ Box fill</button>
+              </div>
               <div id="txtSwatches" class="text-swatches"></div>
               <input type="color" id="txtColorInput" hidden />
               <p class="hint text-tip">Two-finger pinch on a selected text to resize &amp; spin it. 🎯 = pick a colour from the photo.</p>
+              <p class="hint sticker-tip sticker-only">Pick <strong>Letters</strong> or <strong>Box fill</strong>, then tap a colour. 🎯 samples a colour from the photo; 🎨 opens more colours.</p>
               <div class="text-row">
                 <button class="chip" id="txtAlign" data-txt="align">↔ Centre</button>
                 <button class="chip" id="txtHighlight" data-txt="highlight">▢ No fill</button>
@@ -160,8 +257,8 @@
           <div id="collageSlots" class="slots"></div>
           <input id="collageInput" type="file" accept="image/*" hidden />
           <div class="photo-tools">
-            <button class="btn btn-secondary" data-action="pick-folder-collage">📁 Use a folder</button>
-            <button class="btn btn-accent" id="collageShuffle" data-action="shuffle-collage" disabled>🔀 Shuffle images</button>
+            <button class="btn btn-secondary" data-action="pick-folder-collage">📁 Folder</button>
+            <button class="btn btn-accent" id="collageShuffle" data-action="shuffle-collage" disabled>🔀 Shuffle</button>
           </div>
           <p id="collagePoolNote" class="pool-note" hidden></p>
           <div class="actionbar">
@@ -269,22 +366,26 @@
             <span id="reviewBadge" class="img-badge" hidden></span>
           </div>
           <p id="reviewCaption" class="review-caption"></p>
-          <button class="btn btn-primary btn-xl" data-action="share">📤 Share</button>
-          <div class="row">
-            <button class="btn btn-secondary" data-action="copy-caption">📋 Copy caption</button>
-            <button class="btn btn-secondary" data-action="save-image">⬇️ Save image</button>
-          </div>
-          <div id="publishRow" hidden>
-            <p class="or-row">— or post directly —</p>
+          <div id="reviewShareControls">
+            <button class="btn btn-primary btn-xl" data-action="share">📤 Share</button>
             <div class="row">
-              <button class="btn btn-accent" id="pubIG" data-action="publish-ig">📸 Instagram</button>
-              <button class="btn btn-secondary" id="pubFB" data-action="publish-fb">📘 Facebook</button>
+              <button class="btn btn-secondary" data-action="copy-caption">📋 Copy caption</button>
+              <button class="btn btn-secondary" data-action="save-image">⬇️ Save image</button>
+            </div>
+            <div id="publishRow" hidden>
+              <p class="or-row">— or post directly —</p>
+              <div class="row">
+                <button class="btn btn-accent" id="pubIG" data-action="publish-ig">📸 Instagram</button>
+                <button class="btn btn-secondary" id="pubFB" data-action="publish-fb">📘 Facebook</button>
+              </div>
             </div>
           </div>
+          <button class="btn btn-primary btn-xl" data-action="save-customise" hidden id="saveCustomise">✓ Save &amp; back to my posts</button>
           <p id="publishNote" class="hint" hidden></p>
-          <img class="mascot mascot-lg mascot-center mascot-pop" id="celebrateMascot" src="assets/mascot/celebrate.png" alt="Wingman celebrating your post" hidden draggable="false" />
+          <img class="mascot mascot-lg mascot-center mascot-win" id="celebrateMascot" src="assets/mascot/excited.svg" alt="Wingman celebrating your post" hidden draggable="false" />
           <p id="shareNote" class="hint" hidden></p>
           <button class="btn btn-ghost" data-action="go-home" hidden id="doneHome">Done — back to start</button>
+          <button class="btn btn-secondary" data-action="back-to-keepers" hidden id="doneKeepers">← Back to my kept posts</button>
         </div>
       </section>
 
@@ -346,7 +447,7 @@
               <span id="genProgress" class="gen-progress" aria-live="polite"></span>
               <button class="swipe-btn like" data-action="gen-like" aria-label="Keep this post">♥</button>
             </div>
-            <p class="hint gen-deck-hint">Swipe right to keep, left to bin — or tap the buttons.</p>
+            <p class="hint gen-deck-hint">Swipe right to keep, left to bin.</p>
           </div>
 
           <!-- keepers tray -->
@@ -354,12 +455,6 @@
 
           <!-- empty state -->
           <div id="genEmpty" class="gen-empty" hidden></div>
-
-          <div class="row" id="genFolderRow">
-            <button class="btn btn-secondary" data-action="gen-folder">📁 Photo folder</button>
-            <button class="btn btn-accent" data-action="gen-regenerate">🔀 New batch</button>
-          </div>
-          <p id="genPoolNote" class="hint gen-pool-note"></p>
         </div>
       </section>
 
@@ -411,7 +506,7 @@
       <section class="screen" data-screen="settings">
         <header class="bar">
           <button class="back" aria-label="Back" data-back="home">‹</button>
-          <h2>Menu &amp; Settings</h2>
+          <h2>Settings</h2>
         </header>
         <div class="pad">
           <p class="lead">📍 Saved locations</p>
@@ -481,6 +576,23 @@
           <button class="btn btn-ghost btn-sm" data-action="notify-test">Send a test reminder</button>
           <p id="notifyStatus" class="hint"></p>
 
+          <p class="lead" style="margin-top: 28px;">💾 Backup &amp; restore</p>
+          <p class="hint">Everything above — locations, hashtags, your captions, calendar, queue, post history and saved photos — lives only on this phone. Export it to one file so a new phone or a cleared browser doesn't start you from zero. (Meta credentials below aren't included — reconnect those after restoring.)</p>
+          <div class="row">
+            <button class="btn btn-secondary" data-action="backup-export">⬇️ Export</button>
+            <button class="btn btn-secondary" data-action="backup-import">⬆️ Restore</button>
+          </div>
+          <input id="backupInput" type="file" accept="application/json,.json" hidden />
+          <p id="backupStatus" class="hint"></p>
+
+          <p class="lead" style="margin-top: 28px;">🔤 App font</p>
+          <p class="hint">Pick the look for the whole app — menus, buttons, everything.</p>
+          <div id="fontChips" class="chips"></div>
+
+          <p class="lead" style="margin-top: 28px;">🧭 Setup</p>
+          <p class="hint">Walk through the first-run setup again — photos and pitches. Nothing gets wiped.</p>
+          <button class="btn btn-secondary" data-action="ob-restart">Run setup again</button>
+
           <p class="lead" style="margin-top: 28px;">🚀 Auto-posting (Meta) — optional</p>
           <p class="hint">Post straight to Instagram/Facebook without the share sheet. Needs a one-time Meta setup — see <strong>docs/META_SETUP.md</strong> for the plain-English walkthrough. Everything you paste here stays on this device.</p>
           <div class="field">
@@ -511,7 +623,7 @@
       <!-- ===== BOTTOM NAV ===== -->
       <nav class="bottomnav" id="bottomNav" aria-label="Primary">
         <button class="navbtn" data-action="new-post" aria-label="New post">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v7.5M8.25 12h7.5"/></svg>
         </button>
         <button class="navbtn" data-nav="calendar" data-action="open-calendar" aria-label="Work calendar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/></svg>
@@ -532,13 +644,18 @@
     <script src="js/greetings.js"></script>
     <script src="js/store.js"></script>
     <script src="js/photos.js"></script>
+    <script src="js/drafts.js"></script>
     <script src="js/hooks.js"></script>
     <script src="js/imaging.js"></script>
+    <script src="js/backup.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/share.js"></script>
     <script src="js/notify.js"></script>
     <script src="js/publish.js"></script>
     <script src="js/weather.js"></script>
+    <script src="js/vendor/lottie.min.js"></script>
+    <script src="assets/lottie/confetti.js"></script>
+    <script src="assets/lottie/heart.js"></script>
     <script src="js/fx.js"></script>
     <script src="js/mascot.js"></script>
     <script src="js/app.js"></script>
@@ -547,7 +664,20 @@
       // file:// open skips this and everything still works).
       if ("serviceWorker" in navigator &&
           (location.protocol === "https:" || ["localhost", "127.0.0.1"].includes(location.hostname))) {
-        addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+        // updateViaCache:"none" => the browser never serves sw.js from its HTTP
+        // cache, so a new service worker is picked up promptly.
+        addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).catch(() => {});
+        });
+        // When a fresh service worker takes control (new deploy), reload once so
+        // the page swaps to the new assets instead of getting stuck on an old
+        // cached build. The guard prevents a reload loop.
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (refreshing) return;
+          refreshing = true;
+          location.reload();
+        });
       }
     </script>
   </body>
