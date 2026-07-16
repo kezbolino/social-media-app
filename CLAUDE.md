@@ -84,7 +84,40 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Generate swipe deck decluttered.** Owner wanted the
+- 2026-07-16 (latest): **"Generate more" — but only once there's nothing left
+  to act on.** Follow-up to the swipe-deck declutter below: after removing the
+  always-on "New batch" button, the owner clarified they don't want a reshuffle
+  offered while there's still a card to swipe or a kept post sitting unposted
+  in the tray — only once the batch is genuinely finished (nothing kept, or
+  everything kept has been posted). Version → v0.47.
+  - New `keptTotal` counter (js/app.js, alongside `keepers`) tracks how many
+    cards were swiped right **this batch**, independent of `keepers.length`
+    shrinking as each one gets posted (`returnToKeepers` splices the posted
+    item out). Reset to 0 in `runGenerate()`, incremented in `decideCard()`.
+  - `showKeepers()`'s zero-keepers branch (hit both when nothing was kept AND
+    after the last keeper is posted, since both leave `keepers` empty) now
+    branches on `keptTotal` for the message — "None kept this round — no
+    worries." vs "All posted — nice work! 🎉" — and both render a
+    "🔀 Generate more" button (`data-action="gen-regenerate"`, the same action
+    the old always-on button used, still wired from the previous change) inside
+    a `.gen-empty`-classed wrapper (existing empty-state styling: centred flex
+    column, auto-width button) so it doesn't stretch full width like a bare
+    `.btn` would.
+  - **Deliberately NOT shown**: mid-deck (there's always a next card to swipe,
+    the deck reshuffling itself isn't meaningful), or with unposted keepers
+    still in the tray (`keepers.length > 0` — Post/Customise/Queue are still
+    the point). Queueing a keeper does NOT remove it from `keepers` (only
+    posting does, via `returnToKeepers`), so a tray that's fully queued-but-
+    not-posted correctly stays on the action list, not the "generate more"
+    empty state — matches the owner's framing of "posts complete."
+  - Verified headless (Chromium, 390×844, localhost, real swipe-deck runs
+    against a seeded stash photo — not just DOM inspection): binning all 10
+    cards → "None kept this round — no worries." + one Generate-more button;
+    tapping it re-rolls a fresh 10-card batch; keeping 1 card → tray shows
+    "You kept 1 🎉" (no Generate-more button while it's sitting there) →
+    Post → Share → "← Back to my kept posts" → tray now shows "All posted —
+    nice work! 🎉" + Generate-more button. No console errors either pass.
+- 2026-07-16: **Generate swipe deck decluttered.** Owner wanted the
   Tinder-style deck simpler. Version → v0.46.
   - **Like heart turned green** (was orange, `--orange`): `.swipe-btn.like`
     now uses `#2b8a3e` — the same green already used for the `.swipe-badge.keep`

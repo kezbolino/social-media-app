@@ -1803,6 +1803,7 @@
   let genDeck = [];        // the whole generated batch
   let deckCursor = 0;      // index of the current top card
   let keepers = [];        // items swiped right
+  let keptTotal = 0;       // how many were kept this batch, even once posted out of `keepers`
   const binnedHookIds = new Set(); // captions binned this session — don't resurface
   let genBusy = false;
   let genLocation = "";
@@ -1848,6 +1849,7 @@
     if (genBusy) return;
     refreshPoolUi(); // keep the single/collage "photos loaded" notes current
     keepers = [];
+    keptTotal = 0;
     deckCursor = 0;
     const info = $("#genInfo");
     if (!photoPool.length) {
@@ -2041,7 +2043,7 @@
     const g = genDeck[deckCursor];
     if (!g) return;
     if (window.Sound) Sound.play(dir === "right" ? "swipe-keep" : "swipe-nope");
-    if (dir === "right") { keepers.push(g); if (window.FX) { FX.buzz(6); FX.heart(); } }
+    if (dir === "right") { keepers.push(g); keptTotal++; if (window.FX) { FX.buzz(6); FX.heart(); } }
     else { binnedHookIds.add(g.hook.id); }
     deckCursor++;
     advanceDeck();
@@ -2077,9 +2079,17 @@
     $("#genInfo").textContent = "";
     const wrap = $("#genKeepers");
     if (!keepers.length) {
+      // Only offer a fresh batch once there's nothing left to act on — either
+      // nothing was kept this round, or everything kept has now been posted.
+      const message = keptTotal
+        ? "All posted — nice work! 🎉"
+        : "None kept this round — no worries.";
       wrap.innerHTML =
+        `<div class="gen-empty">` +
         (window.Mascot ? Mascot.html("sad", { size: "lg", className: "mascot-center" }) : "") +
-        '<p class="hint" style="text-align:center">None kept this round — no worries.</p>';
+        `<p class="hint">${message}</p>` +
+        `<button class="btn btn-accent" data-action="gen-regenerate">🔀 Generate more</button>` +
+        `</div>`;
       return;
     }
     const today = Notify.todayStr();
