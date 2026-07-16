@@ -467,6 +467,12 @@ input[type="range"] { touch-action: none; }
 .ob-add .btn { margin: 0; flex: 0 0 auto; width: auto; }
 
 /* ---- Buttons ---- */
+/* Sizing rules that keep every button the same height (see .btn-secondary and
+   .btn-sm below — the three work as a set):
+   - line-height is pinned, NOT `normal`. With `normal` the line box is sized by
+     the tallest font in the string, so an emoji label rendered 3px taller than
+     a plain one ("Next" 51px vs "📸 Next" 54px).
+   - min-height is the floor for short/compact variants and the 44px tap target. */
 .btn {
   display: block;
   width: 100%;
@@ -474,6 +480,8 @@ input[type="range"] { touch-action: none; }
   border-radius: var(--radius);
   padding: 16px;
   font-size: 1.05rem;
+  line-height: 1.2;
+  min-height: 52px;
   font-weight: 700;
   cursor: pointer;
   margin: 10px 0;
@@ -485,19 +493,33 @@ input[type="range"] { touch-action: none; }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-primary { background: var(--blue); color: #fff; }
 .btn-primary:active { background: var(--blue-press); }
+/* padding is 14px, not .btn's 16px, to pay for the 2px border. Height here is
+   content-driven, so border-box does NOT absorb the border — without this the
+   white button renders 4px taller than the blue/orange one beside it. Don't
+   swap the border for an inset box-shadow: box-shadow already carries the 3D
+   edge (--btn-edge) and .home .btn overrides it. */
 .btn-secondary {
   background: var(--panel);
   color: var(--blue);
   border: 2px solid var(--blue);
+  padding: 14px;
 }
 .btn-accent { background: var(--orange); color: #1a1208; }
 .btn-accent:active { background: var(--orange-press); }
 .btn-ghost { background: transparent; color: var(--blue); font-weight: 600; }
 .btn-xl { padding: 20px; font-size: 1.2rem; }
-.btn-sm { width: auto; padding: 8px 12px; font-size: 0.9rem; margin: 0; }
+/* min-height overrides .btn's 52px and sets the 44px tap-target floor. Its own
+   padding also overrides .btn-secondary's 14px, but the border is absorbed here
+   because min-height (unlike an auto height) does include it under border-box. */
+.btn-sm { width: auto; padding: 8px 12px; font-size: 0.9rem; margin: 0; min-height: 44px; }
 
 .row { display: flex; gap: 10px; align-items: center; }
 .row .btn { margin: 10px 0; flex: 1; }
+/* A compact ghost link (e.g. "Clear all") sharing a horizontal .row with a
+   full-height button stretches to match it, so the pair sits level. Ghost
+   styling still marks it as the lesser action — the tier is carried by weight,
+   not height. Doesn't touch the vertically-stacked .ob-actions links. */
+.row > .btn-sm { align-self: stretch; }
 
 /* Sticky forward-action bar so the primary CTA stays in thumb reach while the
    content above scrolls behind a soft fade. */
@@ -584,6 +606,11 @@ input[type="range"] { touch-action: none; }
 
 /* ---- Chips (saved locations / days) ---- */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+/* Same pinned line-height + min-height as .btn, and for the same reason: with
+   line-height:normal the emoji chips (⬛ Square, 📱 Story) rendered 34px while
+   the geometric-glyph ones (▮ Portrait, ▬ Landscape) rendered 24px, in one row.
+   NB .tag-chip and .style-chip are deliberately NOT covered — the hashtag cloud
+   is a dense list where a 44px floor would balloon the Settings screen. */
 .chip {
   border: 1px solid var(--line);
   background: var(--panel);
@@ -591,6 +618,8 @@ input[type="range"] { touch-action: none; }
   border-radius: 999px;
   padding: 9px 14px;
   font-size: 0.95rem;
+  line-height: 1.2;
+  min-height: 44px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -673,6 +702,7 @@ input[type="range"] { touch-action: none; }
   font-weight: 700;
   font-size: 0.95rem;
   padding: 9px;
+  min-height: 44px;
   border-radius: 999px;
   cursor: pointer;
 }
@@ -855,7 +885,9 @@ input[type="range"] { touch-action: none; }
 /* ---- Work calendar ---- */
 .cal-head { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 10px; }
 .cal-title { font-weight: 700; color: var(--blue); font-size: 1.1rem; }
-.cal-head .btn-sm { font-size: 1.3rem; padding: 4px 14px; }
+/* min-width pairs with .btn-sm's min-height for a 44px target — these month
+   arrows were 35x32 and get tapped repeatedly. */
+.cal-head .btn-sm { font-size: 1.3rem; padding: 4px 14px; min-width: 44px; }
 .cal-weekdays, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .cal-weekdays { margin-bottom: 6px; }
 .cal-weekdays span { text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--muted); }
