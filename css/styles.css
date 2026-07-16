@@ -845,6 +845,14 @@ input[type="range"] { touch-action: none; }
   white-space: pre-wrap;
 }
 
+/* Copy caption / Save image sit in a flex .row (each flex:1, so equal width).
+   On a narrow or large-text screen one label wrapped to two lines while the
+   other stayed on one, giving them different heights. Keep both single-line so
+   they always match; the labels are short enough to fit the half-width slot. */
+#reviewShareControls .row .btn {
+  white-space: nowrap;
+}
+
 /* ---- Lists (menu + locations) ---- */
 .menu-list { margin: 12px 0 24px; }
 .menu-item {

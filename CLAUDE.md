@@ -84,7 +84,23 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Generate now starts with "the brief"** — three quick
+- 2026-07-16 (latest): **Two consistency fixes on the brief + review.** Version → v0.49.
+  - **Brief chips were centre-justified** (`.chips chips-centre`), which wrapped
+    into a ragged centred block unlike every other chip screen in the app
+    (Settings font picker, editor aspect picker — all left-aligned). Dropped
+    `chips-centre` on all three brief steps so they wrap left-aligned from the
+    container edge; mascot/title/hint stay centred (the fun onboarding feel).
+  - **"Copy caption" / "Save image" on Ready-to-share were unequal.** They sit
+    in a flex `.row` (`flex:1`, so equal *width*), but on a narrow/large-text
+    screen "Copy caption" wrapped to two lines while "Save image" stayed one →
+    different heights. Two-part fix: (1) `#reviewShareControls .row .btn {
+    white-space: nowrap }` so neither wraps → equal height; (2) shortened the
+    labels to **📋 Copy** / **⬇️ Save** — "Copy caption" (nowrap) is wider than
+    half a 375px screen, so flex couldn't equalise the widths (172 vs 161);
+    the short labels fit the half-slot, so flex makes them exactly equal at
+    every width (verified 139/139 @320, 167/167 @375, 174/174 @390). The 📋/⬇️
+    icons carry the meaning. Verified headless, no console errors.
+- 2026-07-16: **Generate now starts with "the brief"** — three quick
   questions (owner: "at the moment there's no input and the posts are generated
   with Leadenhall"; wanted location/date/type input, made fun, with an
   onboarding-style progress bar and satisfying easing). Version → v0.48.
