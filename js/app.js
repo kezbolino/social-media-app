@@ -2029,7 +2029,9 @@
     $("#genBriefBar").style.width = "100%";
     const track = $("#genBriefBar").parentElement;
     if (track) track.setAttribute("aria-valuenow", "4");
-    setTimeout(() => runGenerate(), reduceMotion ? 0 : 480);
+    // Wait out the bar's fill sweep (0.8s in CSS) so you actually see it reach
+    // 100% before the deck starts cooking.
+    setTimeout(() => runGenerate(), reduceMotion ? 0 : 850);
   }
 
   async function runGenerate() {

@@ -353,18 +353,25 @@ input[type="range"] { touch-action: none; }
 }
 .ob-progress {
   flex: 0 0 auto;
-  height: 6px;
+  height: 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.22);
+  /* Inset shading so the track reads as a recessed groove the fill sits in. */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
   overflow: hidden;
 }
+/* The fill is shared by both progress bars (onboarding + the Generate brief).
+   Vertical gradient + a top highlight and bottom shade give it a glossy,
+   rounded "pill" look; the longer transition makes the sweep clearly visible. */
 .ob-bar {
   display: block;
   height: 100%;
   width: 25%;
   border-radius: 999px;
-  background: var(--orange);
-  transition: width 0.45s var(--ease-premium);
+  background: linear-gradient(180deg, #ffb662 0%, var(--orange) 55%, #e07d10 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.14);
+  transition: width 0.8s var(--ease-premium);
 }
 /* The scrolling middle. overflow-x MUST be pinned: setting only overflow-y
    makes the x axis compute to `auto`, which hands this its own sideways
@@ -1067,11 +1074,12 @@ input[type="range"] { touch-action: none; }
 /* Light-background twin of .ob-progress; the fill inside is a real .ob-bar,
    so it keeps the orange + the 0.45s premium-ease width sweep for free. */
 .gen-brief-track {
-  height: 6px;
+  height: 14px;
   border-radius: 999px;
   background: rgba(10, 77, 161, 0.14);
+  box-shadow: inset 0 1px 2px rgba(10, 77, 161, 0.2);
   overflow: hidden;
-  margin: 6px 0 4px;
+  margin: 8px 0 4px;
 }
 /* Each step slides in with the premium decelerate — forward from the right,
    back from the left (.from-back, set when the ‹ step-back is used). */

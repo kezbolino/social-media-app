@@ -84,7 +84,21 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **One confetti look — the full-screen burst is always the
+- 2026-07-16 (latest): **Both progress bars: fatter, shaded, slower.** Owner
+  wanted them chunkier, with shading, and a longer sweep so the animation is
+  actually visible. Applies to BOTH bars (they share the `.ob-bar` fill): the
+  onboarding `.ob-progress` and the Generate-brief `.gen-brief-track`. Height
+  6px → **14px**; tracks got an inset `box-shadow` groove; the `.ob-bar` fill is
+  now a vertical orange gradient (`#ffb662 → --orange → #e07d10`) with a top
+  white highlight + bottom shade (glossy pill); transition `0.45s → 0.8s`. The
+  brief's "Cook 'em up" delay bumped `480ms → 850ms` so the sweep to 100% is
+  seen before the deck cooks. Reduced-motion still disables the transition
+  (`.ob-bar { transition: none }`). Verified headless: both tracks measure 14px,
+  fill carries the gradient, and a mid-sweep width sample (105px) differs from
+  the settled width (178px), confirming it animates; no console errors.
+  Version → v0.52. **Open idea from owner**: a tick + circle marker at each step
+  on the bar (not built yet — discussed).
+- 2026-07-16: **One confetti look — the full-screen burst is always the
   Lottie now.** Owner: "there's 2 confetti effects, only use the lottie file
   one." There were two full-screen confetti visuals: the owner's DC-confetti
   **Lottie** (`playLottieConfetti`, fired on the real win in `markPostShared`)
