@@ -101,7 +101,7 @@
           <button class="btn btn-accent" data-action="open-generate">✨ Generate posts</button>
           <button class="btn btn-secondary" data-action="open-queue">🗓 Post queue</button>
           <button class="btn btn-secondary" data-action="open-history">🔁 Run it back</button>
-          <p class="app-version" id="appVersion">v0.38</p>
+          <p class="app-version" id="appVersion">v0.40</p>
         </div>
       </section>
 
@@ -143,8 +143,8 @@
           <input id="folderInput" type="file" accept="image/*" multiple webkitdirectory hidden />
           <button class="btn btn-secondary" data-action="pick-single">📷 Choose photo</button>
           <div class="photo-tools">
-            <button class="btn btn-secondary" data-action="pick-folder-single">📁 Use a folder</button>
-            <button class="btn btn-accent" id="singleShuffle" data-action="shuffle-single" disabled>🔀 Shuffle photo</button>
+            <button class="btn btn-secondary" data-action="pick-folder-single">📁 Folder</button>
+            <button class="btn btn-accent" id="singleShuffle" data-action="shuffle-single" disabled>🔀 Shuffle</button>
           </div>
           <p id="singlePoolNote" class="pool-note" hidden></p>
           <div class="actionbar">
@@ -243,8 +243,8 @@
           <div id="collageSlots" class="slots"></div>
           <input id="collageInput" type="file" accept="image/*" hidden />
           <div class="photo-tools">
-            <button class="btn btn-secondary" data-action="pick-folder-collage">📁 Use a folder</button>
-            <button class="btn btn-accent" id="collageShuffle" data-action="shuffle-collage" disabled>🔀 Shuffle images</button>
+            <button class="btn btn-secondary" data-action="pick-folder-collage">📁 Folder</button>
+            <button class="btn btn-accent" id="collageShuffle" data-action="shuffle-collage" disabled>🔀 Shuffle</button>
           </div>
           <p id="collagePoolNote" class="pool-note" hidden></p>
           <div class="actionbar">
@@ -571,8 +571,8 @@
           <p class="lead" style="margin-top: 28px;">💾 Backup &amp; restore</p>
           <p class="hint">Everything above — locations, hashtags, your captions, calendar, queue, post history and saved photos — lives only on this phone. Export it to one file so a new phone or a cleared browser doesn't start you from zero. (Meta credentials below aren't included — reconnect those after restoring.)</p>
           <div class="row">
-            <button class="btn btn-secondary" data-action="backup-export">⬇️ Export backup</button>
-            <button class="btn btn-secondary" data-action="backup-import">⬆️ Restore backup</button>
+            <button class="btn btn-secondary" data-action="backup-export">⬇️ Export</button>
+            <button class="btn btn-secondary" data-action="backup-import">⬆️ Restore</button>
           </div>
           <input id="backupInput" type="file" accept="application/json,.json" hidden />
           <p id="backupStatus" class="hint"></p>
