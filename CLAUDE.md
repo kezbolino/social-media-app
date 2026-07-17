@@ -84,9 +84,29 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-17 (latest): **"What kind of post?" screen → mascot + speech bubble
+- 2026-07-17 (latest): **New Post progress bar now advances across the whole
+  flow.** Follow-up to the v0.62 static bar. Version → v0.63.
+  - `FLOW_STEPS` (js/app.js) maps the flow screens onto 4 milestones — Type
+    (25%) → Photo/Edit (single/collage/carousel/editor, 50%) → Caption (quiz/
+    details/caption, 75%) → Review (100%). `updateFlowProgress(screen)` is
+    called from `show()` and drives the bar; `lastFlowPct` tracks the width to
+    animate FROM, so forward steps sweep up, Back shrinks, and leaving the flow
+    (any non-flow screen) resets to 0 for the next post.
+  - Every flow screen carries a `.flow-bar`. The type screen's lives under its
+    mascot (its `<span>` gained `flow-bar`); the other seven are **injected at
+    boot** by `initFlowBars()` (a `.flow-track` prepended to each screen's
+    `.pad`) so the markup isn't duplicated. `.flow-track` shares `.quiz-track`'s
+    visual (light rgba-blue track + `.ob-bar` orange fill).
+  - Animation reuses the park-reflow-set trick (transition off → set to
+    `lastFlowPct` → force reflow → transition on → set target), same as `obGo`;
+    the `.ob-bar { transition: none }` reduced-motion rule makes it jump instead.
+  - Verified headless: bars injected on all 9 flow screens; walking type→single
+    →editor measured 25%→50%→50% (photo+edit share a milestone); editor layout
+    uncrowded; no console errors.
+- 2026-07-17: **"What kind of post?" screen → mascot + speech bubble
   + progress bar (Brilliant-app reference).** Owner liked Brilliant's question
-  header. Version → v0.62.
+  header. Version → v0.62. (Progress bar was static at first — wired to advance
+  across the flow in v0.63 above.)
   - Added inside the type screen's `.pad` (kept the blue "New Post" `.bar` for
     nav consistency — same arrangement the Generate brief already uses: blue bar
     + a progress bar & mascot below it): a `.quiz-track` progress bar (reuses the
@@ -96,9 +116,8 @@ below). **Not yet built, roughly in priority order:**
     `.speech` bubble ("What kind of post?") whose left-pointing tail (two stacked
     triangles, outer=`--blue` border, inner=`--panel` fill) points at it.
     Dropped the old `.lead` "What kind of post?" text (the bubble replaces it).
-  - ⚠️ The progress bar is **static (decorative)** — it does NOT advance across
-    type→photo→caption→review yet. Wiring it through the whole New Post flow is a
-    follow-up the owner can ask for.
+  - The progress bar started **static at 25%** here; v0.63 (above) wired it to
+    advance across the whole New Post flow.
   - Icons kept as-is (emoji 🖼️/🔲/🎠 in the `.tile-icon` badges) — Brilliant's
     are custom flat illustrations; swapping ours to bespoke icons would be a
     separate art task.

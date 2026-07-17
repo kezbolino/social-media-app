@@ -688,14 +688,17 @@ input[type="range"] { touch-action: none; }
 /* ---- "What kind of post?" question header (Brilliant-style) ----
    Progress bar (reuses the .ob-bar fill on a light track like the Generate
    brief) + the mascot asking the question in a speech bubble. */
-.quiz-track {
+.quiz-track,
+.flow-track {
   height: 14px;
   border-radius: 999px;
   background: rgba(10, 77, 161, 0.14);
   box-shadow: inset 0 1px 2px rgba(10, 77, 161, 0.2);
   overflow: hidden;
-  margin: 4px 0 16px;
 }
+.quiz-track { margin: 4px 0 16px; }
+/* Standalone flow bar (injected at the top of every other New Post screen). */
+.flow-track { margin: 2px 0 16px; }
 .quiz-ask {
   display: flex;
   align-items: center;
