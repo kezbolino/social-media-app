@@ -84,7 +84,30 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-17 (latest): **Bottom nav → floating capsule + active pill (Alan-app
+- 2026-07-17 (latest): **Pill buttons + clean tile boxes (Brilliant-app
+  reference).** Owner liked Brilliant's button *shape* and option-box *shape*.
+  Version → v0.61. Colour scheme deliberately left as-is (owner reviewed the
+  6-theme round-1 gallery and chose to keep the current blue/orange).
+  - **Buttons are now full pills/stadiums.** New `--btn-radius: 999px` token
+    (kept separate from `--radius: 16px`, which still governs cards/tiles/
+    previews/inputs); `.btn` uses it. All variants inherit, so primary/secondary/
+    accent/ghost/sm/xl are all pills. The 3D edge is a solid `box-shadow: 0 4px 0`
+    (home: `0 6px 0`) which follows border-radius, so the raised edge became a
+    pill edge for free — matches Brilliant's raised-pill look with no extra work.
+    The *only* visual gap between our buttons and theirs was the radius (ours
+    were 16px rounded-rects); everything else (bold text, solid fill, chunky
+    edge, press-down) already matched.
+  - **Type/quiz tiles → clean uniform-bordered boxes.** Dropped the `border-left:
+    5px solid var(--orange)` accent stripe on `.tile`; now one `1.5px var(--line)`
+    border all round (border colour → `--blue` on `:active`). Shared by the type
+    ("What kind of post?") AND quiz screens, so both match. The `.tile-icon`
+    54×54 badge stays (it's what keeps the 3 mismatched emoji looking uniform —
+    see 2026-07-16 note; Brilliant's icons are custom-consistent so they need no
+    badge, ours do).
+  - Verified headless (Chromium, localhost): `.btn` computes `border-radius:
+    999px`; home pills render with the raised edge following the curve; type-
+    screen tiles show uniform border (no stripe), r16; no console errors.
+- 2026-07-17: **Bottom nav → floating capsule + active pill (Alan-app
   reference).** Owner shared the Alan app's nav and liked "the shape around the
   icons" + the tap animation. Version → v0.60.
   - **Capsule**: `.bottomnav` detached from the screen edges — `bottom: 10px +

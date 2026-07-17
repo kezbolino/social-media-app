@@ -205,7 +205,8 @@
   --edge-accent: #b0590a; /* 3D bottom edge under orange home buttons */
   --edge-neutral: #a9b2bf; /* 3D bottom edge under white home buttons */
   --hero-bg: linear-gradient(160deg, var(--blue) 0%, var(--blue) 45%, var(--blue-2) 100%);
-  --radius: 16px;
+  --radius: 16px; /* cards, tiles, previews, inputs */
+  --btn-radius: 999px; /* buttons are full pills/stadiums (Brilliant-style) */
   --navh: 64px; /* floating capsule nav: visual height + the gap under it */
 
   /* App-wide UI font (Settings → 🔤 App font). A `data-font` attribute on
@@ -582,7 +583,7 @@ input[type="range"] { touch-action: none; }
   display: block;
   width: 100%;
   border: none;
-  border-radius: var(--radius);
+  border-radius: var(--btn-radius);
   padding: 16px;
   font-size: 1.05rem;
   line-height: 1.2;
@@ -642,6 +643,10 @@ input[type="range"] { touch-action: none; }
 .actionbar .row { margin: 0; }
 
 /* ---- Tiles (type & quiz) ---- */
+/* Clean uniform-bordered box (Brilliant-style): no left accent stripe — the
+   whole rounded rectangle carries one thin border, the icon badge does the
+   visual lifting. Shared by the type ("what kind of post is it?") and quiz
+   screens. */
 .tile {
   width: 100%;
   display: flex;
@@ -649,16 +654,17 @@ input[type="range"] { touch-action: none; }
   gap: 16px;
   text-align: left;
   background: var(--panel);
-  border: 1px solid var(--line);
-  border-left: 5px solid var(--orange);
+  border: 1.5px solid var(--line);
   border-radius: var(--radius);
   padding: 18px;
   margin: 12px 0;
   color: var(--text);
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(10, 77, 161, 0.06);
+  transition: border-color 0.15s ease, background 0.15s ease,
+    transform 0.05s ease;
 }
-.tile:active { background: var(--panel-2); }
+.tile:active { background: var(--panel-2); border-color: var(--blue); }
 /* The three emoji (framed pic / square / carousel horse) are wildly different
    in style and visual weight, which read as "inconsistent buttons". Seat each
    in an identical rounded-square badge so they present uniformly — the badge is
