@@ -84,7 +84,21 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-17 (latest): **New Post progress bar now advances across the whole
+- 2026-07-17 (latest): **Custom SVG post-type icons (replaced the emoji).**
+  Owner approved a hand-drawn flat set (previewed first). Version → v0.64.
+  - `assets/icons/{single,collage,carousel}.svg` — flat, solid, blue-primary +
+    orange-accent to match the brand look (single = sun+mountains photo card;
+    collage = big pane + 2 small panes; carousel = centre card + peek cards +
+    page dots). 48×48 viewBox, tiny, offline-safe.
+  - The three `.tile-icon` badges now hold `<img src="assets/icons/…svg"
+    alt="" width="32" height="32">` instead of the emoji 🖼️/🔲/🎠. New CSS
+    `.tile-icon img { width:32px; height:32px; display:block }`. The 54×54 badge
+    (`--panel-2` bg) stays — it still frames the icon uniformly. The old
+    `.tile-icon { font-size:28px }` is now dead but harmless.
+  - SW cache `v4`→`v5` so installs pick up the new assets.
+  - Verified headless: all three load (`naturalWidth>0`), 32px, no failed
+    requests, no console errors. Screenshot eyeballed in situ.
+- 2026-07-17: **New Post progress bar now advances across the whole
   flow.** Follow-up to the v0.62 static bar. Version → v0.63.
   - `FLOW_STEPS` (js/app.js) maps the flow screens onto 4 milestones — Type
     (25%) → Photo/Edit (single/collage/carousel/editor, 50%) → Caption (quiz/
