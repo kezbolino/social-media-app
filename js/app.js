@@ -1545,6 +1545,92 @@
     else $("#doneHome").hidden = false;
   }
 
+  /* ---------- POSTED! success screen ---------- */
+  // Monday 00:00 of the current week (the calendar runs Mon–Sun).
+  function weekStartDate() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // Mon=0 … Sun=6
+    return d;
+  }
+  function postsThisWeek() {
+    const ws = weekStartDate().getTime();
+    return Store.getPosts().filter((p) => p.created && new Date(p.created).getTime() >= ws).length;
+  }
+  // Weekly goal = the trading days you set on the calendar this week (so it's
+  // personal); falls back to 5 if you haven't marked any.
+  function workdaysThisWeek() {
+    const ws = weekStartDate();
+    const we = new Date(ws);
+    we.setDate(we.getDate() + 7);
+    const sched = Store.getSchedule() || {};
+    return Object.keys(sched).filter((k) => {
+      const t = new Date(k + "T00:00:00").getTime();
+      return t >= ws.getTime() && t < we.getTime();
+    }).length;
+  }
+  function nextWorkdayNudge() {
+    const sched = Store.getSchedule() || {};
+    const todayStr = Notify.todayStr();
+    const future = Object.keys(sched).filter((k) => k > todayStr).sort();
+    if (!future.length) return null;
+    const k = future[0];
+    const loc = sched[k];
+    return `Next up: ${weekdayName(k)}${loc ? " at " + loc : ""}`;
+  }
+
+  // Render the success screen (weekly goal ring + a separate queued count +
+  // the next-workday nudge) and go to it. Called after a real share/publish;
+  // markPostShared has already recorded the post, so it's in the week's count.
+  function goPosted(noteText) {
+    const posted = postsThisWeek();
+    const workdays = workdaysThisWeek();
+    const hasGoal = workdays >= 1;
+    const goal = hasGoal ? workdays : 5; // goal = your trading days, else a soft 5
+    const pct = Math.min(posted / goal, 1); // ring never renders past full
+    const smashed = posted >= goal;
+
+    $("#postedCount").textContent = posted;
+    $("#postedTitle").textContent = smashed ? "Week smashed! 🎉" : "Posted! 🎉";
+    // Label uses the real trading-day count — no inflating when you're ahead.
+    if (hasGoal) {
+      $("#postedRingCap").textContent =
+        posted >= workdays
+          ? "every trading day covered! 🔥"
+          : `${workdays - posted} more to hit your week`;
+    } else {
+      $("#postedRingCap").textContent = "keep 'em coming 🔥";
+    }
+
+    const arc = $("#postedRingArc");
+    const C = 2 * Math.PI * 52;
+    arc.style.strokeDasharray = C;
+    if (reduceMotion) {
+      arc.style.strokeDashoffset = C * (1 - pct);
+    } else {
+      arc.style.transition = "none";
+      arc.style.strokeDashoffset = C; // park empty
+      void arc.getBoundingClientRect(); // commit
+      arc.style.transition = "";
+      requestAnimationFrame(() => { arc.style.strokeDashoffset = C * (1 - pct); });
+    }
+
+    $("#postedQueued").textContent = Store.getQueue().length;
+
+    const nudge = nextWorkdayNudge();
+    const nEl = $("#postedNudge");
+    nEl.textContent = nudge || "";
+    nEl.hidden = !nudge;
+
+    const noteEl = $("#postedNote");
+    noteEl.textContent = noteText || "";
+    noteEl.hidden = !noteText;
+
+    $("#postedHome").hidden = !!post.keeperRef;
+    $("#postedKeepers").hidden = !post.keeperRef;
+    show("posted");
+  }
+
   async function doShare() {
     if (!post.finalBlob) return;
     const blobs = post.finalBlobs && post.finalBlobs.length ? post.finalBlobs : [post.finalBlob];
@@ -1553,15 +1639,13 @@
 
     markPostShared("share-sheet");
 
-    const note = $("#shareNote");
-    note.hidden = false;
-    note.textContent =
+    const noteText =
       result.method === "fallback"
         ? (result.captionCopied
             ? "Caption copied & image downloaded — paste the caption into Instagram or Facebook."
-            : "Image downloaded — copy your caption above into Instagram or Facebook.")
-        : "Shared! Pick Instagram or Facebook to finish posting.";
-    showDoneButton();
+            : "Image downloaded — copy your caption into Instagram or Facebook.")
+        : "Pick Instagram or Facebook in the share sheet to finish posting.";
+    goPosted(noteText);
   }
 
   /* ---------- DIRECT PUBLISH (Meta) ---------- */
@@ -1588,8 +1672,7 @@
       if (kind === "ig") await Publish.postToInstagram(post.finalBlob, post.captionText);
       else await Publish.postToFacebook(post.finalBlob, post.captionText);
       markPostShared(kind === "ig" ? "instagram-api" : "facebook-api");
-      note.textContent = kind === "ig" ? "Posted to Instagram ✅" : "Posted to Facebook ✅";
-      showDoneButton();
+      goPosted(kind === "ig" ? "Posted straight to Instagram ✅" : "Posted straight to Facebook ✅");
     } catch (e) {
       note.textContent = "Couldn't post: " + e.message;
     }

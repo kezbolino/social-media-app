@@ -115,7 +115,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-queue">🗓 Post queue</button>
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
-          <p class="app-version" id="appVersion">v0.81</p>
+          <p class="app-version" id="appVersion">v0.82</p>
         </div>
       </section>
 
@@ -408,6 +408,40 @@
           <p id="shareNote" class="hint" hidden></p>
           <button class="btn btn-ghost" data-action="go-home" hidden id="doneHome">Done — back to start</button>
           <button class="btn btn-secondary" data-action="back-to-keepers" hidden id="doneKeepers">← Back to my kept posts</button>
+        </div>
+      </section>
+
+      <!-- ===== POSTED! (success screen) ===== -->
+      <section class="screen" data-screen="posted">
+        <div class="pad posted-pad">
+          <img class="mascot mascot-lg mascot-center mascot-win" src="assets/mascot/excited.svg" alt="Wingman celebrating your post" draggable="false" />
+          <h2 class="posted-title" id="postedTitle">Posted! 🎉</h2>
+          <p class="posted-sub" id="postedSub">Another one out there.</p>
+
+          <div class="posted-ring" role="img" aria-label="Posts this week">
+            <svg viewBox="0 0 120 120" class="ring-svg" aria-hidden="true">
+              <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+              <circle class="ring-fg" id="postedRingArc" cx="60" cy="60" r="52"></circle>
+            </svg>
+            <div class="ring-center">
+              <strong id="postedCount">0</strong>
+              <small>this week</small>
+            </div>
+          </div>
+          <p class="posted-ring-cap" id="postedRingCap"></p>
+
+          <div class="posted-stats">
+            <div class="posted-stat">
+              <strong id="postedQueued">0</strong>
+              <small>queued for later</small>
+            </div>
+          </div>
+
+          <p class="posted-nudge" id="postedNudge" hidden></p>
+          <p class="hint posted-note" id="postedNote" hidden></p>
+
+          <button class="btn btn-primary btn-xl" data-action="go-home" id="postedHome" hidden>Back to home</button>
+          <button class="btn btn-secondary" data-action="back-to-keepers" id="postedKeepers" hidden>← Back to my kept posts</button>
         </div>
       </section>
 

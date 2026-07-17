@@ -738,6 +738,46 @@ input[type="range"] { touch-action: none; }
   border-color: transparent var(--panel) transparent transparent;
 }
 
+/* ---- Posted! success screen ---- */
+.posted-pad { text-align: center; }
+.posted-pad .mascot { margin-bottom: 2px; }
+.posted-title { margin: 4px 0 2px; font-size: 1.6rem; }
+.posted-sub { color: var(--muted); margin: 0 0 16px; }
+.posted-ring { position: relative; width: 154px; height: 154px; margin: 4px auto 8px; }
+.ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--panel-2); stroke-width: 12; }
+.ring-fg {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s var(--ease-premium);
+}
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.ring-center strong { font-size: 2.7rem; line-height: 1; color: var(--blue); }
+.ring-center small { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
+.posted-ring-cap { font-weight: 700; color: var(--text); margin: 0 0 18px; }
+.posted-stats { display: flex; gap: 12px; justify-content: center; margin: 0 0 16px; }
+.posted-stat {
+  background: var(--panel);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 22px;
+  min-width: 120px;
+}
+.posted-stat strong { display: block; font-size: 1.7rem; line-height: 1; color: var(--blue); }
+.posted-stat small { color: var(--muted); font-size: 0.78rem; }
+.posted-nudge { font-weight: 700; color: var(--blue); margin: 2px 0 14px; }
+.posted-note { margin: 0 0 14px; }
+.posted-pad .btn { max-width: 340px; margin-left: auto; margin-right: auto; }
+
 /* ---- Preview ---- */
 .preview-wrap {
   width: 100%;
@@ -2214,4 +2254,6 @@ html[data-btn="ios"] .swipe-btn:active {
   .navbtn-icon::before { transition: background 0.15s ease, opacity 0.15s ease; }
   /* The progress bar still moves — it just jumps to its new width. */
   .ob-bar { transition: none; }
+  /* Success-screen goal ring: shows its final fill immediately, no sweep. */
+  .ring-fg { transition: none; }
 }
