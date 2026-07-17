@@ -233,7 +233,7 @@ const Store = (() => {
 
   /* ---- App-wide UI font (Settings → 🔤 App font) ---- */
   function getFont() {
-    return read(K.FONT, "poppins");
+    return read(K.FONT, "visuelt");
   }
   function setFont(id) {
     write(K.FONT, id);

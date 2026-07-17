@@ -38,9 +38,13 @@ window.APP_CONFIG = {
   // App-wide UI font choices (Settings → 🔤 App font). `id` matches the
   // `data-font` attribute value in css/styles.css (see the --font-family
   // overrides there) — add a matching @font-face + override block if you add
-  // an option here. "poppins" is the built-in default (no override needed).
+  // an option here. "visuelt" is the built-in default (no override needed).
+  // NB the `label` doubles as the font-family name in the picker chip preview
+  // (renderFontPicker sets style="font-family:'<label>'"), so it must match the
+  // @font-face family name exactly — hence "Visuelt Pro", not "Visuelt".
   FONTS: [
-    { id: "poppins", label: "Poppins", blurb: "Clean & modern (default)" },
+    { id: "visuelt", label: "Visuelt Pro", blurb: "Crisp & grown-up (default)" },
+    { id: "poppins", label: "Poppins", blurb: "Clean & modern" },
     { id: "fredoka", label: "Fredoka", blurb: "Round & bubbly" },
     { id: "baloo2", label: "Baloo 2", blurb: "Bold & playful" },
     { id: "nunito", label: "Nunito", blurb: "Soft & friendly" },

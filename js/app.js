@@ -2737,7 +2737,7 @@
   // attribute change reskins the whole app. "poppins" is the built-in
   // default (no override rule needed, so clearing the attribute is enough).
   function applyFont(id) {
-    if (id && id !== "poppins") document.documentElement.setAttribute("data-font", id);
+    if (id && id !== "visuelt") document.documentElement.setAttribute("data-font", id);
     else document.documentElement.removeAttribute("data-font");
   }
 

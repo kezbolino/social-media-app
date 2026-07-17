@@ -84,7 +84,44 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-17 (latest): **Colour tokenise pass + 5 candidate themes (exploration,
+- 2026-07-17 (latest): **Visuelt Pro is now the default app font (owner brand
+  face).** Owner supplied the Visuelt Pro family (commercial — Colophon
+  Foundry) and asked to use it. Wired into the existing font-picker system, made
+  the default. Version → v0.59.
+  - ⚠️ **LICENSING**: Visuelt Pro is a **commercial** font, NOT under the OFL
+    that covers the other bundled faces (`assets/fonts/OFL.txt` does not apply
+    to it). The uploaded files were **desktop TTFs**; serving it as a webfont in
+    a PWA is a *separate* licence class. The owner is responsible for holding a
+    webfont/app licence for it — flagged to them. If that's ever a problem, the
+    swap-out is trivial: change the `:root --font-family` default back to
+    Poppins + revert the 4 "visuelt"-vs-"poppins" default flips below.
+  - **Files**: `assets/fonts/visuelt-{400,500,700}.woff2` (~74KB each) —
+    converted from the TTFs with fonttools+brotli, **subset to Latin** (UI emoji
+    come from the system emoji font, not this face). Visuelt ships only
+    Regular/Medium/Bold, so the `@font-face` declares **Medium over
+    `font-weight: 500 600`** and **Bold over `700 800`** — this keeps the app's
+    600 (emphasis) rendering as Medium and distinctly lighter than 700+ headings,
+    instead of collapsing 600 into Bold. Regular=400 covers body.
+  - **Made the built-in default the proper way** (kept the "default = no
+    `data-font` attribute" invariant, just repointed it): `:root --font-family`
+    → Visuelt; **added an `html[data-font="poppins"]` override block** so Poppins
+    stays selectable; flipped the hardcoded `"poppins"` default sentinel to
+    `"visuelt"` in all **four** spots — `applyFont()` (js/app.js), the FOUC
+    inline script (index.html, both the `||'"visuelt"'` fallback AND the
+    `!== "visuelt"` guard), and `getFont()`'s default (js/store.js). FONTS list
+    (js/config.js) gained the `visuelt` entry first (label **"Visuelt Pro"** —
+    must match the @font-face family exactly, since the picker chip previews
+    itself via `style="font-family:'<label>'"`); Poppins demoted to a normal
+    option.
+  - SW cache `v3`→`v4` so existing installs purge and pick up the new font.
+  - Verified headless (Chromium, localhost): all five requested weights
+    (400/500/600/700/800) resolve via `document.fonts.check`; body + buttons
+    compute to "Visuelt Pro" with **no** `data-font` attribute on a fresh device;
+    picker lists all 6 (visuelt first); selecting Poppins sets
+    `data-font="poppins"` and switching back clears it (invariant holds); no
+    console errors. Home screenshot eyeballed — Visuelt renders on greeting +
+    buttons, logo lockup unaffected (baked into logo.svg).
+- 2026-07-17: **Colour tokenise pass + 5 candidate themes (exploration,
   inert).** First step of a colour-scheme revamp the owner is picking by
   reaction ("know it when I see it"), Mobbin links from the owner incoming as
   extra candidates. Version → v0.58.

@@ -155,6 +155,34 @@
   src: url("../assets/fonts/quicksand-700.woff2") format("woff2");
 }
 
+/* Visuelt Pro (owner-supplied, commercial — Colophon Foundry, NOT under the
+   OFL that covers the other faces here). Ships Regular/Medium/Bold only, so the
+   Medium face is declared over 500–600 and Bold over 700–800; that keeps the
+   app's 600 (emphasis) as Medium and distinctly lighter than 700+ headings,
+   rather than collapsing 600 into Bold. Subset to Latin — UI emoji come from
+   the system emoji font, not this face. */
+@font-face {
+  font-family: "Visuelt Pro";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/visuelt-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Visuelt Pro";
+  font-style: normal;
+  font-weight: 500 600;
+  font-display: swap;
+  src: url("../assets/fonts/visuelt-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Visuelt Pro";
+  font-style: normal;
+  font-weight: 700 800;
+  font-display: swap;
+  src: url("../assets/fonts/visuelt-700.woff2") format("woff2");
+}
+
 :root {
   --blue: #0a4da1;
   --blue-press: #083f85;
@@ -182,8 +210,13 @@
 
   /* App-wide UI font (Settings → 🔤 App font). A `data-font` attribute on
      <html> (set by applyFont() in app.js) swaps --font-family; every element
-     inherits it from html,body below rather than hardcoding "Poppins", so
-     this is the one place a new option needs a stack added. */
+     inherits it from html,body below rather than hardcoding a family, so this
+     is the one place a new option needs a stack added. Visuelt Pro is the
+     built-in default (owner's brand face) — the no-attribute state; every other
+     family, incl. Poppins, is a data-font override below. */
+  --font-family: "Visuelt Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+html[data-font="poppins"] {
   --font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 html[data-font="fredoka"] {

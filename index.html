@@ -16,8 +16,8 @@
       // localStorage directly (Store isn't loaded yet at this point).
       (function () {
         try {
-          var f = JSON.parse(localStorage.getItem("sfp.font") || '"poppins"');
-          if (f && f !== "poppins") document.documentElement.setAttribute("data-font", f);
+          var f = JSON.parse(localStorage.getItem("sfp.font") || '"visuelt"');
+          if (f && f !== "visuelt") document.documentElement.setAttribute("data-font", f);
         } catch (e) {}
       })();
     </script>
@@ -114,7 +114,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
           <button class="btn btn-ghost btn-sm" data-action="ob-restart">🧪 View onboarding (debug)</button>
-          <p class="app-version" id="appVersion">v0.58</p>
+          <p class="app-version" id="appVersion">v0.59</p>
         </div>
       </section>
 
