@@ -114,7 +114,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
           <button class="btn btn-ghost btn-sm" data-action="ob-restart">🧪 View onboarding (debug)</button>
-          <p class="app-version" id="appVersion">v0.61</p>
+          <p class="app-version" id="appVersion">v0.62</p>
         </div>
       </section>
 
@@ -125,7 +125,16 @@
           <h2>New Post</h2>
         </header>
         <div class="pad">
-          <p class="lead">What kind of post?</p>
+          <!-- Brilliant-style question header: a progress bar, then the mascot
+               asking the question in a speech bubble (mirrors the Generate
+               brief's mascot + progress-bar pattern). -->
+          <div class="quiz-track" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="New post progress">
+            <span class="ob-bar" style="width: 25%"></span>
+          </div>
+          <div class="quiz-ask">
+            <img class="mascot quiz-mascot mascot-breathe" src="assets/mascot/thinking.svg" alt="Wingman thinking" decoding="async" draggable="false" />
+            <p class="speech">What kind of post?</p>
+          </div>
           <button class="tile" data-action="choose-single">
             <span class="tile-icon">🖼️</span>
             <span class="tile-text"><strong>Single photo</strong><small>One picture, sized for the feed</small></span>

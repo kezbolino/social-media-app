@@ -685,6 +685,59 @@ input[type="range"] { touch-action: none; }
 .tile-text strong { font-size: 1.1rem; color: var(--blue); }
 .tile-text small { color: var(--muted); margin-top: 2px; }
 
+/* ---- "What kind of post?" question header (Brilliant-style) ----
+   Progress bar (reuses the .ob-bar fill on a light track like the Generate
+   brief) + the mascot asking the question in a speech bubble. */
+.quiz-track {
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(10, 77, 161, 0.14);
+  box-shadow: inset 0 1px 2px rgba(10, 77, 161, 0.2);
+  overflow: hidden;
+  margin: 4px 0 16px;
+}
+.quiz-ask {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+.quiz-mascot { flex: 0 0 auto; height: 88px; width: auto; }
+.speech {
+  position: relative;
+  flex: 1;
+  margin: 0;
+  background: var(--panel);
+  border: 2px solid var(--blue);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  line-height: 1.25;
+  color: var(--text);
+}
+/* Left-pointing tail toward the mascot — two stacked triangles so the border
+   is preserved (outer = border colour, inner = fill sitting 3px over it). */
+.speech::before,
+.speech::after {
+  content: "";
+  position: absolute;
+  top: 26px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+.speech::before {
+  left: -13px;
+  border-width: 9px 13px 9px 0;
+  border-color: transparent var(--blue) transparent transparent;
+}
+.speech::after {
+  left: -10px;
+  border-width: 6px 10px 6px 0;
+  border-color: transparent var(--panel) transparent transparent;
+}
+
 /* ---- Preview ---- */
 .preview-wrap {
   width: 100%;

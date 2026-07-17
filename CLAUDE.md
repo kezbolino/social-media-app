@@ -84,7 +84,27 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-17 (latest): **Pill buttons + clean tile boxes (Brilliant-app
+- 2026-07-17 (latest): **"What kind of post?" screen → mascot + speech bubble
+  + progress bar (Brilliant-app reference).** Owner liked Brilliant's question
+  header. Version → v0.62.
+  - Added inside the type screen's `.pad` (kept the blue "New Post" `.bar` for
+    nav consistency — same arrangement the Generate brief already uses: blue bar
+    + a progress bar & mascot below it): a `.quiz-track` progress bar (reuses the
+    `.ob-bar` orange fill on a light rgba-blue track, **static at 25%** = step 1
+    of the New Post flow), then a `.quiz-ask` row — the **thinking** mascot
+    (`assets/mascot/thinking.svg`, `mascot-breathe`) on the left with a new
+    `.speech` bubble ("What kind of post?") whose left-pointing tail (two stacked
+    triangles, outer=`--blue` border, inner=`--panel` fill) points at it.
+    Dropped the old `.lead` "What kind of post?" text (the bubble replaces it).
+  - ⚠️ The progress bar is **static (decorative)** — it does NOT advance across
+    type→photo→caption→review yet. Wiring it through the whole New Post flow is a
+    follow-up the owner can ask for.
+  - Icons kept as-is (emoji 🖼️/🔲/🎠 in the `.tile-icon` badges) — Brilliant's
+    are custom flat illustrations; swapping ours to bespoke icons would be a
+    separate art task.
+  - Verified headless: bubble + tail render, mascot = thinking pose, bar = 25%,
+    no horizontal overflow, no console errors. Screenshot eyeballed.
+- 2026-07-17: **Pill buttons + clean tile boxes (Brilliant-app
   reference).** Owner liked Brilliant's button *shape* and option-box *shape*.
   Version → v0.61. Colour scheme deliberately left as-is (owner reviewed the
   6-theme round-1 gallery and chose to keep the current blue/orange).
