@@ -84,7 +84,36 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Progress-bar step markers tried, then reverted.**
+- 2026-07-17 (latest): **Colour tokenise pass + 5 candidate themes (exploration,
+  inert).** First step of a colour-scheme revamp the owner is picking by
+  reaction ("know it when I see it"), Mobbin links from the owner incoming as
+  extra candidates. Version → v0.58.
+  - **Tokenise pass (zero visual change, verified):** every hardcoded colour in
+    css/styles.css now routes through `:root` tokens — new ones: `--success`
+    (the keep/posted green, was `#2b8a3e` ×9), `--ink-on-accent` (text on
+    orange surfaces), `--accent-soft` (calendar working-day fill), `--stage`
+    (dark editor stage), `--edge-accent`/`--edge-neutral` (home 3D button
+    edges), `--blue-2` + `--hero-bg` (the home/onboarding gradient, now one
+    token). Whites deliberately NOT tokenised — all themes keep light-on-dark
+    heroes so the rgba(255,…) tints stay valid. Every non-white hex now
+    appears exactly once, in `:root`.
+  - **5 candidate themes** as `html[data-theme=…]` blocks right after the
+    `data-font` blocks — same mechanism as the font picker: `duo` (bright
+    green/yellow), `ember` (cream/paprika/mustard), `midnight` (dark),
+    `poster` (chalkboard + hot red), `pastel` (lavender/coral). **Inert until
+    something sets the attribute — nothing in the app does yet**; they exist
+    for the round-1 comparison gallery (screenshotted all 6 incl. current
+    across home/generate/calendar/settings/onboarding, headless, no console
+    errors). NB semantics: `--blue` = "primary", `--orange` = "accent/CTA";
+    themes reassign what those hold. `--ink-on-accent` exists because poster's
+    red CTA needs white text where the others use near-black.
+  - ⚠️ **These are tasting-menu candidates, NOT approved looks** — don't wire a
+    picker or default any of them without the owner choosing. Known quirks for
+    the eventual winner's polish pass: logo.svg's blue plate + mascot/Lottie
+    colours are baked into artwork (CSS can't retheme them), and a handful of
+    rgba brand-blue tints (shadows/glows, e.g. `.gen-brief-track`) still read
+    blue in every theme — convert via color-mix() or per-theme values then.
+- 2026-07-16: **Progress-bar step markers tried, then reverted.**
   Circle+tick step markers were added to both bars (v0.55), then the empty
   upcoming circles were hidden (v0.56) — but the owner decided against markers
   entirely and asked for the plain bar back. Fully removed: the `.pb-step`

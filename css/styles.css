@@ -161,6 +161,8 @@
   --orange: #f58b1f;
   --orange-press: #dd7a12;
 
+  --blue-2: #0d59b8; /* lighter primary — hero gradient end */
+
   --bg: #eef2f7;
   --panel: #ffffff;
   --panel-2: #e9eef5;
@@ -168,6 +170,13 @@
   --muted: #5d6b7b;
   --line: #d6deea;
   --error: #c0362c;
+  --success: #2b8a3e; /* keep/posted/like green */
+  --ink-on-accent: #1a1208; /* text sitting on --orange surfaces */
+  --accent-soft: #fdebd6; /* soft accent tint (calendar working day) */
+  --stage: #0c1622; /* dark editor-stage surface */
+  --edge-accent: #b0590a; /* 3D bottom edge under orange home buttons */
+  --edge-neutral: #a9b2bf; /* 3D bottom edge under white home buttons */
+  --hero-bg: linear-gradient(160deg, var(--blue) 0%, var(--blue) 45%, var(--blue-2) 100%);
   --radius: 16px;
   --navh: 54px;
 
@@ -188,6 +197,59 @@ html[data-font="nunito"] {
 }
 html[data-font="quicksand"] {
   --font-family: "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* ---- Candidate colour themes (round-1 tasting menu) ----
+   Same mechanism as the font picker: a `data-theme` attribute on <html> swaps
+   the :root tokens. No attribute = the current blue/orange look. These are
+   exploration candidates — inert in normal use until a picker sets the
+   attribute. NB `--blue` semantically means "primary" and `--orange` means
+   "accent/CTA" app-wide; themes reassign what colour those hold. */
+html[data-theme="duo"] {
+  /* Duolingo-bright: playful green primary, sunshine yellow CTA. */
+  --blue: #1d9e4f; --blue-press: #178342; --blue-2: #2ab863;
+  --orange: #ffc800; --orange-press: #e6b000;
+  --bg: #f2f9f2; --panel: #ffffff; --panel-2: #e5f3e7;
+  --text: #17301f; --muted: #587263; --line: #cfe6d4;
+  --success: #1cb0f6; --ink-on-accent: #241a02; --accent-soft: #fff3c4;
+  --stage: #0f2418; --edge-accent: #c79400; --edge-neutral: #a9bcae;
+}
+html[data-theme="ember"] {
+  /* Warm street-food: cream paper, paprika primary, mustard CTA. */
+  --blue: #b43a1e; --blue-press: #96311a; --blue-2: #cf4c2a;
+  --orange: #e8a13b; --orange-press: #cf8b25;
+  --bg: #f8f1e5; --panel: #fffdf8; --panel-2: #f1e6d4;
+  --text: #2c1f14; --muted: #7a6a58; --line: #e2d5bf;
+  --success: #4a7c2f; --ink-on-accent: #241505; --accent-soft: #fae8c8;
+  --stage: #241811; --edge-accent: #9c6b1d; --edge-neutral: #bfae95;
+}
+html[data-theme="midnight"] {
+  /* Dark mode: deep navy surfaces, the brand orange glowing on top. */
+  --blue: #3b82f6; --blue-press: #2f6cd1; --blue-2: #5b9bff;
+  --bg: #0e1520; --panel: #1a2433; --panel-2: #232f42;
+  --text: #e8eef7; --muted: #93a1b5; --line: #31405a;
+  --success: #35b45e; --accent-soft: #3a2a15;
+  --stage: #060b12; --edge-accent: #8a4d08; --edge-neutral: #0a0f16;
+  --hero-bg: linear-gradient(160deg, #101a2c 0%, #101a2c 45%, #1a2a4a 100%);
+}
+html[data-theme="poster"] {
+  /* Bold chalkboard poster: warm paper, charcoal primary, hot-red CTA. */
+  --blue: #1f1d18; --blue-press: #000000; --blue-2: #3a362c;
+  --orange: #ff4d2e; --orange-press: #e03a1c;
+  --bg: #fffbe9; --panel: #fffef7; --panel-2: #f5eed1;
+  --text: #16130c; --muted: #5c584a; --line: #e0d8b8;
+  --success: #1f7a33; --ink-on-accent: #ffffff; --accent-soft: #ffe1d6;
+  --stage: #16130c; --edge-accent: #a82a12; --edge-neutral: #c9c0a0;
+  --hero-bg: linear-gradient(160deg, #16130c 0%, #16130c 45%, #2a251a 100%);
+}
+html[data-theme="pastel"] {
+  /* Soft playful: lavender primary, coral CTA, airy lilac surfaces. */
+  --blue: #7b5ea7; --blue-press: #654a8f; --blue-2: #937bc0;
+  --orange: #ff8a5c; --orange-press: #ef7443;
+  --bg: #f7f5fb; --panel: #ffffff; --panel-2: #edeaf6;
+  --text: #2a2440; --muted: #6f6a85; --line: #ddd7ec;
+  --success: #4caf7d; --ink-on-accent: #2a1608; --accent-soft: #ffe4d6;
+  --stage: #221d33; --edge-accent: #c45f33; --edge-neutral: #b8b2cc;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -278,7 +340,7 @@ input[type="range"] { touch-action: none; }
   text-align: center;
   padding: 24px;
   gap: 12px;
-  background: linear-gradient(160deg, #0a4da1 0%, #0a4da1 45%, #0d59b8 100%);
+  background: var(--hero-bg);
   color: #fff;
 }
 /* .home is a centred flex column (align-items: center), which shrink-wraps
@@ -320,7 +382,7 @@ input[type="range"] { touch-action: none; }
   min-height: 1.4em;
 }
 .subtitle { color: rgba(255, 255, 255, 0.85); margin: 0 0 22px; max-width: 22rem; }
-.home .btn-primary { background: var(--orange); color: #1a1208; }
+.home .btn-primary { background: var(--orange); color: var(--ink-on-accent); }
 .home .btn-primary:active { background: var(--orange-press); }
 .home .btn-ghost { color: rgba(255, 255, 255, 0.9); }
 .app-version {
@@ -348,7 +410,7 @@ input[type="range"] { touch-action: none; }
   height: 100vh;
   height: 100dvh;
   padding: max(14px, env(safe-area-inset-top)) 20px max(18px, env(safe-area-inset-bottom));
-  background: linear-gradient(160deg, #0a4da1 0%, #0a4da1 45%, #0d59b8 100%);
+  background: var(--hero-bg);
   color: #fff;
 }
 .ob-progress {
@@ -514,7 +576,7 @@ input[type="range"] { touch-action: none; }
   border: 2px solid var(--blue);
   padding: 14px;
 }
-.btn-accent { background: var(--orange); color: #1a1208; }
+.btn-accent { background: var(--orange); color: var(--ink-on-accent); }
 .btn-accent:active { background: var(--orange-press); }
 .btn-ghost { background: transparent; color: var(--blue); font-weight: 600; }
 .btn-xl { padding: 20px; font-size: 1.2rem; }
@@ -648,7 +710,7 @@ input[type="range"] { touch-action: none; }
   font-weight: 600;
   cursor: pointer;
 }
-.chip.selected { background: var(--orange); border-color: var(--orange); color: #1a1208; }
+.chip.selected { background: var(--orange); border-color: var(--orange); color: var(--ink-on-accent); }
 .chip-add { color: var(--muted); border-style: dashed; }
 
 /* ---- Font picker (Settings → 🔤 App font) — each chip previews its own
@@ -695,7 +757,7 @@ input[type="range"] { touch-action: none; }
   flex: 0 0 auto; /* pinned — never scrolls away */
   width: 100%;
   min-height: 200px;
-  background: #0c1622;
+  background: var(--stage);
   border-radius: var(--radius);
   display: flex;
   align-items: center;
@@ -939,14 +1001,14 @@ input[type="range"] { touch-action: none; }
   padding: 0;
 }
 .cal-cell.blank { visibility: hidden; border: none; background: none; }
-.cal-cell.working { background: #fdebd6; border-color: var(--orange); color: var(--orange-press); }
+.cal-cell.working { background: var(--accent-soft); border-color: var(--orange); color: var(--orange-press); }
 .cal-cell.today { box-shadow: inset 0 0 0 2px var(--blue); }
 .cal-cell.selected { box-shadow: inset 0 0 0 3px var(--orange); }
 .cal-num { font-size: 0.95rem; }
 .cal-dot { position: absolute; bottom: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
-.cal-tick { position: absolute; bottom: 3px; font-size: 0.72rem; font-weight: 800; color: #2b8a3e; line-height: 1; }
-.cal-cell.posted { box-shadow: inset 0 0 0 2px #2b8a3e; }
-.cal-cell.posted.selected { box-shadow: inset 0 0 0 3px var(--orange), inset 0 0 0 5px #2b8a3e; }
+.cal-tick { position: absolute; bottom: 3px; font-size: 0.72rem; font-weight: 800; color: var(--success); line-height: 1; }
+.cal-cell.posted { box-shadow: inset 0 0 0 2px var(--success); }
+.cal-cell.posted.selected { box-shadow: inset 0 0 0 3px var(--orange), inset 0 0 0 5px var(--success); }
 .cal-legend {
   display: flex;
   gap: 18px;
@@ -958,7 +1020,7 @@ input[type="range"] { touch-action: none; }
 .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .lg-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .lg-work { background: var(--orange); }
-.lg-tick { color: #2b8a3e; font-weight: 800; font-style: normal; }
+.lg-tick { color: var(--success); font-weight: 800; font-style: normal; }
 .cal-day {
   margin-top: 16px;
   background: var(--panel);
@@ -1038,7 +1100,7 @@ input[type="range"] { touch-action: none; }
   border-radius: 10px;
   padding: 8px 10px;
 }
-.cal-sched-item.is-posted { border-left-color: #2b8a3e; }
+.cal-sched-item.is-posted { border-left-color: var(--success); }
 .cal-sched-when { font-weight: 700; font-size: 0.85rem; color: var(--blue); }
 .cal-sched-cap { font-size: 0.85rem; color: var(--text); margin-top: 3px; line-height: 1.35; }
 .cal-sched-empty { font-size: 0.85rem; color: var(--muted); margin: 0; }
@@ -1142,7 +1204,7 @@ input[type="range"] { touch-action: none; }
   font-weight: 800; font-size: 1.1rem; letter-spacing: 1.5px; text-transform: uppercase;
   border: 3px solid currentColor; opacity: 0; pointer-events: none;
 }
-.swipe-badge.keep { left: 16px; color: #2b8a3e; transform: rotate(-12deg); }
+.swipe-badge.keep { left: 16px; color: var(--success); transform: rotate(-12deg); }
 .swipe-badge.nope { right: 16px; color: var(--error); transform: rotate(12deg); }
 
 .gen-swipe-actions { display: flex; align-items: center; justify-content: center; gap: 24px; margin: 2px 0 6px; }
@@ -1158,7 +1220,7 @@ input[type="range"] { touch-action: none; }
   transition: transform 0.3s var(--spring), background 0.15s ease;
 }
 .swipe-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(10, 35, 49, 0.12); }
-.swipe-btn.like { color: #2b8a3e; border-color: #2b8a3e; }
+.swipe-btn.like { color: var(--success); border-color: var(--success); }
 .swipe-btn.nope { color: var(--error); border-color: var(--error); }
 .gen-deck-hint { text-align: center; margin: 2px 0 8px; }
 .gen-pool-note { text-align: center; margin: 8px 0 0; font-size: 0.82rem; }
@@ -1298,7 +1360,7 @@ input[type="range"] { touch-action: none; }
   padding: 12px 14px;
   margin-bottom: 10px;
 }
-.queue-item.is-due { border-left-color: #2b8a3e; }
+.queue-item.is-due { border-left-color: var(--success); }
 .queue-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; flex: 0 0 auto; border: 1px solid var(--line); }
 .queue-body { flex: 1; min-width: 0; }
 .queue-when { font-weight: 700; color: var(--blue); font-size: 0.95rem; }
@@ -1516,10 +1578,10 @@ input[type="range"] { touch-action: none; }
 /* Home buttons: a chunkier, more pronounced edge (owner request) — a darker
    orange under the orange buttons, a grey under the white (secondary) ones. */
 .home .btn { box-shadow: 0 6px 0 var(--btn-edge); }
-.home .btn-primary, .home .btn-accent { --btn-edge: #b0590a; }
+.home .btn-primary, .home .btn-accent { --btn-edge: var(--edge-accent); }
 /* The white home buttons: grey edge, and NO blue border (owner: the grey
    ones shouldn't have a dark outline) — the grey shadow gives the depth. */
-.home .btn-secondary { --btn-edge: #a9b2bf; border: none; }
+.home .btn-secondary { --btn-edge: var(--edge-neutral); border: none; }
 .home .btn:active { transform: translateY(6px); box-shadow: 0 0 0 var(--btn-edge); }
 
 /* The hero CTA gently breathes to invite the first tap. */
