@@ -1958,9 +1958,10 @@
     renderBriefStep(dir === "back");
   }
 
+  // Stoic-style stacked pill option (full-width, fills blue when selected).
   function briefChip(action, val, label, selected) {
     return (
-      `<button class="chip${selected ? " selected" : ""}" data-action="${action}" ` +
+      `<button class="brief-opt${selected ? " selected" : ""}" data-action="${action}" ` +
       `data-val="${escapeAttr(val)}">${escapeAttr(label)}</button>`
     );
   }
@@ -1974,9 +1975,9 @@
         (window.Mascot ? Mascot.html("walk", { anim: "sway", size: "lg", className: "mascot-center" }) : "") +
         `<h3 class="gen-q-title">Right — where are we at?</h3>` +
         `<p class="hint">The captions will shout about this pitch.</p>` +
-        `<div class="chips">` +
+        `<div class="brief-opts">` +
         locs.map((l) => briefChip("brief-loc", l, l, l === genBrief.location)).join("") +
-        `<button class="chip chip-add" data-action="brief-new-loc">＋ Somewhere new</button>` +
+        `<button class="brief-opt brief-opt-add" data-action="brief-new-loc">＋ Somewhere new</button>` +
         `</div>` +
         `<div class="row gen-brief-add" id="briefAddRow" ${locs.length ? "hidden" : ""}>` +
         `<input id="briefLocInput" class="text-input" type="text" placeholder="e.g. Greenwich Market" />` +
@@ -1998,9 +1999,9 @@
         (window.Mascot ? Mascot.html("thinking", { anim: "breathe", size: "lg", className: "mascot-center" }) : "") +
         `<h3 class="gen-q-title">When's it going out?</h3>` +
         `<p class="hint">Sets the day the captions mention.</p>` +
-        `<div class="chips">` +
+        `<div class="brief-opts">` +
         chips.map((c) => briefChip("brief-when", c.val, c.label, c.val === genBrief.date)).join("") +
-        `<button class="chip chip-add" data-action="brief-pick-day">📅 Another day</button>` +
+        `<button class="brief-opt brief-opt-add" data-action="brief-pick-day">📅 Another day</button>` +
         `</div>` +
         `<div class="row gen-brief-add" id="briefDayRow" hidden>` +
         `<input id="briefDayInput" class="text-input" type="date" min="${today}" value="${escapeAttr(genBrief.date || today)}" aria-label="Post day" />` +
@@ -2012,7 +2013,7 @@
         (window.Mascot ? Mascot.html("excited", { anim: "breathe", size: "lg", className: "mascot-center" }) : "") +
         `<h3 class="gen-q-title">What's the vibe?</h3>` +
         `<p class="hint">Tick as many as you fancy — mix it up.</p>` +
-        `<div class="chips" id="briefVibes">` +
+        `<div class="brief-opts" id="briefVibes">` +
         GEN_VIBES.map((v) => briefChip("brief-vibe", v.tag, v.label, genBrief.tags.has(v.tag))).join("") +
         `</div>` +
         `<button class="btn btn-accent gen-cook" data-action="brief-cook">✨ Cook 'em up</button>` +
@@ -2027,7 +2028,7 @@
     if (briefAdvancing) return;
     briefAdvancing = true;
     apply();
-    $$("#genBriefStep .chip").forEach((c) => c.classList.toggle("selected", c === el));
+    $$("#genBriefStep .brief-opt").forEach((c) => c.classList.toggle("selected", c === el));
     setTimeout(() => goBriefStep(genBriefStep + 1), reduceMotion ? 0 : 380);
   }
 

@@ -1262,6 +1262,41 @@ input[type="range"] { touch-action: none; }
 .gen-q .mascot { height: 110px; }
 .gen-q .chips { margin-top: 14px; }
 .gen-cook { margin-top: 18px; }
+
+/* Generate brief options — Stoic-style stacked full-width pills (kept the
+   brand blue/orange, not Stoic's mono). Selected fills solid blue with white
+   text; the "add" variants (Somewhere new / Another day) get a dashed border. */
+.brief-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0 4px;
+}
+.brief-opt {
+  width: 100%;
+  padding: 15px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 1.02rem;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease, transform 0.05s ease;
+}
+.brief-opt:active { transform: scale(0.97); }
+.brief-opt.selected {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.brief-opt-add {
+  border-style: dashed;
+  color: var(--muted);
+  font-weight: 600;
+}
 .gen-step-back { width: auto; margin: 4px auto 0; }
 .gen-brief-add { margin-top: 12px; }
 /* Flex-row input trap (see the calendar add-place note): without min-width:0

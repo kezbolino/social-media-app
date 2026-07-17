@@ -84,7 +84,26 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-17 (latest): **Custom SVG post-type icons (replaced the emoji).**
+- 2026-07-17 (latest): **Generate brief → Stoic-style stacked pill options.**
+  Owner liked the Stoic onboarding's pills + minimal look, wanted it on the
+  Generate brief (NOT onboarding), keeping the brand blue/orange (not Stoic's
+  mono). Version → v0.65.
+  - The three brief steps (Where / When / Vibe) render their options as
+    full-width **stacked pills** (`.brief-opts` column + `.brief-opt`) instead
+    of the old wrapping `.chips`. Selected = solid `--blue` fill + white text;
+    the add variants (＋ Somewhere new / 📅 Another day) get `.brief-opt-add`
+    (dashed border, muted). `briefChip()` (js/app.js) now emits `.brief-opt`;
+    the three `renderBriefStep` containers became `.brief-opts`; and
+    `briefSelectAndAdvance`'s selector was updated `.chip`→`.brief-opt` (it's
+    what clears the other pills' selected state — miss it and auto-advance
+    leaves every tapped option highlighted).
+  - Multi-select (Vibe) still toggles via `briefToggleVibe` (class-agnostic, no
+    change); auto-advance (Where/When) unchanged. Pills are full-width to line
+    up with the orange "Cook 'em up" `.btn` below them.
+  - Verified headless: walked Where→When→Vibe — pills render (radius 999px), no
+    `.chip` left, tap selects + auto-advances, Vibe multi-select keeps 3
+    preselected, no console errors. Screenshots eyeballed.
+- 2026-07-17: **Custom SVG post-type icons (replaced the emoji).**
   Owner approved a hand-drawn flat set (previewed first). Version → v0.64.
   - `assets/icons/{single,collage,carousel}.svg` — flat, solid, blue-primary +
     orange-accent to match the brand look (single = sun+mountains photo card;
