@@ -206,7 +206,7 @@
   --edge-neutral: #a9b2bf; /* 3D bottom edge under white home buttons */
   --hero-bg: linear-gradient(160deg, var(--blue) 0%, var(--blue) 45%, var(--blue-2) 100%);
   --radius: 16px;
-  --navh: 54px;
+  --navh: 64px; /* floating capsule nav: visual height + the gap under it */
 
   /* App-wide UI font (Settings → 🔤 App font). A `data-font` attribute on
      <html> (set by applyFont() in app.js) swaps --font-family; every element
@@ -1489,58 +1489,79 @@ input[type="range"] { touch-action: none; }
    sections (fixed to the viewport) and is only shown on the hub screens —
    the guided post-creation flow (photo/editor/quiz/caption/review) hides it
    so it doesn't fight with that flow's own sticky actionbar. */
+/* Floating "capsule" nav (à la Alan): detached from the screen edges, fully
+   rounded, soft all-round shadow — reads as a raised control, not a chrome bar
+   welded to the bottom. */
 .bottomnav {
   position: fixed;
   left: 50%;
-  bottom: 0;
+  bottom: calc(10px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 520px;
+  width: calc(100% - 24px);
+  max-width: 460px;
   display: none;
   justify-content: space-around;
   align-items: center;
+  gap: 2px;
   background: var(--panel);
-  border-top: 1px solid var(--line);
-  padding: 8px 4px max(8px, env(safe-area-inset-bottom));
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  padding: 7px 8px;
   z-index: 50;
-  box-shadow: 0 -2px 10px rgba(10, 77, 161, 0.08);
+  box-shadow: 0 10px 30px rgba(10, 35, 49, 0.16), 0 2px 8px rgba(10, 35, 49, 0.08);
 }
 #app.has-bottomnav .bottomnav { display: flex; }
 .navbtn {
   flex: 1;
+  position: relative; /* anchors the active pill (::before) */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
   background: none;
   border: none;
   color: var(--muted);
-  padding: 8px 2px;
+  padding: 10px 2px;
   margin: 0;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 14px;
+}
+/* The "shape around the icon" — a soft tinted pill that sits behind the active
+   tab's icon and springs in when you land on it. A tint of the primary via
+   color-mix, so it re-colours automatically with whatever theme is active. */
+.navbtn::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 34px;
+  border-radius: 13px;
+  background: transparent;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.55);
+  transition: background 0.18s ease, opacity 0.18s ease,
+    transform 0.32s var(--spring);
+  z-index: 0;
 }
 .navbtn svg {
+  position: relative;
+  z-index: 1;
   width: 24px;
   height: 24px;
   transition: transform 0.15s var(--spring), color 0.15s ease;
 }
-.navbtn::after {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: transparent;
-  transition: background 0.15s ease;
-}
 .navbtn.is-active { color: var(--blue); }
 .navbtn.is-active svg { stroke-width: 2; }
-/* The dot marks where you are, so it follows is-active and nothing else. The
-   post button gets is-active from show() on the "type" screen (it has no
-   data-nav to match on) — never lit unconditionally, or it reads as "you are
+/* Active pill marks where you are, so it follows is-active and nothing else.
+   The post button gets is-active from show() on the "type" screen (it has no
+   data-nav to match on) — never lit unconditionally, or it'd read as "you are
    here" on every screen. */
-.navbtn.is-active::after { background: var(--orange); }
+.navbtn.is-active::before {
+  background: color-mix(in srgb, var(--blue) 15%, var(--panel));
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
 /* Light press feedback: the icon dips down then springs back via the
    bouncy easing on release — same feel as the rest of the app's buttons. */
 .navbtn:active svg { transform: scale(0.78); }
@@ -1984,6 +2005,8 @@ input[type="range"] { touch-action: none; }
   .btn { transition: background 0.15s ease; }
   .back, .tile-icon, .slot, .cal-cell, .etab { transition: none; }
   .swipe-card, .swipe-btn { transition: none !important; }
+  /* Active-tab pill still appears — it just snaps in instead of springing. */
+  .navbtn::before { transition: background 0.15s ease, opacity 0.15s ease; }
   /* The progress bar still moves — it just jumps to its new width. */
   .ob-bar { transition: none; }
 }

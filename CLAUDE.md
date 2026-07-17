@@ -84,7 +84,37 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-17 (latest): **Visuelt Pro is now the default app font (owner brand
+- 2026-07-17 (latest): **Bottom nav → floating capsule + active pill (Alan-app
+  reference).** Owner shared the Alan app's nav and liked "the shape around the
+  icons" + the tap animation. Version → v0.60.
+  - **Capsule**: `.bottomnav` detached from the screen edges — `bottom: 10px +
+    safe-area`, `width: calc(100% - 24px)` / `max-width: 460px`, `border-radius:
+    26px`, all-round soft shadow (was an edge-to-edge bar with `border-top` and
+    a top-only shadow). `--navh` 54→64px so the hub/home content padding still
+    clears the now-floating bar (both use `calc(... + var(--navh) + safe)`).
+  - **Active pill** replaces the old 6px dot: a `.navbtn::before` soft rounded
+    rect (48×34, r13) sits *behind* the active icon and **springs in** (scale
+    0.55→1 on `--spring`) when you land on the tab — that's the "shape around
+    the icons" + the tap animation in one. Tint is `color-mix(in srgb,
+    var(--blue) 15%, var(--panel))` so it **re-colours with whatever theme is
+    active** (no hardcoded value). Same `is-active` semantics as before — the
+    post button (no `data-nav`) only lights on the `type` screen via show().
+    The icon keeps its `fx-nav-pop` bounce + `:active` press-scale.
+  - Reduced-motion: the pill still appears but **snaps** (transform transition
+    dropped, only bg/opacity fade) — added a `.navbtn::before` override in the
+    reduced-motion block.
+  - ⚠️ **Kept icon-only** (no text labels) to match the app's existing nav —
+    the Alan reference HAS labels; owner was asked whether to add them as a
+    follow-up. If added: New/Calendar/Generate/Settings labels, bump `--navh`
+    again + revisit pill geometry (it'd wrap icon+label).
+  - Uses **`color-mix()`** — first use in the app; fine for the modern
+    mobile/PWA target. If an ancient webview ever matters, the fallback is a
+    flat `--accent-soft`-style token.
+  - Verified headless (Chromium, 390×844, localhost): capsule floats 10px up,
+    12px inset each side, r26; active pill opacity 1 + tinted bg only on the
+    current tab and moves correctly on tab change (calendar→settings); no
+    console errors. Screenshot eyeballed.
+- 2026-07-17: **Visuelt Pro is now the default app font (owner brand
   face).** Owner supplied the Visuelt Pro family (commercial — Colophon
   Foundry) and asked to use it. Wired into the existing font-picker system, made
   the default. Version → v0.59.
