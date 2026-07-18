@@ -207,7 +207,7 @@
   --hero-bg: linear-gradient(160deg, var(--blue) 0%, var(--blue) 45%, var(--blue-2) 100%);
   --radius: 16px; /* cards, tiles, previews, inputs */
   --btn-radius: 999px; /* buttons are full pills/stadiums (Brilliant-style) */
-  --navh: 64px; /* floating capsule nav: visual height + the gap under it */
+  --navh: 80px; /* floating capsule nav: visual height (icon + label) + the gap under it */
 
   /* App-wide UI font (Settings → 🔤 App font). A `data-font` attribute on
      <html> (set by applyFont() in app.js) swaps --font-family; every element
@@ -1615,33 +1615,40 @@ input[type="range"] { touch-action: none; }
 #app.has-bottomnav .bottomnav { display: flex; }
 .navbtn {
   flex: 1;
-  position: relative; /* anchors the active pill (::before) */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3px;
   background: none;
   border: none;
   color: var(--muted);
-  padding: 10px 2px;
+  padding: 6px 1px;
   margin: 0;
   cursor: pointer;
   border-radius: 14px;
 }
+/* The icon sits in a fixed box so the active pill (::before) stays anchored to
+   the icon regardless of the label beneath it. */
+.navbtn-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 30px;
+}
 /* The "shape around the icon" — a soft tinted pill that sits behind the active
    tab's icon and springs in when you land on it. A tint of the primary via
    color-mix, so it re-colours automatically with whatever theme is active. */
-.navbtn::before {
+.navbtn-icon::before {
   content: "";
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 48px;
-  height: 34px;
-  border-radius: 13px;
+  inset: 0;
+  border-radius: 15px;
   background: transparent;
   opacity: 0;
-  transform: translate(-50%, -50%) scale(0.55);
+  transform: scale(0.55);
   transition: background 0.18s ease, opacity 0.18s ease,
     transform 0.32s var(--spring);
   z-index: 0;
@@ -1653,16 +1660,23 @@ input[type="range"] { touch-action: none; }
   height: 24px;
   transition: transform 0.15s var(--spring), color 0.15s ease;
 }
+.navbtn-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+}
 .navbtn.is-active { color: var(--blue); }
 .navbtn.is-active svg { stroke-width: 2; }
 /* Active pill marks where you are, so it follows is-active and nothing else.
    The post button gets is-active from show() on the "type" screen (it has no
    data-nav to match on) — never lit unconditionally, or it'd read as "you are
    here" on every screen. */
-.navbtn.is-active::before {
+.navbtn.is-active .navbtn-icon::before {
   background: color-mix(in srgb, var(--blue) 15%, var(--panel));
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
+  transform: scale(1);
 }
 /* Light press feedback: the icon dips down then springs back via the
    bouncy easing on release — same feel as the rest of the app's buttons. */
@@ -1994,6 +2008,7 @@ input[type="range"] { touch-action: none; }
   padding: 14px 0;
 }
 .mascot-empty-msg { color: var(--muted); font-size: 0.92rem; max-width: 22rem; }
+.mascot-empty-cta { margin-top: 4px; }
 
 /* Win moment on the Review screen: celebrate pose pops in above the note. */
 #celebrateMascot { margin: 8px auto 4px; }
@@ -2109,7 +2124,7 @@ input[type="range"] { touch-action: none; }
   .back, .tile-icon, .slot, .cal-cell, .etab { transition: none; }
   .swipe-card, .swipe-btn { transition: none !important; }
   /* Active-tab pill still appears — it just snaps in instead of springing. */
-  .navbtn::before { transition: background 0.15s ease, opacity 0.15s ease; }
+  .navbtn-icon::before { transition: background 0.15s ease, opacity 0.15s ease; }
   /* The progress bar still moves — it just jumps to its new width. */
   .ob-bar { transition: none; }
 }

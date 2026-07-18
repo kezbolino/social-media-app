@@ -1,5 +1,29 @@
 # Session Log
 
+## 2026-07-18 (pm) — Audit punch-list items 8–9 (v0.66 → v0.67)
+**Done** — verified in real Chromium (375×812), no console errors.
+- **#8 nav labels + Home tab.** Bottom nav is now 5 tabs with labels: Home /
+  New / Calendar / Generate / Settings. Added a Home tab (`go-home`), wrapped
+  each icon in `.navbtn-icon` so the active pill (`::before`) stays anchored to
+  the icon with a label beneath, added `.navbtn-label`, bumped `--navh` 64→80.
+  Fixed a latent bug: a normal boot never ran `show("home")` (home is
+  statically active), so the nav's active-tab logic didn't fire until the first
+  navigation — added a suppressed `show("home")` on boot so Home lights
+  immediately.
+- **#9 smart defaults.** (a) Calendar opens on today with its day panel already
+  open (`openCalendar` → `selectCalDay(today)`). (b) Honest ob-done copy —
+  `renderObDone()` drops the "got your photos" claim when the stash is empty
+  (photos step is skippable). (c) Empty-state CTAs — `mascotEmpty()` takes an
+  optional CTA button; History + Queue empties link to Generate, the Generate
+  no-photos empty links to Settings → Add photos. (d) Today already pre-selected
+  in the brief — verified, no change needed.
+- Version → v0.67. SW cache untouched (network-first; no new assets).
+
+**Next** — structural items still queued: #10 stash picker grid on photo
+screens, #11 keeper tray compact rows, #12 44px tap targets + undo snackbar,
+#13 finish SVG icon set, then #14–18. Homework #1 (delete old wings hashtags on
+the phone) and #4 (brand-line decision) still owner-side.
+
 ## 2026-07-18 (pm) — Audit punch-list items 5–7 (v0.65 → v0.66)
 **Done** — first three code items off the agreed list; owner confirmed homework
 2 & 3 (backup / Visuelt licence) already sorted. All verified in real Chromium

@@ -164,7 +164,7 @@
 
   // Fill an empty-state <p> with a mascot pose + message, so blank screens feel
   // charming rather than dead. Text is set via textContent (never innerHTML).
-  function mascotEmpty(el, state, text) {
+  function mascotEmpty(el, state, text, cta) {
     if (!el) return;
     el.classList.add("mascot-empty");
     el.innerHTML = "";
@@ -175,6 +175,15 @@
     span.className = "mascot-empty-msg";
     span.textContent = text;
     el.appendChild(span);
+    // Optional call-to-action so a dead-end screen offers a way forward. The
+    // button uses data-action, so the delegated click handler wires it for free.
+    if (cta && cta.label && cta.action) {
+      const btn = document.createElement("button");
+      btn.className = "btn btn-accent btn-sm mascot-empty-cta";
+      btn.setAttribute("data-action", cta.action);
+      btn.textContent = cta.label;
+      el.appendChild(btn);
+    }
     el.hidden = false;
   }
 
@@ -194,6 +203,13 @@
     if (firstRun) {
       suppressHistoryPush = true;
       startOnboarding();
+      suppressHistoryPush = false;
+    } else {
+      // Home is is-active in the static HTML, but the nav's active-tab marking
+      // lives in show() — so without this the Home tab wouldn't light until the
+      // first navigation. Suppress the push: the initial entry is already home.
+      suppressHistoryPush = true;
+      show("home");
       suppressHistoryPush = false;
     }
     try {
@@ -369,6 +385,7 @@
     }
     if (screen === "ob-photos") renderObPhotos();
     if (screen === "ob-places") renderObPlaces();
+    if (screen === "ob-done") renderObDone();
     show(screen);
     if (bar) {
       // Reading offsetWidth once the screen is visible forces a synchronous
@@ -393,6 +410,19 @@
 
   function startOnboarding() {
     obGo("ob-welcome");
+  }
+
+  // Honest sign-off: the photos step is skippable, so don't claim "got your
+  // photos" when the stash is empty. The pitches are always seeded, so they're
+  // safe to promise.
+  async function renderObDone() {
+    const hint = $("#obDoneHint");
+    if (!hint) return;
+    let hasPhotos = false;
+    try { hasPhotos = window.Photos && Photos.supported ? (await Photos.count()) > 0 : false; } catch (e) {}
+    hint.textContent = hasPhotos
+      ? "Wingman's got your photos, your pitches and a pile of ready-written captions. Let's make some posts."
+      : "Your pitches are set and there's a pile of ready-written captions waiting. Add a photo or two when you're ready and you're away.";
   }
 
   // Every exit from setup runs through here, so the flag can't be missed and
@@ -1680,9 +1710,9 @@
 
   function openCalendar() {
     calView = new Date();
-    selectedDate = null;
-    $("#calDay").hidden = true;
-    renderCalendar();
+    // Land on today with its schedule already open — a useful default beats a
+    // blank panel (selectCalDay renders the grid + day panel itself).
+    selectCalDay(Notify.todayStr());
     show("calendar");
   }
   function shiftMonth(delta) {
@@ -2099,7 +2129,8 @@
       info.textContent = "";
       $("#genEmpty").innerHTML =
         (window.Mascot ? Mascot.html("relaxing", { size: "lg", className: "mascot-center" }) : "") +
-        '<p class="hint">Add some chicken photos first — Settings → 📸 My chicken photos — then come back for a fresh batch.</p>';
+        '<p class="hint">Add some chicken photos first, then come back for a fresh batch.</p>' +
+        '<button class="btn btn-accent btn-sm mascot-empty-cta" data-action="open-settings">📸 Add photos</button>';
       genShow("empty");
       return;
     }
@@ -2575,7 +2606,8 @@
     const empty = $("#historyEmpty");
     list.innerHTML = "";
     if (!posts.length) {
-      mascotEmpty(empty, "sad", "No posts yet — once you share a few, they'll show up here to reuse.");
+      mascotEmpty(empty, "sad", "No posts yet — once you share a few, they'll show up here to reuse.",
+        { label: "✨ Generate posts", action: "open-generate" });
       return;
     }
     empty.hidden = true;
@@ -2643,7 +2675,8 @@
     queueUrls = [];
     list.innerHTML = "";
     if (!items.length) {
-      mascotEmpty(empty, "sleeping", "Nothing queued yet — add one below.");
+      mascotEmpty(empty, "sleeping", "Nothing queued yet — generate a batch and queue one for a day at the pitch.",
+        { label: "✨ Generate posts", action: "open-generate" });
       return;
     }
     empty.hidden = true;

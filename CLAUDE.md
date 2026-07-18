@@ -84,7 +84,37 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-18 (latest): **Audit punch-list #5–7 (v0.66).**
+- 2026-07-18 (latest): **Audit punch-list #8–9 (v0.67).**
+  - **#8 nav labels + Home tab.** The floating capsule nav gained a **5th tab
+    (Home**, `data-nav="home" data-action="go-home"`, first) and **text labels**
+    under every icon (Home/New/Calendar/Generate/Settings). Each icon is now
+    wrapped in a `.navbtn-icon` box and the active pill moved from
+    `.navbtn::before` → `.navbtn-icon::before` so it stays anchored to the icon
+    regardless of the label beneath. Added `.navbtn-label` (0.63rem/700).
+    `--navh` 64→80px so hub-screen content still clears the taller bar. The New
+    button stays the only `data-nav`-less navbtn (still lit on `type` via
+    show()); Home has `data-nav` so the `:not([data-nav])` post-button selector
+    is unaffected. **Gotcha:** a non-first-run boot never called `show("home")`
+    (home is is-active in static HTML), so the nav's active-tab marking — which
+    lives in show() — never ran; the Home tab wouldn't light until the first
+    navigation. Fixed with a suppressed `show("home")` in boot's else branch.
+    Reduced-motion selector updated to `.navbtn-icon::before`.
+  - **#9 smart defaults.**
+    - *Calendar opens on today:* `openCalendar()` now calls
+      `selectCalDay(todayStr())` instead of leaving `selectedDate = null`, so
+      the day panel + today's schedule show straight away (the `.today`/
+      `.selected` cell styling already existed).
+    - *Honest ob-done copy:* the photos step is skippable, so `renderObDone()`
+      (called from `obGo` on ob-done) swaps the sign-off — "got your photos"
+      only when the stash is non-empty, else a "add a photo when you're ready"
+      line. Hint got `id="obDoneHint"`.
+    - *Empty-state CTAs:* `mascotEmpty()` gained an optional `cta {label,action}`
+      arg that appends a `.btn` (data-action, so the delegated handler wires it).
+      History + Queue empties now offer "✨ Generate posts"; the Generate
+      no-photos empty offers "📸 Add photos" (→ open-settings).
+    - *Today pre-selected in the brief* was already the case (openGenerate sets
+      `genBrief.date = today`; the Today chip matches) — verified, left as is.
+- 2026-07-18: **Audit punch-list #5–7 (v0.66).**
   - **#5 confetti once-per-batch.** `showKeepers()` fired the quiet confetti on
     every keeper-tray visit (so it re-celebrated on each return from posting/
     customising a keeper). New `keepersCelebrated` flag — reset in
