@@ -18,9 +18,20 @@
   warns when the checkout is behind or the tree is dirty — so no session
   works on stale code again.
 
-**Next** — pick items off the audit; week-1 list: confetti guard, clip fixes,
-home hierarchy, nav labels, remaining smart defaults. Also: confirm the
-Visuelt Pro webfont licence.
+**Next — agreed numbered list (owner wants to go through it in order; full
+detail + mockups in the audit artifact):**
+- Homework, no code: 1 delete old wings hashtags on the phone · 2 export a
+  backup · 3 confirm Visuelt Pro webfont licence · 4 decide the brand line
+  (Chuckling Wings name vs no-wings menu) → new caption hooks.
+- Quick app fixes: 5 confetti once-per-batch · 6 swipe-cap clip + scroll
+  fades · 7 home hierarchy (one orange hero, demote New Post, drop debug
+  btn) · 8 nav labels + Home tab · 9 remaining smart defaults (today
+  pre-selected, honest ob-done copy, empty-state CTAs, calendar today).
+- Structural: 10 stash picker grid on photo screens · 11 keeper tray
+  compact rows · 12 44px targets + undo snackbar · 13 finish SVG icon set ·
+  14 type-scale + colour-role rules · 15 "same as yesterday" brief shortcut.
+- Repo/product: 16 resolve the stall.svg stash · 17 dish tagging (finish or
+  revert the Jul 14 groundwork) · 18 Meta publishing: connect or delete.
 
 ## 2026-07-14 — Bug-fix session: nav dot, calendar confetti, heart, keeper tray
 **Done** — v0.26 → v0.33, all verified in a real browser. Shipped to `main`
