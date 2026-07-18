@@ -84,7 +84,28 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-17 (latest): **Generate brief → Stoic-style stacked pill options.**
+- 2026-07-18 (latest): **Audit punch-list #5–7 (v0.66).**
+  - **#5 confetti once-per-batch.** `showKeepers()` fired the quiet confetti on
+    every keeper-tray visit (so it re-celebrated on each return from posting/
+    customising a keeper). New `keepersCelebrated` flag — reset in
+    `runGenerate()`, set + confetti on the batch's first `showKeepers()` render,
+    skipped after. `returnToKeepers`/`saveCustomiseToKeeper` re-render silently.
+  - **#6 swipe-cap fade.** `.swipe-cap` was `-webkit-line-clamp: 3` (hard
+    mid-line cut). The card is a pointer-drag target, so a scrollable caption
+    would fight the swipe — instead it now fills the area and fades out at the
+    bottom via `mask-image` gradient (opaque→76%, transparent→100%). Full
+    caption is still baked on the image + shown at Post.
+  - **#7 home hierarchy — one orange hero.** Home had two orange heroes (New
+    Post's `.home .btn-primary` was overridden orange, plus Generate's
+    `btn-accent`). Now Generate is the sole orange hero (top of the stack; the
+    `fx-pulse-ring` `::after` moved from `.home .btn-primary` to
+    `.home .btn-accent`), New Post demoted to a white `.btn-secondary`. Dropped
+    the `🧪 View onboarding (debug)` home button (Settings → Run setup again
+    still uses `ob-restart`). Removed the dead `.home .btn-primary` orange bg/
+    active/edge rules + its half of the edge-accent & reduced-motion selectors.
+    ⚠️ The home nth-of-type stagger delays for slots 3/4 are now dead (only two
+    direct `.home > .btn` remain) but harmless.
+- 2026-07-17: **Generate brief → Stoic-style stacked pill options.**
   Owner liked the Stoic onboarding's pills + minimal look, wanted it on the
   Generate brief (NOT onboarding), keeping the brand blue/orange (not Stoic's
   mono). Version → v0.65.

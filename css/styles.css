@@ -416,8 +416,6 @@ input[type="range"] { touch-action: none; }
   min-height: 1.4em;
 }
 .subtitle { color: rgba(255, 255, 255, 0.85); margin: 0 0 22px; max-width: 22rem; }
-.home .btn-primary { background: var(--orange); color: var(--ink-on-accent); }
-.home .btn-primary:active { background: var(--orange-press); }
 .home .btn-ghost { color: rgba(255, 255, 255, 0.9); }
 .app-version {
   margin: 16px 0 0;
@@ -1324,9 +1322,15 @@ input[type="range"] { touch-action: none; }
   pointer-events: none; user-select: none;
 }
 .swipe-cap {
-  flex: 1 1 auto; min-height: 0; padding: 8px 14px; font-size: 0.82rem; line-height: 1.35;
+  flex: 1 1 auto; min-height: 0; padding: 8px 14px 12px; font-size: 0.82rem; line-height: 1.35;
   color: var(--text); white-space: normal; overflow: hidden; text-align: center;
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  /* The card is a pointer-drag target, so the caption can't scroll (it'd fight
+     the swipe). Instead of a hard 3-line clamp that guillotines mid-line, let
+     the text fill the area and fade out at the bottom edge — softer, and it
+     reads as "there's more" (the full caption is baked on the image + shown at
+     Post). */
+  -webkit-mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
 }
 .swipe-card.depth-1 { transform: translateY(10px) scale(0.955); }
 .swipe-card.depth-2 { transform: translateY(20px) scale(0.91); }
@@ -1716,7 +1720,6 @@ input[type="range"] { touch-action: none; }
 .btn:active { transition: transform 0.06s ease, box-shadow 0.06s ease; }
 .btn-primary { --btn-edge: var(--blue-press); }
 .btn-accent { --btn-edge: var(--orange-press); }
-.home .btn-primary { --btn-edge: var(--orange-press); }
 .btn-secondary { --btn-edge: rgba(10, 77, 161, 0.25); }
 .btn-ghost { box-shadow: none; }
 /* Press the button into its edge. Overrides the old scale(0.98). */
@@ -1730,7 +1733,7 @@ input[type="range"] { touch-action: none; }
 /* Home buttons: a chunkier, more pronounced edge (owner request) — a darker
    orange under the orange buttons, a grey under the white (secondary) ones. */
 .home .btn { box-shadow: 0 6px 0 var(--btn-edge); }
-.home .btn-primary, .home .btn-accent { --btn-edge: var(--edge-accent); }
+.home .btn-accent { --btn-edge: var(--edge-accent); }
 /* The white home buttons: grey edge, and NO blue border (owner: the grey
    ones shouldn't have a dark outline) — the grey shadow gives the depth. */
 .home .btn-secondary { --btn-edge: var(--edge-neutral); border: none; }
@@ -1897,10 +1900,12 @@ input[type="range"] { touch-action: none; }
   to { transform: scale(1) rotate(0); }
 }
 
-/* ---- Home hero CTA: a soft orange pulse-ring invites the first tap.
+/* ---- Home hero CTA: a soft orange pulse-ring invites the first tap. The
+   single orange hero is now Generate (btn-accent); New Post is demoted to a
+   plain secondary button beneath it.
    Lives on a pseudo-element so it never fights the entrance/press motion. ---- */
-.home .btn-primary { position: relative; }
-.home .btn-primary::after {
+.home .btn-accent { position: relative; }
+.home .btn-accent::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -2094,7 +2099,7 @@ input[type="range"] { touch-action: none; }
   .chips .chip.selected, .gen-card, .gen-q, .settings-group[open] .sg-body,
   .queue-item, .menu-item, .cal-sched-item,
   .cal-day, .cal-cell.selected, .navbtn.is-active svg, .slot.filled,
-  .carousel-thumb, .home .btn-primary::after,
+  .carousel-thumb, .home .btn-accent::after,
   .mascot-bob, .mascot-float, .mascot-sway, .mascot-spin, .mascot-pop,
   .mascot-breathe, .mascot-wave, .mascot-jog, .mascot-win, .mascot-snooze,
   .mascot-mope {

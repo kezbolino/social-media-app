@@ -1864,6 +1864,7 @@
   let deckCursor = 0;      // index of the current top card
   let keepers = [];        // items swiped right
   let keptTotal = 0;       // how many were kept this batch, even once posted out of `keepers`
+  let keepersCelebrated = false; // confetti fires once when a batch first reaches the tray, not on every revisit
   const binnedHookIds = new Set(); // captions binned this session — don't resurface
   let genBusy = false;
   let genLocation = "";
@@ -2091,6 +2092,7 @@
     refreshPoolUi(); // keep the single/collage "photos loaded" notes current
     keepers = [];
     keptTotal = 0;
+    keepersCelebrated = false;
     deckCursor = 0;
     const info = $("#genInfo");
     if (!photoPool.length) {
@@ -2371,7 +2373,12 @@
     wrap.querySelectorAll(".keeper-date").forEach((inp) =>
       inp.addEventListener("change", () => syncKeeperDateLabel(inp))
     );
-    if (window.FX) FX.confetti({ quiet: true });
+    // Celebrate the batch ONCE — when it first lands in the tray — not on every
+    // return here after posting/customising/queueing one of the keepers.
+    if (!keepersCelebrated) {
+      keepersCelebrated = true;
+      if (window.FX) FX.confetti({ quiet: true });
+    }
   }
 
   // After sharing a keeper, come back to the tray to handle the rest (the

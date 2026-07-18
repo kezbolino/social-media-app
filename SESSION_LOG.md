@@ -1,5 +1,36 @@
 # Session Log
 
+## 2026-07-18 (pm) — Audit punch-list items 5–7 (v0.65 → v0.66)
+**Done** — first three code items off the agreed list; owner confirmed homework
+2 & 3 (backup / Visuelt licence) already sorted. All verified in real Chromium
+(375×812), no console errors.
+- **#5 confetti once-per-batch.** `showKeepers()` fired `FX.confetti({quiet})`
+  on *every* visit to the keeper tray — so it re-celebrated each time you came
+  back after posting/customising/queueing a keeper. New `keepersCelebrated`
+  flag: reset in `runGenerate()` (start of a batch), set + confetti on the
+  first `showKeepers()` render, skipped thereafter. `returnToKeepers` /
+  `saveCustomiseToKeeper` re-render the tray without re-firing.
+- **#6 swipe-cap clip + fade.** `.swipe-cap` used `-webkit-line-clamp: 3` +
+  `overflow: hidden`, guillotining the caption mid-line. The card is a
+  pointer-drag target (a scrollable caption would fight the swipe), so instead
+  of scroll it now fills the area and fades out at the bottom via a
+  `mask-image` linear-gradient (opaque to 76%, transparent at 100%) — softer,
+  reads as "there's more" (full caption is baked on the image + shown at Post).
+- **#7 home hierarchy — one orange hero.** Home had *two* orange heroes: New
+  Post (`btn-primary`, overridden orange on home) and Generate (`btn-accent`).
+  Now Generate is the single orange hero (kept `btn-accent`, moved to the top,
+  and the `fx-pulse-ring` pseudo-element moved onto `.home .btn-accent`); New
+  Post demoted to a plain white `.btn-secondary` beneath it. Dropped the
+  `🧪 View onboarding (debug)` button (Settings → Run setup again still exists).
+  Removed the now-dead `.home .btn-primary` orange overrides (bg/active/edge)
+  and the `.home .btn-primary` half of the edge-accent + reduced-motion rules.
+- Version → v0.66. SW cache untouched (network-first; no new assets).
+
+**Next** — continue the list: #8 nav labels + Home tab, #9 remaining smart
+defaults (today pre-selected, honest ob-done copy, empty-state CTAs, calendar
+today). Then structural #10–15. Homework #1 (delete old wings hashtags on the
+phone) and #4 (brand-line decision → new caption hooks) still owner-side.
+
 ## 2026-07-18 — UI/UX audit (10 enhancements) + repo sync to v0.65
 **Done** — audit only, nothing built in the app.
 - Full design audit: walked every flow on a 375×812 viewport + code read.
