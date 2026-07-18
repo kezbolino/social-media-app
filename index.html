@@ -113,7 +113,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-queue">🗓 Post queue</button>
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
-          <p class="app-version" id="appVersion">v0.70</p>
+          <p class="app-version" id="appVersion">v0.71</p>
         </div>
       </section>
 
@@ -530,10 +530,9 @@
                it's accessible + needs no JS state). Dynamic lists still render
                into the same inner IDs, so openSettings() is untouched. Only the
                render-target IDs matter — the wrapping structure is free to move.
-               The two everyday-content groups open by default; config/advanced
-               stay collapsed so the screen isn't a giant scroll. -->
+               All groups start collapsed so the screen opens short. -->
 
-          <details class="settings-group" open>
+          <details class="settings-group">
             <summary class="sg-head">
               <span class="sg-heading">
                 <span class="sg-title">📸 Photos &amp; pitches</span>
@@ -562,7 +561,7 @@
             </div>
           </details>
 
-          <details class="settings-group" open>
+          <details class="settings-group">
             <summary class="sg-head">
               <span class="sg-heading">
                 <span class="sg-title">✍️ Captions &amp; hashtags</span>

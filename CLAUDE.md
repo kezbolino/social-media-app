@@ -84,7 +84,15 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-18 (latest): **Swipe deck (Generate) scroll locked in place, v0.70.**
+- 2026-07-18 (latest): **All Settings groups collapsed by default, v0.71.**
+  Owner: collapse all the folders. The two everyday-content groups (📸 Photos
+  & pitches, ✍️ Captions & hashtags) had `open` on their `<details>` since the
+  v0.50 Settings regroup; dropped both attributes so all 6 groups
+  (Photos & pitches / Captions & hashtags / Reminders / Appearance / Backup &
+  setup / Auto-posting) now start closed — no JS change, `<details>` handles
+  it natively. Verified headless: all 6 report `open: false` on landing in
+  Settings, tapping a header still expands it, no console errors.
+- 2026-07-18: **Swipe deck (Generate) scroll locked in place, v0.70.**
   Owner: don't let the "tinder section" scroll down. The app has no per-screen
   scroll container — the whole document is the scroller (body, `height:100%`,
   no `overflow-y` set) — so a tall generate screen could scroll behind the
