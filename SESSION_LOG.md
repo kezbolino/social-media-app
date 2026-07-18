@@ -1,5 +1,15 @@
 # Session Log
 
+## 2026-07-18 (pm) — New stall.svg (v0.67 → v0.68)
+**Done** — owner supplied a redrawn `stall.svg` (clean Illustrator vector export,
+not a trace). Swapped it into `assets/mascot/stall.svg`: **76KB → 24KB**, crisp
+vectors. New art is 250×250 square (old was cropped landscape). Renders as a
+~288px scene on the onboarding "Where do you trade?" step via `.ob-scene`; the
+white-outline drop-shadow treatment (for blue-on-blue) stays. Verified in the
+real ob-places screen — renders, sticker edge visible, no console errors. Bumped
+version → v0.68 and SW cache v5→v6 so installs pick up the new asset. Also
+refreshed the SVG asset-sheet artifact so it shows the new stall.
+
 ## 2026-07-18 (pm) — Audit punch-list items 8–9 (v0.66 → v0.67)
 **Done** — verified in real Chromium (375×812), no console errors.
 - **#8 nav labels + Home tab.** Bottom nav is now 5 tabs with labels: Home /

@@ -84,7 +84,21 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-18 (latest): **Audit punch-list #8–9 (v0.67).**
+- 2026-07-18 (latest): **New stall.svg (owner re-draw, v0.68).**
+  Owner supplied a fresh hand-vectored `stall.svg` (a proper Illustrator export,
+  not a trace) to replace the auto-traced 76KB file. Swapped it into
+  `assets/mascot/stall.svg` — now **24KB** (a third the size) and clean vectors.
+  New art is a **250×250 square** viewBox (the old was cropped landscape
+  247×186), so on ob-places it renders as a ~288px square scene via `.ob-scene`
+  (width-sized). The canopy blue is `#0252C5` — brighter/more saturated than the
+  onboarding gradient's `#0a4da1`, so the old blue-on-blue dissolve is less of an
+  issue, but the `.ob-scene` white-outline drop-shadow treatment stays (helps and
+  doesn't hurt; works off alpha so it survives an SVG→PNG swap). Verified in the
+  real ob-places screen (renders, white sticker-edge visible, no console errors).
+  SW cache `v5`→`v6` so installs purge the old asset. **The old traced pipeline
+  notes below (2026-07-14 stall entry) are now historical — this is a clean
+  source, so don't re-trace it.**
+- 2026-07-18: **Audit punch-list #8–9 (v0.67).**
   - **#8 nav labels + Home tab.** The floating capsule nav gained a **5th tab
     (Home**, `data-nav="home" data-action="go-home"`, first) and **text labels**
     under every icon (Home/New/Calendar/Generate/Settings). Each icon is now
