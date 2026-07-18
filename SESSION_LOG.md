@@ -1,5 +1,27 @@
 # Session Log
 
+## 2026-07-18 — UI/UX audit (10 enhancements) + repo sync to v0.65
+**Done** — audit only, nothing built in the app.
+- Full design audit: walked every flow on a 375×812 viewport + code read.
+  Report with before/after mockups (private artifact, per-finding status):
+  https://claude.ai/code/artifact/f71d215e-93ab-46e6-88f2-5a70bb8816a4
+- **Caught a stale checkout**: this Mac was 21 commits behind origin/main
+  (v0.45 local vs v0.65 live) — audit was re-validated against v0.65.
+  At v0.65 the standing items are: confetti re-fires on every keeper-tray
+  visit; no stash picker on photo screens; two equal orange heroes on home;
+  keeper cards too tall; delete targets 20–27px with no undo; nav still
+  icon-only/no Home; swipe-card captions clip mid-line.
+- Synced: `git stash` of orphaned local work ("pre-v0.65-sync" — a stall.svg
+  rework from Jul 17 + a v0.46 bump, never committed; still in the stash),
+  then fast-forwarded main to origin/main (v0.65).
+- Added a SessionStart hook (.claude/settings.json) that fetches origin and
+  warns when the checkout is behind or the tree is dirty — so no session
+  works on stale code again.
+
+**Next** — pick items off the audit; week-1 list: confetti guard, clip fixes,
+home hierarchy, nav labels, remaining smart defaults. Also: confirm the
+Visuelt Pro webfont licence.
+
 ## 2026-07-14 — Bug-fix session: nav dot, calendar confetti, heart, keeper tray
 **Done** — v0.26 → v0.33, all verified in a real browser. Shipped to `main`
 (live at kezbolino.github.io/social-media-app, confirmed serving the new build).
