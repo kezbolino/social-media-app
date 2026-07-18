@@ -498,19 +498,12 @@ input[type="range"] { touch-action: none; }
   margin: 0 auto;
   user-select: none;
   -webkit-user-drag: none;
-  /* The stall is painted brand blue — rgb(9,76,160) against this screen's
-     rgb(10,77,161), i.e. the same colour — so its canopy and counter dissolved
-     into the backdrop and the tent's peak was invisible entirely.
-     Four zero-blur drop-shadows trace the alpha silhouette to draw a white
-     outline (a "sticker" edge, which suits the app's look), and the fifth lifts
-     it off the background. This works on the alpha channel, so it behaves the
-     same if this asset is ever swapped from SVG to PNG. */
-  filter:
-    drop-shadow(1.5px 0 0 #fff)
-    drop-shadow(-1.5px 0 0 #fff)
-    drop-shadow(0 1.5px 0 #fff)
-    drop-shadow(0 -1.5px 0 #fff)
-    drop-shadow(0 8px 14px rgba(0, 0, 0, 0.3));
+  /* Just a soft shadow to lift the stall off the background. (The old traced
+     stall was rgb(9,76,160) — the same brand blue as this screen — so it needed
+     a white "sticker" outline traced from four zero-blur drop-shadows to be
+     visible at all. The owner's redraw uses a brighter, more saturated blue
+     (#0252C5) that separates on its own, so the outline was dropped.) */
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.3));
 }
 .ob-title { margin: 2px 0 0; font-size: 1.5rem; }
 .ob-hint {

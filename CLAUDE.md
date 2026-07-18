@@ -91,13 +91,15 @@ below). **Not yet built, roughly in priority order:**
   New art is a **250×250 square** viewBox (the old was cropped landscape
   247×186), so on ob-places it renders as a ~288px square scene via `.ob-scene`
   (width-sized). The canopy blue is `#0252C5` — brighter/more saturated than the
-  onboarding gradient's `#0a4da1`, so the old blue-on-blue dissolve is less of an
-  issue, but the `.ob-scene` white-outline drop-shadow treatment stays (helps and
-  doesn't hurt; works off alpha so it survives an SVG→PNG swap). Verified in the
-  real ob-places screen (renders, white sticker-edge visible, no console errors).
-  SW cache `v5`→`v6` so installs purge the old asset. **The old traced pipeline
-  notes below (2026-07-14 stall entry) are now historical — this is a clean
-  source, so don't re-trace it.**
+  onboarding gradient's `#0a4da1`, so it separates from the background on its own.
+  **Because of that the old `.ob-scene` white-outline drop-shadow treatment (four
+  zero-blur white drop-shadows tracing the alpha silhouette) was removed (v0.69)
+  — the owner saw it as an unwanted outline around the whole stall. Only the soft
+  lift shadow remains.** Verified in the real ob-places screen (renders clean, no
+  outline, no console errors). SW cache `v5`→`v6` so installs purge the old asset.
+  **The old traced pipeline notes below (2026-07-14 stall entry) are now
+  historical — this is a clean source, so don't re-trace it, and don't re-add the
+  white outline.**
 - 2026-07-18: **Audit punch-list #8–9 (v0.67).**
   - **#8 nav labels + Home tab.** The floating capsule nav gained a **5th tab
     (Home**, `data-nav="home" data-action="go-home"`, first) and **text labels**
