@@ -84,7 +84,24 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-18 (latest): **New stall.svg (owner re-draw, v0.68).**
+- 2026-07-18 (latest): **Swipe deck (Generate) scroll locked in place, v0.70.**
+  Owner: don't let the "tinder section" scroll down. The app has no per-screen
+  scroll container — the whole document is the scroller (body, `height:100%`,
+  no `overflow-y` set) — so a tall generate screen could scroll behind the
+  swipe deck and fight the drag gesture. New `body.scroll-lock` CSS rule
+  (`overflow: hidden; height: 100%`, right next to the existing `html,body`
+  horizontal hard-lock) plus `updateGenScrollLock()` in js/app.js, which
+  toggles that class based on `screen === "generate" && !#genDeckWrap.hidden`.
+  Called from both `show()` (handles navigating screens, incl. browser-back
+  landing back on a screen where the deck was already the visible panel) and
+  `genShow()` (handles switching panels — brief/loading/deck/keepers/empty —
+  without a `show()` call, since they're all the same `generate` screen).
+  Only the deck panel locks; brief/keepers/empty scroll normally. Verified
+  headless (Chromium, 390×700): `body.scroll-lock` + `overflow-y:hidden` while
+  the deck shows, `window.scrollTo` a no-op, stays locked across a swipe
+  (deck→deck), and clears on every other panel/screen (brief, home). No
+  console errors.
+- 2026-07-18: **New stall.svg (owner re-draw, v0.68).**
   Owner supplied a fresh hand-vectored `stall.svg` (a proper Illustrator export,
   not a trace) to replace the auto-traced 76KB file. Swapped it into
   `assets/mascot/stall.svg` — now **24KB** (a third the size) and clean vectors.

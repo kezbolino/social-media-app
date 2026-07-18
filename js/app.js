@@ -101,6 +101,7 @@
     updateFlowProgress(screen);
     if (screen === "home") rollGreeting();
     window.scrollTo(0, 0);
+    updateGenScrollLock();
     if (!suppressHistoryPush) {
       try { history.pushState({ screen }, "", ""); } catch (e) { /* ignore */ }
     }
@@ -1960,6 +1961,24 @@
     $("#genDeckWrap").hidden = which !== "deck";
     $("#genKeepers").hidden = which !== "keepers";
     $("#genEmpty").hidden = which !== "empty";
+    updateGenScrollLock();
+  }
+
+  // The swipe deck (the "tinder" card) is a drag surface — letting the page
+  // scroll behind/under it fights the gesture and the deck visibly drifts.
+  // Lock the whole page in place for as long as the deck panel is the one
+  // showing on the generate screen; every other generate panel (brief,
+  // keepers, empty) scrolls normally. Re-checked on every show()/genShow()
+  // call (not just toggled once) so a browser-back into a screen where the
+  // deck was already the visible panel re-locks correctly.
+  function updateGenScrollLock() {
+    const onGenerate = document
+      .querySelector('.screen[data-screen="generate"]')
+      .classList.contains("is-active");
+    document.body.classList.toggle(
+      "scroll-lock",
+      onGenerate && !$("#genDeckWrap").hidden
+    );
   }
 
   function briefPct(i) {

@@ -310,6 +310,11 @@ html, body {
   overscroll-behavior-x: none;
 }
 
+/* Pins the page in place while the Generate swipe deck (the "tinder" card)
+   is the visible panel — see updateGenScrollLock() in js/app.js. Without
+   this, dragging near the card's edges could scroll the page behind it. */
+body.scroll-lock { overflow: hidden; height: 100%; }
+
 /* Range sliders (size/rotate/zoom/adjust) must move their thumb on a drag,
    never let the drag turn into a page scroll. Without this, dragging a slider
    sideways pans the page like a web page. */
