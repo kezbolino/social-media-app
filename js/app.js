@@ -2405,7 +2405,7 @@
         `<div class="keeper-body"><p class="keeper-cap">${escapeAttr(cap)}</p>` +
         `<div class="keeper-actions">` +
         `<button class="btn btn-primary btn-sm" data-keeper-post="${i}">📤 Post</button>` +
-        `<button class="btn btn-secondary btn-sm" data-keeper-edit="${i}">✏️ Customise</button>` +
+        `<button class="btn btn-secondary btn-sm" data-keeper-edit="${i}">✏️ Edit</button>` +
         `</div>` +
         `<div class="keeper-queue">` +
         `<label class="keeper-date-field">` +
@@ -2484,7 +2484,7 @@
     seedPostFromGen(g);
     post.fromGenerate = true;
     await Imaging.ensureFonts();
-    setEditorChrome("generate", "Customise post");
+    setEditorChrome("generate", "Edit post");
     show("editor"); // show first so the editor can measure its real width
     // Background = the raw photo itself (no baked sticker). With no state the
     // editor defaults to Square / zoom 1 / centred, which cover-fits the photo

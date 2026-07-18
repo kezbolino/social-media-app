@@ -84,7 +84,21 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-18 (latest): **All Settings groups collapsed by default, v0.71.**
+- 2026-07-18 (latest): **Keeper tray "Customise" button → "Edit", v0.72.**
+  Owner: the ✏️ Customise / 📤 Post pair looked unbalanced — two `flex: 1`
+  equal-width buttons where one label is a 4-letter word and the other a
+  9-letter word behind an emoji, so Post read sparse and Customise crammed.
+  Renamed the keeper-card button `✏️ Customise` → `✏️ Edit` (js/app.js
+  showKeepers) — two short verbs balance the pills, and "Edit" is more honest
+  since v0.43 (the button opens the FULL editor: reframe/filters/sticker, not
+  just a caption tweak). Also changed the editor header it opens from
+  `setEditorChrome("generate", "Customise post")` → `"Edit post"` so the
+  chrome matches the button. Internal identifiers (customiseKeeper,
+  save-customise, g.customised, etc.) left as-is — code-only, not user-facing.
+  Verified headless: keeper tray renders `📤 Post` (114px) + `✏️ Edit` (118px)
+  at equal 44px height (no wrap), tapping Edit opens the editor titled "Edit
+  post", no console errors. Screenshot eyeballed.
+- 2026-07-18: **All Settings groups collapsed by default, v0.71.**
   Owner: collapse all the folders. The two everyday-content groups (📸 Photos
   & pitches, ✍️ Captions & hashtags) had `open` on their `<details>` since the
   v0.50 Settings regroup; dropped both attributes so all 6 groups
