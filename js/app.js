@@ -643,6 +643,12 @@
     if (back) back.dataset.back = backTo;
     const h2 = document.querySelector('[data-screen="editor"] h2');
     if (h2) h2.textContent = title;
+    // The New Post progress bar only belongs on the New Post flow. Editing a
+    // Generate keeper reaches the editor with back target "generate" — that's
+    // a side trip, not the flow — so hide the bar there; keep it for the
+    // normal single/collage flow.
+    const track = document.querySelector('[data-screen="editor"] .flow-track');
+    if (track) track.hidden = backTo === "generate";
   }
 
   // A cheeky-hook cycler for the editor's Text tool — behaves like the caption
