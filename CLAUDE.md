@@ -97,7 +97,46 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-19 (latest): **Generate brief reordered to When → Where → Vibe
+- 2026-07-19 (latest): **"Posted!" success screen with a weekly goal ring
+  (v0.82).** Salvaged from the unmerged `claude/app-audit-ui-colors-erbail`
+  branch (built at v0.66) and cherry-picked onto v0.81. After a real share or
+  direct publish the flow now lands on a dedicated `posted` screen instead of
+  a "Done" button on Review.
+  - `goPosted(noteText)` (js/app.js) renders it and is called from `doShare`
+    and `doPublish` (both after `markPostShared`). The old `showDoneButton` is
+    now unused (left in place, harmless).
+  - **Weekly goal ring**: goal = the trading days you set on the calendar this
+    week (`workdaysThisWeek`), falling back to a soft 5 if none are marked;
+    progress = posts shared since Monday (`postsThisWeek`). The SVG arc
+    (`#postedRingArc`) animates from empty via the park-reflow-rAF trick, and
+    jumps instead under reduced motion. Title switches to "Week smashed! 🎉"
+    once the goal is hit; also shows a queued-count tile and a next-workday
+    nudge. `#postedHome`/`#postedKeepers` mirror the old done buttons (keeper
+    posts return to the tray, everything else goes home).
+  - The v0.66 version of this commit still carried the old home "🧪 View
+    onboarding (debug)" button; that was dropped during the merge (main removed
+    it long ago) — do NOT re-add it.
+  - Verified headless (real keeper Post → Review → Share): lands on `posted`,
+    ring renders (offset reflects progress), weekly count = 1, note + "Back to
+    my kept posts" shown; 0 console errors.
+- 2026-07-19: **Customise a keeper saves straight from the caption screen
+  (v0.81).** Salvaged from the unmerged `claude/bro-wcsnt0` branch. Editing a
+  Generate keeper used to run caption → an extra Review/preview whose only CTA
+  was "✓ Save & back to my posts". That preview added nothing (the caption
+  screen already shows a live preview), so it's cut.
+  - `caption-next` branches on `post.fromGenerate`: keeper edit →
+    `saveCustomiseFromCaption()` (composes the final image, then
+    `saveCustomiseToKeeper()` back to the tray); everything else →
+    `buildReview()`. The caption CTA reads **"✓ Save"** on the customise path,
+    "Review ›" otherwise (set in `renderCaptionPreview`).
+  - Same version also **hides the New Post progress bar when editing a keeper**:
+    `setEditorChrome` toggles `track.hidden = backTo === "generate"`, so the
+    flow bar shows on a real New Post but not on the Generate → keep → ✏️ Edit
+    side-trip.
+  - Verified headless: Generate → keep → Edit → editor → caption CTA reads
+    "✓ Save"; tapping it returns to the keepers tray (no Review shown); 0
+    console errors.
+- 2026-07-19: **Generate brief reordered to When → Where → Vibe
   (v0.80).** Owner wanted the questions in the order "When's it going out? /
   Where are we at? / What's the vibe?" (was Where → When → Vibe).
   - Swapped the `genBriefStep === 0` and `=== 1` branches in `renderBriefStep`:
