@@ -560,7 +560,7 @@
       case "brief-loc": briefSelectAndAdvance(el, () => { genBrief.location = el.dataset.val; }); break;
       case "brief-new-loc": $("#briefAddRow").hidden = false; $("#briefLocInput").focus(); break;
       case "brief-add-loc": briefAddLoc(); break;
-      case "brief-when": briefSelectAndAdvance(el, () => { genBrief.date = el.dataset.val; }); break;
+      case "brief-when": briefSelectAndAdvance(el, () => setBriefDate(el.dataset.val)); break;
       case "brief-pick-day": $("#briefDayRow").hidden = false; break;
       case "brief-day-next": briefDayNext(); break;
       case "brief-vibe": briefToggleVibe(el); break;
@@ -2183,7 +2183,18 @@
       if (window.FX) FX.wiggle(input);
       return;
     }
-    briefSelectAndAdvance(null, () => { genBrief.date = val; });
+    briefSelectAndAdvance(null, () => setBriefDate(val));
+  }
+
+  // Set the brief's day and refresh the suggested pitch to follow it: now that
+  // When is asked before Where, picking a day should pre-select that day's
+  // planned workday location on the Where step. Mirrors openGenerate's
+  // precedence — a planned pitch wins; with none, the current answer stands
+  // (so a location the trader already picked isn't wiped by a pitch-less day).
+  function setBriefDate(val) {
+    genBrief.date = val;
+    const wd = Store.getWorkday(val);
+    if (wd && wd.location) genBrief.location = wd.location;
   }
 
   function briefToggleVibe(el) {
