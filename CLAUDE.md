@@ -26,6 +26,19 @@ static server.
   Generate, Settings. It is the primary way to reach Calendar & Settings.
 
 ## Conventions / gotchas
+- ⭐ **Don't let a cheap proxy stand in for the answer, and don't inherit
+  load-bearing claims from these notes without re-checking.** On 2026-07-19
+  three assertions were made confidently and were all wrong, each from a quick
+  check that told a tidier story than the evidence: a **line-by-line diff**
+  said local work was missing upstream (it was the same feature renamed —
+  `trayCelebrated` vs `keepersCelebrated`; a feature-by-feature check found 4 of
+  5 commits already there); **`git stash apply --check`** reported a conflict
+  that a real apply didn't have (nearly causing an approved rewrite of working
+  code); and a scroll check measured **`documentElement`/`.pad`** when this app
+  scrolls on **`body`**, inventing a bug that didn't exist. When a claim decides
+  whether code gets rewritten or thrown away, go and look at the thing itself.
+  This applies to CLAUDE.md and SESSION_LOG.md too — they record what was true
+  when written.
 - Home screen buttons animate in via `.home .btn:nth-of-type(n)` delays — adding/
   removing home buttons shifts those, but it's cosmetic only.
 - Back buttons use `class="back"` with just the `‹` glyph (no "Back" text); they

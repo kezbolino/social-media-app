@@ -61,6 +61,26 @@
 
 **Ended clean**: main = origin/main at v0.78, 0 stashes, both hooks silent.
 
+**⚠️ Two confident wrong calls in this session — re-check before trusting these
+notes.** Both times a quick check told a tidier story than the evidence did, and
+both were stated to the owner as fact before being corrected:
+1. *"Local `main` holds work upstream lacks."* Based on a line-by-line diff,
+   which flagged the same feature under a different variable name
+   (`trayCelebrated` vs upstream's `keepersCelebrated`) as missing. A
+   feature-by-feature check found 4 of 5 commits already upstream. Had this gone
+   unchecked, the "salvage" would have re-introduced duplicates of code that was
+   already there.
+2. *"`stash@{0}` conflicts with main and needs rebuilding."* From a bad
+   `git stash apply --check` reading. The real apply was clean, so the approved
+   rewrite would have been wasted work.
+   (Also, mid-verification: *"nothing scrolls at 20 photos"* — I'd measured
+   `documentElement` and `.pad`; the scroll container is `body`. No bug.)
+
+The pattern: a cheap proxy (line diff, `--check`, wrong scroll element) was
+treated as the answer instead of as a hint to go and look. Where this log or
+CLAUDE.md asserts something load-bearing about repo state, verify it still holds
+rather than inheriting it.
+
 **Pending / next**
 1. **Triage the 8 kept `origin/claude/*` branches.** Top of the list:
    `app-audit-ui-colors-erbail` holds a **"Posted!" success screen with a weekly
