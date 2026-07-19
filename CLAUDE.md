@@ -84,7 +84,24 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-19 (latest): **App-wide iOS button-style toggle (Settings → 🎨
+- 2026-07-19 (latest): **iOS button style now covers the Generate screen's
+  non-`.btn` controls, v0.74.** Follow-up to v0.73 — owner noticed the flat iOS
+  look "wasn't there on the Generate screen". Its standard `.btn`s (Cook 'em up,
+  keeper Post/Edit) already flattened, but two Generate-only controls aren't
+  `.btn`, so they kept the chunky look: the brief's stacked question pills
+  (`.brief-opt`) and the round ♥/✕ swipe buttons (`.swipe-btn`). Extended the
+  same `html[data-btn="ios"]` block: `.brief-opt` → flat 15px/600 like the iOS
+  buttons (selected pill stays blue); `.swipe-btn` **stays circular** (they're
+  icon buttons) but sheds the `0 4px 0` edge + `translateY` plunge for the iOS
+  soft `0 1px 3px` shadow + dim/scale. Both new selectors are `html[data-btn=
+  "ios"] .x` (0,2,1), one step above the base `.brief-opt`/`.swipe-btn` (0,1,0),
+  so they win without `!important`. Verified headless on the real Generate
+  screen (seeded a stash photo, reloaded so `photoPool` seeds, walked to the
+  brief + deck): brief pill reads 15px/600 in iOS vs 999px/700 default;
+  `.swipe-btn` reads `50%` radius + soft `0 1px 3px` (not `0 4px 0`); 0 console
+  errors. Chips (aspect/sticker/font pickers) deliberately left alone — they're
+  selection filters, not CTA buttons, and weren't part of the ask.
+- 2026-07-19: **App-wide iOS button-style toggle (Settings → 🎨
   Appearance), v0.73.** Owner wasn't happy with the button shape, asked what
   iOS uses and for a way to switch. (Mockup first — an Artifact comparing the
   current chunky pill vs "iOS Classic" flat-rounded vs iOS 26 Liquid Glass;

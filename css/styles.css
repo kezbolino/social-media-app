@@ -1805,6 +1805,23 @@ html[data-btn="ios"] .home .btn-secondary {
 html[data-btn="ios"] .home .btn-secondary:active {
   background: rgba(255, 255, 255, 0.26);
 }
+/* Generate screen has two controls that aren't .btn, so they'd otherwise keep
+   the chunky look while the rest of the screen flattens. Bring them along:
+   the brief's stacked question pills (.brief-opt) go flat + 15px like the iOS
+   buttons; the round ♥/✕ swipe buttons (.swipe-btn) STAY circular (icon
+   buttons) but shed the 0 4px 0 edge + translateY plunge for the iOS soft
+   shadow + dim/scale. */
+html[data-btn="ios"] .brief-opt { border-radius: 15px; font-weight: 600; }
+html[data-btn="ios"] .swipe-btn {
+  border-width: 1.5px;
+  box-shadow: 0 1px 3px rgba(10, 35, 49, 0.14);
+  transition: transform 0.16s ease, filter 0.16s ease, background 0.15s ease;
+}
+html[data-btn="ios"] .swipe-btn:active {
+  transform: scale(0.94);
+  filter: brightness(0.94);
+  box-shadow: 0 1px 3px rgba(10, 35, 49, 0.14);
+}
 
 /* ---- Screen wipe: incoming screen slides in horizontally. Direction is set
    by #app.nav-back (a ‹ Back / home navigation wipes in from the left; going
