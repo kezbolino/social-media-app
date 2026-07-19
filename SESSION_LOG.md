@@ -1,5 +1,103 @@
 # Session Log
 
+## 2026-07-18 (pm) — New stall.svg (v0.67 → v0.68)
+**Done** — owner supplied a redrawn `stall.svg` (clean Illustrator vector export,
+not a trace). Swapped it into `assets/mascot/stall.svg`: **76KB → 24KB**, crisp
+vectors. New art is 250×250 square (old was cropped landscape). Renders as a
+~288px scene on the onboarding "Where do you trade?" step via `.ob-scene`; the
+white-outline drop-shadow treatment (for blue-on-blue) stays. Verified in the
+real ob-places screen — renders, sticker edge visible, no console errors. Bumped
+version → v0.68 and SW cache v5→v6 so installs pick up the new asset. Also
+refreshed the SVG asset-sheet artifact so it shows the new stall.
+
+## 2026-07-18 (pm) — Audit punch-list items 8–9 (v0.66 → v0.67)
+**Done** — verified in real Chromium (375×812), no console errors.
+- **#8 nav labels + Home tab.** Bottom nav is now 5 tabs with labels: Home /
+  New / Calendar / Generate / Settings. Added a Home tab (`go-home`), wrapped
+  each icon in `.navbtn-icon` so the active pill (`::before`) stays anchored to
+  the icon with a label beneath, added `.navbtn-label`, bumped `--navh` 64→80.
+  Fixed a latent bug: a normal boot never ran `show("home")` (home is
+  statically active), so the nav's active-tab logic didn't fire until the first
+  navigation — added a suppressed `show("home")` on boot so Home lights
+  immediately.
+- **#9 smart defaults.** (a) Calendar opens on today with its day panel already
+  open (`openCalendar` → `selectCalDay(today)`). (b) Honest ob-done copy —
+  `renderObDone()` drops the "got your photos" claim when the stash is empty
+  (photos step is skippable). (c) Empty-state CTAs — `mascotEmpty()` takes an
+  optional CTA button; History + Queue empties link to Generate, the Generate
+  no-photos empty links to Settings → Add photos. (d) Today already pre-selected
+  in the brief — verified, no change needed.
+- Version → v0.67. SW cache untouched (network-first; no new assets).
+
+**Next** — structural items still queued: #10 stash picker grid on photo
+screens, #11 keeper tray compact rows, #12 44px tap targets + undo snackbar,
+#13 finish SVG icon set, then #14–18. Homework #1 (delete old wings hashtags on
+the phone) and #4 (brand-line decision) still owner-side.
+
+## 2026-07-18 (pm) — Audit punch-list items 5–7 (v0.65 → v0.66)
+**Done** — first three code items off the agreed list; owner confirmed homework
+2 & 3 (backup / Visuelt licence) already sorted. All verified in real Chromium
+(375×812), no console errors.
+- **#5 confetti once-per-batch.** `showKeepers()` fired `FX.confetti({quiet})`
+  on *every* visit to the keeper tray — so it re-celebrated each time you came
+  back after posting/customising/queueing a keeper. New `keepersCelebrated`
+  flag: reset in `runGenerate()` (start of a batch), set + confetti on the
+  first `showKeepers()` render, skipped thereafter. `returnToKeepers` /
+  `saveCustomiseToKeeper` re-render the tray without re-firing.
+- **#6 swipe-cap clip + fade.** `.swipe-cap` used `-webkit-line-clamp: 3` +
+  `overflow: hidden`, guillotining the caption mid-line. The card is a
+  pointer-drag target (a scrollable caption would fight the swipe), so instead
+  of scroll it now fills the area and fades out at the bottom via a
+  `mask-image` linear-gradient (opaque to 76%, transparent at 100%) — softer,
+  reads as "there's more" (full caption is baked on the image + shown at Post).
+- **#7 home hierarchy — one orange hero.** Home had *two* orange heroes: New
+  Post (`btn-primary`, overridden orange on home) and Generate (`btn-accent`).
+  Now Generate is the single orange hero (kept `btn-accent`, moved to the top,
+  and the `fx-pulse-ring` pseudo-element moved onto `.home .btn-accent`); New
+  Post demoted to a plain white `.btn-secondary` beneath it. Dropped the
+  `🧪 View onboarding (debug)` button (Settings → Run setup again still exists).
+  Removed the now-dead `.home .btn-primary` orange overrides (bg/active/edge)
+  and the `.home .btn-primary` half of the edge-accent + reduced-motion rules.
+- Version → v0.66. SW cache untouched (network-first; no new assets).
+
+**Next** — continue the list: #8 nav labels + Home tab, #9 remaining smart
+defaults (today pre-selected, honest ob-done copy, empty-state CTAs, calendar
+today). Then structural #10–15. Homework #1 (delete old wings hashtags on the
+phone) and #4 (brand-line decision → new caption hooks) still owner-side.
+
+## 2026-07-18 — UI/UX audit (10 enhancements) + repo sync to v0.65
+**Done** — audit only, nothing built in the app.
+- Full design audit: walked every flow on a 375×812 viewport + code read.
+  Report with before/after mockups (private artifact, per-finding status):
+  https://claude.ai/code/artifact/f71d215e-93ab-46e6-88f2-5a70bb8816a4
+- **Caught a stale checkout**: this Mac was 21 commits behind origin/main
+  (v0.45 local vs v0.65 live) — audit was re-validated against v0.65.
+  At v0.65 the standing items are: confetti re-fires on every keeper-tray
+  visit; no stash picker on photo screens; two equal orange heroes on home;
+  keeper cards too tall; delete targets 20–27px with no undo; nav still
+  icon-only/no Home; swipe-card captions clip mid-line.
+- Synced: `git stash` of orphaned local work ("pre-v0.65-sync" — a stall.svg
+  rework from Jul 17 + a v0.46 bump, never committed; still in the stash),
+  then fast-forwarded main to origin/main (v0.65).
+- Added a SessionStart hook (.claude/settings.json) that fetches origin and
+  warns when the checkout is behind or the tree is dirty — so no session
+  works on stale code again.
+
+**Next — agreed numbered list (owner wants to go through it in order; full
+detail + mockups in the audit artifact):**
+- Homework, no code: 1 delete old wings hashtags on the phone · 2 export a
+  backup · 3 confirm Visuelt Pro webfont licence · 4 decide the brand line
+  (Chuckling Wings name vs no-wings menu) → new caption hooks.
+- Quick app fixes: 5 confetti once-per-batch · 6 swipe-cap clip + scroll
+  fades · 7 home hierarchy (one orange hero, demote New Post, drop debug
+  btn) · 8 nav labels + Home tab · 9 remaining smart defaults (today
+  pre-selected, honest ob-done copy, empty-state CTAs, calendar today).
+- Structural: 10 stash picker grid on photo screens · 11 keeper tray
+  compact rows · 12 44px targets + undo snackbar · 13 finish SVG icon set ·
+  14 type-scale + colour-role rules · 15 "same as yesterday" brief shortcut.
+- Repo/product: 16 resolve the stall.svg stash · 17 dish tagging (finish or
+  revert the Jul 14 groundwork) · 18 Meta publishing: connect or delete.
+
 ## 2026-07-14 — Bug-fix session: nav dot, calendar confetti, heart, keeper tray
 **Done** — v0.26 → v0.33, all verified in a real browser. Shipped to `main`
 (live at kezbolino.github.io/social-media-app, confirmed serving the new build).

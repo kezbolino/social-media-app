@@ -233,10 +233,18 @@ const Store = (() => {
 
   /* ---- App-wide UI font (Settings → 🔤 App font) ---- */
   function getFont() {
-    return read(K.FONT, "poppins");
+    return read(K.FONT, "visuelt");
   }
   function setFont(id) {
     write(K.FONT, id);
+  }
+
+  /* ---- App-wide button style (Settings → 🎨 Appearance) ---- */
+  function getButtonStyle() {
+    return read(K.BTNSTYLE, "default");
+  }
+  function setButtonStyle(id) {
+    write(K.BTNSTYLE, id);
   }
 
   /* ---- Saved posts: draft -> approved -> shared ---- */
@@ -294,5 +302,7 @@ const Store = (() => {
     setOnboarded,
     getFont,
     setFont,
+    getButtonStyle,
+    setButtonStyle,
   };
 })();

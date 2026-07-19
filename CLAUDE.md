@@ -84,29 +84,360 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-16 (latest): **Step markers (circle + tick) on both progress bars.**
-  Owner idea from the progress-bar work. Each bar now has a circle at every step
-  stop (25/50/75/100%): faint = upcoming, orange bead + halo = current, orange +
-  white ✓ = done (the tick pops in via `pb-tick`). Version → v0.55.
-  - **Markup**: 4 `.pb-step` spans added to each of the 4 onboarding
-    `.ob-progress` bars and the one `.gen-brief-track` (20 total), positioned by
-    inline `left:25/50/75/100%`. The track wrappers went `overflow:hidden →
-    position:relative; overflow:visible` so the 18px circles can sit proud of the
-    14px groove (the self-rounded fill needs no clip). Per-bg upcoming styles:
-    translucent white on the blue onboarding bar, faint blue on the light brief
-    bar; current/done are orange in both. The ✓ is a rotated-border `::after`.
-  - **State**: one shared `paintSteps(root, current)` helper toggles
-    `.done` (i<current) / `.current` (i===current). `obGo` calls it with the
-    step index; the brief's `goBriefStep` with `genBriefStep`; `briefCook` with
-    `4` so every marker ticks as the fill hits 100%. `classList.toggle` only
-    flips on change, so a just-completed marker's tick pops exactly once (no
-    replay on re-render). `.pb-step` + `.pb-step.done::after` added to the
-    reduced-motion disable list.
-  - Verified headless: brief marker states walk
-    current→done correctly across steps (`[current,up,up,up]` →
-    `[done,current,up,up]` → `[done,done,current,up]` → all `done` on cook), same
-    for onboarding; screenshotted on both the light and blue bars; no console
-    errors. Version → v0.55.
+- 2026-07-19 (latest): **App-wide iOS button-style toggle (Settings → 🎨
+  Appearance), v0.73.** Owner wasn't happy with the button shape, asked what
+  iOS uses and for a way to switch. (Mockup first — an Artifact comparing the
+  current chunky pill vs "iOS Classic" flat-rounded vs iOS 26 Liquid Glass;
+  owner picked Classic.) Built as a second picker in the existing Appearance
+  group, mirroring the **font picker pattern exactly** (attribute-swap on
+  `<html>` + FOUC inline script + Store getter/setter):
+  - **Mechanism**: `html[data-btn="ios"]` override block in css/styles.css
+    (right after the `.btn-xl` breathe block, with the button system). Additive
+    only — no attribute = the default chunky pill, untouched. Every selector is
+    one step more specific than the base `.btn` / `.home .btn` rules (the
+    `html[data-btn=…]` prefix adds an attribute + type selector, so
+    `html[data-btn="ios"] .btn` is 0,2,1 vs `.home .btn`'s 0,2,0), so the iOS
+    rules win **without `!important`** regardless of source order. Flattens the
+    `0 6px 0` 3D edge → soft `0 1px 2px` shadow, weight 700→600, pill 999px →
+    15px rounded rect, and swaps the translateY press-plunge for an iOS dim
+    (`brightness(0.94)`) + `scale(0.98)`.
+  - **Secondary buttons are background-dependent** — the one real subtlety of
+    going app-wide (the home mockup only had them on the blue hero). `.btn-
+    secondary` appears both on light surfaces (Settings/editor) and the blue
+    gradient hero, so two scoped rules: on light bg → clean white fill +
+    hairline `--line` border (iOS "bordered"); on `.home` → translucent
+    `rgba(255,255,255,0.16)` "glass" so the gradient shows through. **Accent
+    text left as `--ink-on-accent` (dark), NOT flipped to white** — white on the
+    light `--orange` fails contrast; dark-on-orange is the accessible choice
+    even if my mockup showed white.
+  - **Wiring** (all copied from the font picker): `APP_CONFIG.BUTTON_STYLES`
+    (js/config.js, `default`/`ios`) + `K.BTNSTYLE = "sfp.btnstyle"`;
+    `Store.getButtonStyle()/setButtonStyle()` (default `"default"`);
+    `applyButtonStyle()` sets/clears `data-btn`; `renderButtonStylePicker()`
+    into `#btnStyleChips`; `pickButtonStyle()` on the delegated
+    `[data-btn-option]` handler. Called from `boot()` (apply) and
+    `openSettings()` (render). FOUC: index.html head script also reads
+    `sfp.btnstyle` and sets `data-btn` before first paint (same as the font one)
+    so the choice doesn't flash on launch.
+  - Deliberately **not** in Backup & restore (device display preference, like
+    the font — same reasoning). Liquid Glass NOT built: leans on
+    `backdrop-filter` (heavier on old phones) and pulls toward a full iOS 26
+    redesign; Classic keeps the brand blue/orange and is a pure additive layer.
+  - Verified headless (Chromium, 390×844, localhost) driving the **real UI**
+    (bottom-nav → Settings → tap iOS chip → home): default reads 999px/700/
+    `0 6px 0` chunky edge; after the flip reads 15px/600/flat `0 1px 2px` with
+    the home secondary going translucent white; `data-btn="ios"` persists across
+    a full reload (FOUC script); picker chip reflects the selection; 0 console
+    errors. Both home screenshots eyeballed.
+- 2026-07-18: **Keeper tray "Customise" button → "Edit", v0.72.**
+  Owner: the ✏️ Customise / 📤 Post pair looked unbalanced — two `flex: 1`
+  equal-width buttons where one label is a 4-letter word and the other a
+  9-letter word behind an emoji, so Post read sparse and Customise crammed.
+  Renamed the keeper-card button `✏️ Customise` → `✏️ Edit` (js/app.js
+  showKeepers) — two short verbs balance the pills, and "Edit" is more honest
+  since v0.43 (the button opens the FULL editor: reframe/filters/sticker, not
+  just a caption tweak). Also changed the editor header it opens from
+  `setEditorChrome("generate", "Customise post")` → `"Edit post"` so the
+  chrome matches the button. Internal identifiers (customiseKeeper,
+  save-customise, g.customised, etc.) left as-is — code-only, not user-facing.
+  Verified headless: keeper tray renders `📤 Post` (114px) + `✏️ Edit` (118px)
+  at equal 44px height (no wrap), tapping Edit opens the editor titled "Edit
+  post", no console errors. Screenshot eyeballed.
+- 2026-07-18: **All Settings groups collapsed by default, v0.71.**
+  Owner: collapse all the folders. The two everyday-content groups (📸 Photos
+  & pitches, ✍️ Captions & hashtags) had `open` on their `<details>` since the
+  v0.50 Settings regroup; dropped both attributes so all 6 groups
+  (Photos & pitches / Captions & hashtags / Reminders / Appearance / Backup &
+  setup / Auto-posting) now start closed — no JS change, `<details>` handles
+  it natively. Verified headless: all 6 report `open: false` on landing in
+  Settings, tapping a header still expands it, no console errors.
+- 2026-07-18: **Swipe deck (Generate) scroll locked in place, v0.70.**
+  Owner: don't let the "tinder section" scroll down. The app has no per-screen
+  scroll container — the whole document is the scroller (body, `height:100%`,
+  no `overflow-y` set) — so a tall generate screen could scroll behind the
+  swipe deck and fight the drag gesture. New `body.scroll-lock` CSS rule
+  (`overflow: hidden; height: 100%`, right next to the existing `html,body`
+  horizontal hard-lock) plus `updateGenScrollLock()` in js/app.js, which
+  toggles that class based on `screen === "generate" && !#genDeckWrap.hidden`.
+  Called from both `show()` (handles navigating screens, incl. browser-back
+  landing back on a screen where the deck was already the visible panel) and
+  `genShow()` (handles switching panels — brief/loading/deck/keepers/empty —
+  without a `show()` call, since they're all the same `generate` screen).
+  Only the deck panel locks; brief/keepers/empty scroll normally. Verified
+  headless (Chromium, 390×700): `body.scroll-lock` + `overflow-y:hidden` while
+  the deck shows, `window.scrollTo` a no-op, stays locked across a swipe
+  (deck→deck), and clears on every other panel/screen (brief, home). No
+  console errors.
+- 2026-07-18: **New stall.svg (owner re-draw, v0.68).**
+  Owner supplied a fresh hand-vectored `stall.svg` (a proper Illustrator export,
+  not a trace) to replace the auto-traced 76KB file. Swapped it into
+  `assets/mascot/stall.svg` — now **24KB** (a third the size) and clean vectors.
+  New art is a **250×250 square** viewBox (the old was cropped landscape
+  247×186), so on ob-places it renders as a ~288px square scene via `.ob-scene`
+  (width-sized). The canopy blue is `#0252C5` — brighter/more saturated than the
+  onboarding gradient's `#0a4da1`, so it separates from the background on its own.
+  **Because of that the old `.ob-scene` white-outline drop-shadow treatment (four
+  zero-blur white drop-shadows tracing the alpha silhouette) was removed (v0.69)
+  — the owner saw it as an unwanted outline around the whole stall. Only the soft
+  lift shadow remains.** Verified in the real ob-places screen (renders clean, no
+  outline, no console errors). SW cache `v5`→`v6` so installs purge the old asset.
+  **The old traced pipeline notes below (2026-07-14 stall entry) are now
+  historical — this is a clean source, so don't re-trace it, and don't re-add the
+  white outline.**
+- 2026-07-18: **Audit punch-list #8–9 (v0.67).**
+  - **#8 nav labels + Home tab.** The floating capsule nav gained a **5th tab
+    (Home**, `data-nav="home" data-action="go-home"`, first) and **text labels**
+    under every icon (Home/New/Calendar/Generate/Settings). Each icon is now
+    wrapped in a `.navbtn-icon` box and the active pill moved from
+    `.navbtn::before` → `.navbtn-icon::before` so it stays anchored to the icon
+    regardless of the label beneath. Added `.navbtn-label` (0.63rem/700).
+    `--navh` 64→80px so hub-screen content still clears the taller bar. The New
+    button stays the only `data-nav`-less navbtn (still lit on `type` via
+    show()); Home has `data-nav` so the `:not([data-nav])` post-button selector
+    is unaffected. **Gotcha:** a non-first-run boot never called `show("home")`
+    (home is is-active in static HTML), so the nav's active-tab marking — which
+    lives in show() — never ran; the Home tab wouldn't light until the first
+    navigation. Fixed with a suppressed `show("home")` in boot's else branch.
+    Reduced-motion selector updated to `.navbtn-icon::before`.
+  - **#9 smart defaults.**
+    - *Calendar opens on today:* `openCalendar()` now calls
+      `selectCalDay(todayStr())` instead of leaving `selectedDate = null`, so
+      the day panel + today's schedule show straight away (the `.today`/
+      `.selected` cell styling already existed).
+    - *Honest ob-done copy:* the photos step is skippable, so `renderObDone()`
+      (called from `obGo` on ob-done) swaps the sign-off — "got your photos"
+      only when the stash is non-empty, else a "add a photo when you're ready"
+      line. Hint got `id="obDoneHint"`.
+    - *Empty-state CTAs:* `mascotEmpty()` gained an optional `cta {label,action}`
+      arg that appends a `.btn` (data-action, so the delegated handler wires it).
+      History + Queue empties now offer "✨ Generate posts"; the Generate
+      no-photos empty offers "📸 Add photos" (→ open-settings).
+    - *Today pre-selected in the brief* was already the case (openGenerate sets
+      `genBrief.date = today`; the Today chip matches) — verified, left as is.
+- 2026-07-18: **Audit punch-list #5–7 (v0.66).**
+  - **#5 confetti once-per-batch.** `showKeepers()` fired the quiet confetti on
+    every keeper-tray visit (so it re-celebrated on each return from posting/
+    customising a keeper). New `keepersCelebrated` flag — reset in
+    `runGenerate()`, set + confetti on the batch's first `showKeepers()` render,
+    skipped after. `returnToKeepers`/`saveCustomiseToKeeper` re-render silently.
+  - **#6 swipe-cap fade.** `.swipe-cap` was `-webkit-line-clamp: 3` (hard
+    mid-line cut). The card is a pointer-drag target, so a scrollable caption
+    would fight the swipe — instead it now fills the area and fades out at the
+    bottom via `mask-image` gradient (opaque→76%, transparent→100%). Full
+    caption is still baked on the image + shown at Post.
+  - **#7 home hierarchy — one orange hero.** Home had two orange heroes (New
+    Post's `.home .btn-primary` was overridden orange, plus Generate's
+    `btn-accent`). Now Generate is the sole orange hero (top of the stack; the
+    `fx-pulse-ring` `::after` moved from `.home .btn-primary` to
+    `.home .btn-accent`), New Post demoted to a white `.btn-secondary`. Dropped
+    the `🧪 View onboarding (debug)` home button (Settings → Run setup again
+    still uses `ob-restart`). Removed the dead `.home .btn-primary` orange bg/
+    active/edge rules + its half of the edge-accent & reduced-motion selectors.
+    ⚠️ The home nth-of-type stagger delays for slots 3/4 are now dead (only two
+    direct `.home > .btn` remain) but harmless.
+- 2026-07-17: **Generate brief → Stoic-style stacked pill options.**
+  Owner liked the Stoic onboarding's pills + minimal look, wanted it on the
+  Generate brief (NOT onboarding), keeping the brand blue/orange (not Stoic's
+  mono). Version → v0.65.
+  - The three brief steps (Where / When / Vibe) render their options as
+    full-width **stacked pills** (`.brief-opts` column + `.brief-opt`) instead
+    of the old wrapping `.chips`. Selected = solid `--blue` fill + white text;
+    the add variants (＋ Somewhere new / 📅 Another day) get `.brief-opt-add`
+    (dashed border, muted). `briefChip()` (js/app.js) now emits `.brief-opt`;
+    the three `renderBriefStep` containers became `.brief-opts`; and
+    `briefSelectAndAdvance`'s selector was updated `.chip`→`.brief-opt` (it's
+    what clears the other pills' selected state — miss it and auto-advance
+    leaves every tapped option highlighted).
+  - Multi-select (Vibe) still toggles via `briefToggleVibe` (class-agnostic, no
+    change); auto-advance (Where/When) unchanged. Pills are full-width to line
+    up with the orange "Cook 'em up" `.btn` below them.
+  - Verified headless: walked Where→When→Vibe — pills render (radius 999px), no
+    `.chip` left, tap selects + auto-advances, Vibe multi-select keeps 3
+    preselected, no console errors. Screenshots eyeballed.
+- 2026-07-17: **Custom SVG post-type icons (replaced the emoji).**
+  Owner approved a hand-drawn flat set (previewed first). Version → v0.64.
+  - `assets/icons/{single,collage,carousel}.svg` — flat, solid, blue-primary +
+    orange-accent to match the brand look (single = sun+mountains photo card;
+    collage = big pane + 2 small panes; carousel = centre card + peek cards +
+    page dots). 48×48 viewBox, tiny, offline-safe.
+  - The three `.tile-icon` badges now hold `<img src="assets/icons/…svg"
+    alt="" width="32" height="32">` instead of the emoji 🖼️/🔲/🎠. New CSS
+    `.tile-icon img { width:32px; height:32px; display:block }`. The 54×54 badge
+    (`--panel-2` bg) stays — it still frames the icon uniformly. The old
+    `.tile-icon { font-size:28px }` is now dead but harmless.
+  - SW cache `v4`→`v5` so installs pick up the new assets.
+  - Verified headless: all three load (`naturalWidth>0`), 32px, no failed
+    requests, no console errors. Screenshot eyeballed in situ.
+- 2026-07-17: **New Post progress bar now advances across the whole
+  flow.** Follow-up to the v0.62 static bar. Version → v0.63.
+  - `FLOW_STEPS` (js/app.js) maps the flow screens onto 4 milestones — Type
+    (25%) → Photo/Edit (single/collage/carousel/editor, 50%) → Caption (quiz/
+    details/caption, 75%) → Review (100%). `updateFlowProgress(screen)` is
+    called from `show()` and drives the bar; `lastFlowPct` tracks the width to
+    animate FROM, so forward steps sweep up, Back shrinks, and leaving the flow
+    (any non-flow screen) resets to 0 for the next post.
+  - Every flow screen carries a `.flow-bar`. The type screen's lives under its
+    mascot (its `<span>` gained `flow-bar`); the other seven are **injected at
+    boot** by `initFlowBars()` (a `.flow-track` prepended to each screen's
+    `.pad`) so the markup isn't duplicated. `.flow-track` shares `.quiz-track`'s
+    visual (light rgba-blue track + `.ob-bar` orange fill).
+  - Animation reuses the park-reflow-set trick (transition off → set to
+    `lastFlowPct` → force reflow → transition on → set target), same as `obGo`;
+    the `.ob-bar { transition: none }` reduced-motion rule makes it jump instead.
+  - Verified headless: bars injected on all 9 flow screens; walking type→single
+    →editor measured 25%→50%→50% (photo+edit share a milestone); editor layout
+    uncrowded; no console errors.
+- 2026-07-17: **"What kind of post?" screen → mascot + speech bubble
+  + progress bar (Brilliant-app reference).** Owner liked Brilliant's question
+  header. Version → v0.62. (Progress bar was static at first — wired to advance
+  across the flow in v0.63 above.)
+  - Added inside the type screen's `.pad` (kept the blue "New Post" `.bar` for
+    nav consistency — same arrangement the Generate brief already uses: blue bar
+    + a progress bar & mascot below it): a `.quiz-track` progress bar (reuses the
+    `.ob-bar` orange fill on a light rgba-blue track, **static at 25%** = step 1
+    of the New Post flow), then a `.quiz-ask` row — the **thinking** mascot
+    (`assets/mascot/thinking.svg`, `mascot-breathe`) on the left with a new
+    `.speech` bubble ("What kind of post?") whose left-pointing tail (two stacked
+    triangles, outer=`--blue` border, inner=`--panel` fill) points at it.
+    Dropped the old `.lead` "What kind of post?" text (the bubble replaces it).
+  - The progress bar started **static at 25%** here; v0.63 (above) wired it to
+    advance across the whole New Post flow.
+  - Icons kept as-is (emoji 🖼️/🔲/🎠 in the `.tile-icon` badges) — Brilliant's
+    are custom flat illustrations; swapping ours to bespoke icons would be a
+    separate art task.
+  - Verified headless: bubble + tail render, mascot = thinking pose, bar = 25%,
+    no horizontal overflow, no console errors. Screenshot eyeballed.
+- 2026-07-17: **Pill buttons + clean tile boxes (Brilliant-app
+  reference).** Owner liked Brilliant's button *shape* and option-box *shape*.
+  Version → v0.61. Colour scheme deliberately left as-is (owner reviewed the
+  6-theme round-1 gallery and chose to keep the current blue/orange).
+  - **Buttons are now full pills/stadiums.** New `--btn-radius: 999px` token
+    (kept separate from `--radius: 16px`, which still governs cards/tiles/
+    previews/inputs); `.btn` uses it. All variants inherit, so primary/secondary/
+    accent/ghost/sm/xl are all pills. The 3D edge is a solid `box-shadow: 0 4px 0`
+    (home: `0 6px 0`) which follows border-radius, so the raised edge became a
+    pill edge for free — matches Brilliant's raised-pill look with no extra work.
+    The *only* visual gap between our buttons and theirs was the radius (ours
+    were 16px rounded-rects); everything else (bold text, solid fill, chunky
+    edge, press-down) already matched.
+  - **Type/quiz tiles → clean uniform-bordered boxes.** Dropped the `border-left:
+    5px solid var(--orange)` accent stripe on `.tile`; now one `1.5px var(--line)`
+    border all round (border colour → `--blue` on `:active`). Shared by the type
+    ("What kind of post?") AND quiz screens, so both match. The `.tile-icon`
+    54×54 badge stays (it's what keeps the 3 mismatched emoji looking uniform —
+    see 2026-07-16 note; Brilliant's icons are custom-consistent so they need no
+    badge, ours do).
+  - Verified headless (Chromium, localhost): `.btn` computes `border-radius:
+    999px`; home pills render with the raised edge following the curve; type-
+    screen tiles show uniform border (no stripe), r16; no console errors.
+- 2026-07-17: **Bottom nav → floating capsule + active pill (Alan-app
+  reference).** Owner shared the Alan app's nav and liked "the shape around the
+  icons" + the tap animation. Version → v0.60.
+  - **Capsule**: `.bottomnav` detached from the screen edges — `bottom: 10px +
+    safe-area`, `width: calc(100% - 24px)` / `max-width: 460px`, `border-radius:
+    26px`, all-round soft shadow (was an edge-to-edge bar with `border-top` and
+    a top-only shadow). `--navh` 54→64px so the hub/home content padding still
+    clears the now-floating bar (both use `calc(... + var(--navh) + safe)`).
+  - **Active pill** replaces the old 6px dot: a `.navbtn::before` soft rounded
+    rect (48×34, r13) sits *behind* the active icon and **springs in** (scale
+    0.55→1 on `--spring`) when you land on the tab — that's the "shape around
+    the icons" + the tap animation in one. Tint is `color-mix(in srgb,
+    var(--blue) 15%, var(--panel))` so it **re-colours with whatever theme is
+    active** (no hardcoded value). Same `is-active` semantics as before — the
+    post button (no `data-nav`) only lights on the `type` screen via show().
+    The icon keeps its `fx-nav-pop` bounce + `:active` press-scale.
+  - Reduced-motion: the pill still appears but **snaps** (transform transition
+    dropped, only bg/opacity fade) — added a `.navbtn::before` override in the
+    reduced-motion block.
+  - ⚠️ **Kept icon-only** (no text labels) to match the app's existing nav —
+    the Alan reference HAS labels; owner was asked whether to add them as a
+    follow-up. If added: New/Calendar/Generate/Settings labels, bump `--navh`
+    again + revisit pill geometry (it'd wrap icon+label).
+  - Uses **`color-mix()`** — first use in the app; fine for the modern
+    mobile/PWA target. If an ancient webview ever matters, the fallback is a
+    flat `--accent-soft`-style token.
+  - Verified headless (Chromium, 390×844, localhost): capsule floats 10px up,
+    12px inset each side, r26; active pill opacity 1 + tinted bg only on the
+    current tab and moves correctly on tab change (calendar→settings); no
+    console errors. Screenshot eyeballed.
+- 2026-07-17: **Visuelt Pro is now the default app font (owner brand
+  face).** Owner supplied the Visuelt Pro family (commercial — Colophon
+  Foundry) and asked to use it. Wired into the existing font-picker system, made
+  the default. Version → v0.59.
+  - ⚠️ **LICENSING**: Visuelt Pro is a **commercial** font, NOT under the OFL
+    that covers the other bundled faces (`assets/fonts/OFL.txt` does not apply
+    to it). The uploaded files were **desktop TTFs**; serving it as a webfont in
+    a PWA is a *separate* licence class. The owner is responsible for holding a
+    webfont/app licence for it — flagged to them. If that's ever a problem, the
+    swap-out is trivial: change the `:root --font-family` default back to
+    Poppins + revert the 4 "visuelt"-vs-"poppins" default flips below.
+  - **Files**: `assets/fonts/visuelt-{400,500,700}.woff2` (~74KB each) —
+    converted from the TTFs with fonttools+brotli, **subset to Latin** (UI emoji
+    come from the system emoji font, not this face). Visuelt ships only
+    Regular/Medium/Bold, so the `@font-face` declares **Medium over
+    `font-weight: 500 600`** and **Bold over `700 800`** — this keeps the app's
+    600 (emphasis) rendering as Medium and distinctly lighter than 700+ headings,
+    instead of collapsing 600 into Bold. Regular=400 covers body.
+  - **Made the built-in default the proper way** (kept the "default = no
+    `data-font` attribute" invariant, just repointed it): `:root --font-family`
+    → Visuelt; **added an `html[data-font="poppins"]` override block** so Poppins
+    stays selectable; flipped the hardcoded `"poppins"` default sentinel to
+    `"visuelt"` in all **four** spots — `applyFont()` (js/app.js), the FOUC
+    inline script (index.html, both the `||'"visuelt"'` fallback AND the
+    `!== "visuelt"` guard), and `getFont()`'s default (js/store.js). FONTS list
+    (js/config.js) gained the `visuelt` entry first (label **"Visuelt Pro"** —
+    must match the @font-face family exactly, since the picker chip previews
+    itself via `style="font-family:'<label>'"`); Poppins demoted to a normal
+    option.
+  - SW cache `v3`→`v4` so existing installs purge and pick up the new font.
+  - Verified headless (Chromium, localhost): all five requested weights
+    (400/500/600/700/800) resolve via `document.fonts.check`; body + buttons
+    compute to "Visuelt Pro" with **no** `data-font` attribute on a fresh device;
+    picker lists all 6 (visuelt first); selecting Poppins sets
+    `data-font="poppins"` and switching back clears it (invariant holds); no
+    console errors. Home screenshot eyeballed — Visuelt renders on greeting +
+    buttons, logo lockup unaffected (baked into logo.svg).
+- 2026-07-17: **Colour tokenise pass + 5 candidate themes (exploration,
+  inert).** First step of a colour-scheme revamp the owner is picking by
+  reaction ("know it when I see it"), Mobbin links from the owner incoming as
+  extra candidates. Version → v0.58.
+  - **Tokenise pass (zero visual change, verified):** every hardcoded colour in
+    css/styles.css now routes through `:root` tokens — new ones: `--success`
+    (the keep/posted green, was `#2b8a3e` ×9), `--ink-on-accent` (text on
+    orange surfaces), `--accent-soft` (calendar working-day fill), `--stage`
+    (dark editor stage), `--edge-accent`/`--edge-neutral` (home 3D button
+    edges), `--blue-2` + `--hero-bg` (the home/onboarding gradient, now one
+    token). Whites deliberately NOT tokenised — all themes keep light-on-dark
+    heroes so the rgba(255,…) tints stay valid. Every non-white hex now
+    appears exactly once, in `:root`.
+  - **5 candidate themes** as `html[data-theme=…]` blocks right after the
+    `data-font` blocks — same mechanism as the font picker: `duo` (bright
+    green/yellow), `ember` (cream/paprika/mustard), `midnight` (dark),
+    `poster` (chalkboard + hot red), `pastel` (lavender/coral). **Inert until
+    something sets the attribute — nothing in the app does yet**; they exist
+    for the round-1 comparison gallery (screenshotted all 6 incl. current
+    across home/generate/calendar/settings/onboarding, headless, no console
+    errors). NB semantics: `--blue` = "primary", `--orange` = "accent/CTA";
+    themes reassign what those hold. `--ink-on-accent` exists because poster's
+    red CTA needs white text where the others use near-black.
+  - ⚠️ **These are tasting-menu candidates, NOT approved looks** — don't wire a
+    picker or default any of them without the owner choosing. Known quirks for
+    the eventual winner's polish pass: logo.svg's blue plate + mascot/Lottie
+    colours are baked into artwork (CSS can't retheme them), and a handful of
+    rgba brand-blue tints (shadows/glows, e.g. `.gen-brief-track`) still read
+    blue in every theme — convert via color-mix() or per-theme values then.
+- 2026-07-16: **Progress-bar step markers tried, then reverted.**
+  Circle+tick step markers were added to both bars (v0.55), then the empty
+  upcoming circles were hidden (v0.56) — but the owner decided against markers
+  entirely and asked for the plain bar back. Fully removed: the `.pb-step`
+  spans (index.html), the `.pb-step` CSS + the `pb-tick` keyframe, the
+  `paintSteps()` helper and its calls in `obGo`/`goBriefStep`/`briefCook`
+  (js/app.js), and the reduced-motion additions; the two track wrappers
+  (`.ob-progress`, `.gen-brief-track`) restored to `overflow:hidden`. Net state:
+  the fat, flat-orange, groove-shaded bars from v0.54 (no markers). If markers
+  are ever revisited, the implementation is in git history around v0.55.
+  Version → v0.57. **(Don't re-add step markers without an explicit ask — the
+  owner tried them and preferred without.)**
 - 2026-07-16: **Onboarding welcome logo removed + overflow-clip fix.**
   Owner: drop the Chuckling Wings logo on ob-welcome (keep just the chicken);
   also flagged the orange bar "covering" the photos on ob-photos. Version → v0.54.

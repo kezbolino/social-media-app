@@ -60,6 +60,15 @@
   // sticky actionbar.
   const HUB_SCREENS = new Set(["home", "type", "calendar", "generate", "queue", "history", "settings"]);
 
+  // New Post flow progress bar: the screens collapse into 4 milestones the bar
+  // fills through — Type (25%) → Photo/Edit (50%) → Caption (75%) → Review
+  // (100%). Every flow screen carries a .flow-bar (injected at boot by
+  // initFlowBars, except the type screen which already has one under its
+  // mascot); updateFlowProgress() drives them from show().
+  const FLOW_STEPS = { type: 1, single: 2, collage: 2, carousel: 2, editor: 2, quiz: 3, details: 3, caption: 3, review: 4 };
+  const FLOW_TOTAL = 4;
+  let lastFlowPct = 0; // width the bar animates FROM on the next flow screen
+
   // Direction of the next screen wipe: "back" slides in from the left, anything
   // else from the right. Set by handleBack / go-home just before they show().
   let navDir = "fwd";
@@ -89,8 +98,10 @@
     // hide the bottom nav altogether, so there's nowhere else a dot could show.
     const postBtn = $(".navbtn:not([data-nav])");
     if (postBtn) postBtn.classList.toggle("is-active", screen === "type");
+    updateFlowProgress(screen);
     if (screen === "home") rollGreeting();
     window.scrollTo(0, 0);
+    updateGenScrollLock();
     if (!suppressHistoryPush) {
       try { history.pushState({ screen }, "", ""); } catch (e) { /* ignore */ }
     }
@@ -104,6 +115,45 @@
     suppressHistoryPush = false;
   });
 
+  // Advance the New Post progress bar as the user moves through the flow. Each
+  // flow screen has its own .flow-bar; we park the incoming screen's bar at the
+  // width we left the previous step on, force a reflow to commit it with no
+  // animation, then set the target so the fill sweeps (the same park-reflow
+  // trick obGo uses). Going back shrinks it; leaving the flow (any non-flow
+  // screen) resets to 0 so the next post starts empty.
+  function updateFlowProgress(screen) {
+    const step = FLOW_STEPS[screen];
+    if (!step) { lastFlowPct = 0; return; }
+    const pct = (step / FLOW_TOTAL) * 100;
+    const sec = document.querySelector('[data-screen="' + screen + '"]');
+    const bar = sec && sec.querySelector(".flow-bar");
+    if (!bar) { lastFlowPct = pct; return; }
+    bar.style.transition = "none";
+    bar.style.width = lastFlowPct + "%";
+    void bar.offsetWidth; // commit the parked width before re-enabling the sweep
+    bar.style.transition = "";
+    bar.style.width = pct + "%";
+    lastFlowPct = pct;
+  }
+
+  // Give every New Post flow screen its own progress bar at boot (the type
+  // screen already has one under its mascot, so skip it). Kept in JS so the
+  // markup isn't duplicated across seven screens.
+  function initFlowBars() {
+    Object.keys(FLOW_STEPS).forEach((screen) => {
+      if (screen === "type") return;
+      const sec = document.querySelector('[data-screen="' + screen + '"]');
+      const pad = sec && sec.querySelector(".pad");
+      if (!pad || pad.querySelector(".flow-bar")) return;
+      const track = document.createElement("div");
+      track.className = "flow-track";
+      const bar = document.createElement("span");
+      bar.className = "ob-bar flow-bar";
+      track.appendChild(bar);
+      pad.insertBefore(track, pad.firstChild);
+    });
+  }
+
   // Drop a fresh random greeting onto the home screen.
   function rollGreeting() {
     const el = document.getElementById("homeGreeting");
@@ -115,7 +165,7 @@
 
   // Fill an empty-state <p> with a mascot pose + message, so blank screens feel
   // charming rather than dead. Text is set via textContent (never innerHTML).
-  function mascotEmpty(el, state, text) {
+  function mascotEmpty(el, state, text, cta) {
     if (!el) return;
     el.classList.add("mascot-empty");
     el.innerHTML = "";
@@ -126,6 +176,15 @@
     span.className = "mascot-empty-msg";
     span.textContent = text;
     el.appendChild(span);
+    // Optional call-to-action so a dead-end screen offers a way forward. The
+    // button uses data-action, so the delegated click handler wires it for free.
+    if (cta && cta.label && cta.action) {
+      const btn = document.createElement("button");
+      btn.className = "btn btn-accent btn-sm mascot-empty-cta";
+      btn.setAttribute("data-action", cta.action);
+      btn.textContent = cta.label;
+      el.appendChild(btn);
+    }
     el.hidden = false;
   }
 
@@ -146,6 +205,13 @@
       suppressHistoryPush = true;
       startOnboarding();
       suppressHistoryPush = false;
+    } else {
+      // Home is is-active in the static HTML, but the nav's active-tab marking
+      // lives in show() — so without this the Home tab wouldn't light until the
+      // first navigation. Suppress the push: the initial entry is already home.
+      suppressHistoryPush = true;
+      show("home");
+      suppressHistoryPush = false;
     }
     try {
       await Hooks.init();
@@ -164,7 +230,9 @@
       return;
     }
     wireEvents();
+    initFlowBars();
     applyFont(Store.getFont());
+    applyButtonStyle(Store.getButtonStyle());
     rollGreeting();
     adaptPhotoPickers();
     loadPhotoStash();
@@ -221,6 +289,9 @@
 
       const fontOpt = e.target.closest("[data-font-option]");
       if (fontOpt) return pickFont(fontOpt.dataset.fontOption);
+
+      const btnOpt = e.target.closest("[data-btn-option]");
+      if (btnOpt) return pickButtonStyle(btnOpt.dataset.btnOption);
 
       const qMake = e.target.closest("[data-q-make]");
       if (qMake) return makeFromQueue(Store.getQueue().find((x) => x.id === qMake.dataset.qMake));
@@ -302,18 +373,6 @@
     return ((i + 1) / OB_STEPS.length) * 100;
   }
 
-  // Paint the circle/tick markers on a progress track: steps before `current`
-  // get a ✓ (done), the step at `current` gets the active ring, the rest stay
-  // faint (upcoming). Shared by the onboarding bar and the Generate brief. Pass
-  // a `current` past the last marker (e.g. total) to tick every step.
-  function paintSteps(root, current) {
-    if (!root) return;
-    root.querySelectorAll(".pb-step").forEach((s, i) => {
-      s.classList.toggle("done", i < current);
-      s.classList.toggle("current", i === current);
-    });
-  }
-
   function obGo(screen) {
     const i = OB_STEPS.indexOf(screen);
     if (i < 0) return;
@@ -331,6 +390,7 @@
     }
     if (screen === "ob-photos") renderObPhotos();
     if (screen === "ob-places") renderObPlaces();
+    if (screen === "ob-done") renderObDone();
     show(screen);
     if (bar) {
       // Reading offsetWidth once the screen is visible forces a synchronous
@@ -343,7 +403,6 @@
       bar.style.transition = ""; // back to the stylesheet (none under reduced motion)
       bar.style.width = obPct(i) + "%";
     }
-    paintSteps(sec && sec.querySelector(".ob-progress"), i);
   }
 
   function obNext() {
@@ -356,6 +415,19 @@
 
   function startOnboarding() {
     obGo("ob-welcome");
+  }
+
+  // Honest sign-off: the photos step is skippable, so don't claim "got your
+  // photos" when the stash is empty. The pitches are always seeded, so they're
+  // safe to promise.
+  async function renderObDone() {
+    const hint = $("#obDoneHint");
+    if (!hint) return;
+    let hasPhotos = false;
+    try { hasPhotos = window.Photos && Photos.supported ? (await Photos.count()) > 0 : false; } catch (e) {}
+    hint.textContent = hasPhotos
+      ? "Wingman's got your photos, your pitches and a pile of ready-written captions. Let's make some posts."
+      : "Your pitches are set and there's a pile of ready-written captions waiting. Add a photo or two when you're ready and you're away.";
   }
 
   // Every exit from setup runs through here, so the flag can't be missed and
@@ -1481,6 +1553,7 @@
     renderNotifySettings();
     renderMetaSettings();
     renderFontPicker();
+    renderButtonStylePicker();
     show("settings");
   }
 
@@ -1643,9 +1716,9 @@
 
   function openCalendar() {
     calView = new Date();
-    selectedDate = null;
-    $("#calDay").hidden = true;
-    renderCalendar();
+    // Land on today with its schedule already open — a useful default beats a
+    // blank panel (selectCalDay renders the grid + day panel itself).
+    selectCalDay(Notify.todayStr());
     show("calendar");
   }
   function shiftMonth(delta) {
@@ -1827,6 +1900,7 @@
   let deckCursor = 0;      // index of the current top card
   let keepers = [];        // items swiped right
   let keptTotal = 0;       // how many were kept this batch, even once posted out of `keepers`
+  let keepersCelebrated = false; // confetti fires once when a batch first reaches the tray, not on every revisit
   const binnedHookIds = new Set(); // captions binned this session — don't resurface
   let genBusy = false;
   let genLocation = "";
@@ -1892,6 +1966,24 @@
     $("#genDeckWrap").hidden = which !== "deck";
     $("#genKeepers").hidden = which !== "keepers";
     $("#genEmpty").hidden = which !== "empty";
+    updateGenScrollLock();
+  }
+
+  // The swipe deck (the "tinder" card) is a drag surface — letting the page
+  // scroll behind/under it fights the gesture and the deck visibly drifts.
+  // Lock the whole page in place for as long as the deck panel is the one
+  // showing on the generate screen; every other generate panel (brief,
+  // keepers, empty) scrolls normally. Re-checked on every show()/genShow()
+  // call (not just toggled once) so a browser-back into a screen where the
+  // deck was already the visible panel re-locks correctly.
+  function updateGenScrollLock() {
+    const onGenerate = document
+      .querySelector('.screen[data-screen="generate"]')
+      .classList.contains("is-active");
+    document.body.classList.toggle(
+      "scroll-lock",
+      onGenerate && !$("#genDeckWrap").hidden
+    );
   }
 
   function briefPct(i) {
@@ -1918,13 +2010,13 @@
     bar.style.width = briefPct(genBriefStep) + "%";
     const track = bar.parentElement;
     if (track) track.setAttribute("aria-valuenow", String(genBriefStep + 1));
-    paintSteps(track, genBriefStep);
     renderBriefStep(dir === "back");
   }
 
+  // Stoic-style stacked pill option (full-width, fills blue when selected).
   function briefChip(action, val, label, selected) {
     return (
-      `<button class="chip${selected ? " selected" : ""}" data-action="${action}" ` +
+      `<button class="brief-opt${selected ? " selected" : ""}" data-action="${action}" ` +
       `data-val="${escapeAttr(val)}">${escapeAttr(label)}</button>`
     );
   }
@@ -1938,9 +2030,9 @@
         (window.Mascot ? Mascot.html("walk", { anim: "sway", size: "lg", className: "mascot-center" }) : "") +
         `<h3 class="gen-q-title">Right — where are we at?</h3>` +
         `<p class="hint">The captions will shout about this pitch.</p>` +
-        `<div class="chips">` +
+        `<div class="brief-opts">` +
         locs.map((l) => briefChip("brief-loc", l, l, l === genBrief.location)).join("") +
-        `<button class="chip chip-add" data-action="brief-new-loc">＋ Somewhere new</button>` +
+        `<button class="brief-opt brief-opt-add" data-action="brief-new-loc">＋ Somewhere new</button>` +
         `</div>` +
         `<div class="row gen-brief-add" id="briefAddRow" ${locs.length ? "hidden" : ""}>` +
         `<input id="briefLocInput" class="text-input" type="text" placeholder="e.g. Greenwich Market" />` +
@@ -1962,9 +2054,9 @@
         (window.Mascot ? Mascot.html("thinking", { anim: "breathe", size: "lg", className: "mascot-center" }) : "") +
         `<h3 class="gen-q-title">When's it going out?</h3>` +
         `<p class="hint">Sets the day the captions mention.</p>` +
-        `<div class="chips">` +
+        `<div class="brief-opts">` +
         chips.map((c) => briefChip("brief-when", c.val, c.label, c.val === genBrief.date)).join("") +
-        `<button class="chip chip-add" data-action="brief-pick-day">📅 Another day</button>` +
+        `<button class="brief-opt brief-opt-add" data-action="brief-pick-day">📅 Another day</button>` +
         `</div>` +
         `<div class="row gen-brief-add" id="briefDayRow" hidden>` +
         `<input id="briefDayInput" class="text-input" type="date" min="${today}" value="${escapeAttr(genBrief.date || today)}" aria-label="Post day" />` +
@@ -1976,7 +2068,7 @@
         (window.Mascot ? Mascot.html("excited", { anim: "breathe", size: "lg", className: "mascot-center" }) : "") +
         `<h3 class="gen-q-title">What's the vibe?</h3>` +
         `<p class="hint">Tick as many as you fancy — mix it up.</p>` +
-        `<div class="chips" id="briefVibes">` +
+        `<div class="brief-opts" id="briefVibes">` +
         GEN_VIBES.map((v) => briefChip("brief-vibe", v.tag, v.label, genBrief.tags.has(v.tag))).join("") +
         `</div>` +
         `<button class="btn btn-accent gen-cook" data-action="brief-cook">✨ Cook 'em up</button>` +
@@ -1991,7 +2083,7 @@
     if (briefAdvancing) return;
     briefAdvancing = true;
     apply();
-    $$("#genBriefStep .chip").forEach((c) => c.classList.toggle("selected", c === el));
+    $$("#genBriefStep .brief-opt").forEach((c) => c.classList.toggle("selected", c === el));
     setTimeout(() => goBriefStep(genBriefStep + 1), reduceMotion ? 0 : 380);
   }
 
@@ -2043,7 +2135,6 @@
     $("#genBriefBar").style.width = "100%";
     const track = $("#genBriefBar").parentElement;
     if (track) track.setAttribute("aria-valuenow", "4");
-    paintSteps(track, 4); // fill hits 100% → every marker ticks
 
     // Wait out the bar's fill sweep (0.8s in CSS) so you actually see it reach
     // 100% before the deck starts cooking.
@@ -2055,13 +2146,15 @@
     refreshPoolUi(); // keep the single/collage "photos loaded" notes current
     keepers = [];
     keptTotal = 0;
+    keepersCelebrated = false;
     deckCursor = 0;
     const info = $("#genInfo");
     if (!photoPool.length) {
       info.textContent = "";
       $("#genEmpty").innerHTML =
         (window.Mascot ? Mascot.html("relaxing", { size: "lg", className: "mascot-center" }) : "") +
-        '<p class="hint">Add some chicken photos first — Settings → 📸 My chicken photos — then come back for a fresh batch.</p>';
+        '<p class="hint">Add some chicken photos first, then come back for a fresh batch.</p>' +
+        '<button class="btn btn-accent btn-sm mascot-empty-cta" data-action="open-settings">📸 Add photos</button>';
       genShow("empty");
       return;
     }
@@ -2317,7 +2410,7 @@
         `<div class="keeper-body"><p class="keeper-cap">${escapeAttr(cap)}</p>` +
         `<div class="keeper-actions">` +
         `<button class="btn btn-primary btn-sm" data-keeper-post="${i}">📤 Post</button>` +
-        `<button class="btn btn-secondary btn-sm" data-keeper-edit="${i}">✏️ Customise</button>` +
+        `<button class="btn btn-secondary btn-sm" data-keeper-edit="${i}">✏️ Edit</button>` +
         `</div>` +
         `<div class="keeper-queue">` +
         `<label class="keeper-date-field">` +
@@ -2335,7 +2428,12 @@
     wrap.querySelectorAll(".keeper-date").forEach((inp) =>
       inp.addEventListener("change", () => syncKeeperDateLabel(inp))
     );
-    if (window.FX) FX.confetti({ quiet: true });
+    // Celebrate the batch ONCE — when it first lands in the tray — not on every
+    // return here after posting/customising/queueing one of the keepers.
+    if (!keepersCelebrated) {
+      keepersCelebrated = true;
+      if (window.FX) FX.confetti({ quiet: true });
+    }
   }
 
   // After sharing a keeper, come back to the tray to handle the rest (the
@@ -2391,7 +2489,7 @@
     seedPostFromGen(g);
     post.fromGenerate = true;
     await Imaging.ensureFonts();
-    setEditorChrome("generate", "Customise post");
+    setEditorChrome("generate", "Edit post");
     show("editor"); // show first so the editor can measure its real width
     // Background = the raw photo itself (no baked sticker). With no state the
     // editor defaults to Square / zoom 1 / centred, which cover-fits the photo
@@ -2532,7 +2630,8 @@
     const empty = $("#historyEmpty");
     list.innerHTML = "";
     if (!posts.length) {
-      mascotEmpty(empty, "sad", "No posts yet — once you share a few, they'll show up here to reuse.");
+      mascotEmpty(empty, "sad", "No posts yet — once you share a few, they'll show up here to reuse.",
+        { label: "✨ Generate posts", action: "open-generate" });
       return;
     }
     empty.hidden = true;
@@ -2600,7 +2699,8 @@
     queueUrls = [];
     list.innerHTML = "";
     if (!items.length) {
-      mascotEmpty(empty, "sleeping", "Nothing queued yet — add one below.");
+      mascotEmpty(empty, "sleeping", "Nothing queued yet — generate a batch and queue one for a day at the pitch.",
+        { label: "✨ Generate posts", action: "open-generate" });
       return;
     }
     empty.hidden = true;
@@ -2752,7 +2852,7 @@
   // attribute change reskins the whole app. "poppins" is the built-in
   // default (no override rule needed, so clearing the attribute is enough).
   function applyFont(id) {
-    if (id && id !== "poppins") document.documentElement.setAttribute("data-font", id);
+    if (id && id !== "visuelt") document.documentElement.setAttribute("data-font", id);
     else document.documentElement.removeAttribute("data-font");
   }
 
@@ -2773,6 +2873,35 @@
     applyFont(id);
     renderFontPicker();
     if (window.FX) FX.pop($(`[data-font-option="${id}"]`));
+  }
+
+  /* ---------- BUTTON STYLE ---------- */
+  // Swaps the `data-btn` attribute on <html>, which flips the whole app's
+  // button look via the html[data-btn="ios"] override block in css/styles.css.
+  // "default" is the built-in chunky pill (no override), so clearing the
+  // attribute is enough.
+  function applyButtonStyle(id) {
+    if (id && id !== "default") document.documentElement.setAttribute("data-btn", id);
+    else document.documentElement.removeAttribute("data-btn");
+  }
+
+  function renderButtonStylePicker() {
+    const wrap = $("#btnStyleChips");
+    if (!wrap) return;
+    const current = Store.getButtonStyle();
+    wrap.innerHTML = (window.APP_CONFIG.BUTTON_STYLES || [])
+      .map(
+        (b) =>
+          `<button type="button" class="chip${b.id === current ? " selected" : ""}" data-btn-option="${b.id}" title="${b.blurb}">${b.label}</button>`
+      )
+      .join("");
+  }
+
+  function pickButtonStyle(id) {
+    Store.setButtonStyle(id);
+    applyButtonStyle(id);
+    renderButtonStylePicker();
+    if (window.FX) FX.pop($(`[data-btn-option="${id}"]`));
   }
 
   /* ---------- NOTIFY SETTINGS ---------- */
