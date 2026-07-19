@@ -97,7 +97,33 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-19 (latest): **"Posted!" success screen with a weekly goal ring
+- 2026-07-19 (latest): **Sounds switched back on, with a Settings toggle
+  (v0.83).** The sound layer was unplugged on 2026-07-12 (module + assets left
+  in the repo, just no `<script>` tag). Owner asked to bring it back with an
+  on/off control.
+  - Re-added `<script src="js/sound.js">` (before lottie/fx). `js/sound.js` was
+    already complete on main (`window.Sound`: play/setMuted/isMuted/toggleMuted,
+    mute persisted to `sfp.soundMuted`, `file://`-safe HTML5 Audio). The
+    `Sound.play(...)` calls were also already in `js/app.js`, guarded by
+    `if (window.Sound)` — so loading the module is what actually re-arms them.
+  - **Triggers stay sparing** (the documented design — a sound on every tap was
+    previously judged too much): `big-win` on share (`markPostShared`) and
+    `swipe-keep`/`swipe-nope` on Generate swipe decisions (`decideCard`,
+    `postKeeper`). Nothing else makes noise.
+  - **Toggle**: Settings → 🎨 Appearance → "Sound effects" (`#soundEnabled`).
+    `openSettings` sets `checked = !Sound.isMuted()`; the change handler calls
+    `Sound.setMuted(!checked)`. Sound owns its own persistence, so there's no
+    Store getter/setter — the checkbox just flips its mute. **Defaults ON.**
+  - **Swapped in the softened WAVs** ("lower, woodier, no sparkle — less
+    casino-like") from the unmerged `claude/fable-sound-effects-8gyl6e` branch,
+    but only the clips that actually play (`big-win`, `swipe-keep-1/2`,
+    `swipe-nope-1/2`) — grabbed the files alone, NOT the branch (it's forked off
+    an ancient main and would revert months of work). SW cache `v6`→`v7` so
+    installs pick up the new audio.
+  - Verified headless: module loads (0 errors), the 3 playing clips decode, the
+    toggle defaults checked and flips `Sound.isMuted()` both ways and persists
+    across reload, and a real swipe fires `swipe-keep`/`swipe-nope`.
+- 2026-07-19: **"Posted!" success screen with a weekly goal ring
   (v0.82).** Salvaged from the unmerged `claude/app-audit-ui-colors-erbail`
   branch (built at v0.66) and cherry-picked onto v0.81. After a real share or
   direct publish the flow now lands on a dedicated `posted` screen instead of

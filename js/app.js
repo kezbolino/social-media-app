@@ -353,6 +353,11 @@
     saveMetaField("#metaCloud", "cloudName");
     saveMetaField("#metaPreset", "uploadPreset");
     $("#notifyEnabled").addEventListener("change", onNotifyToggle);
+    // 🔊 Sound on/off — Sound owns its own persistence (localStorage), so the
+    // toggle just flips its mute state. checked = ON = not muted.
+    $("#soundEnabled").addEventListener("change", (e) => {
+      if (window.Sound) Sound.setMuted(!e.target.checked);
+    });
     $("#notifyTime").addEventListener("change", (e) => {
       const n = Store.getNotify();
       n.time = e.target.value || "09:00";
@@ -1725,6 +1730,7 @@
     renderMetaSettings();
     renderFontPicker();
     renderButtonStylePicker();
+    if (window.Sound) $("#soundEnabled").checked = !Sound.isMuted();
     show("settings");
   }
 

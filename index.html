@@ -115,7 +115,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-queue">🗓 Post queue</button>
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
-          <p class="app-version" id="appVersion">v0.82</p>
+          <p class="app-version" id="appVersion">v0.83</p>
         </div>
       </section>
 
@@ -695,6 +695,12 @@
               <p class="lead">🔘 Button style</p>
               <p class="hint">Chunky 3D pills, or a flatter iOS-style look.</p>
               <div id="btnStyleChips" class="chips"></div>
+              <p class="lead">🔊 Sound</p>
+              <p class="hint">A little sound when you share a post or swipe a card. Off keeps the app silent.</p>
+              <label class="switch-row">
+                <span>Sound effects</span>
+                <input type="checkbox" id="soundEnabled" />
+              </label>
             </div>
           </details>
 
@@ -800,6 +806,7 @@
     <script src="js/notify.js"></script>
     <script src="js/publish.js"></script>
     <script src="js/weather.js"></script>
+    <script src="js/sound.js"></script>
     <script src="js/vendor/lottie.min.js"></script>
     <script src="assets/lottie/confetti.js"></script>
     <script src="assets/lottie/heart.js"></script>
