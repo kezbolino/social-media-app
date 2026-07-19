@@ -304,6 +304,9 @@
         return renderQueue();
       }
 
+      const pick = e.target.closest("[data-pick-photo]");
+      if (pick) return pickFromStash(Number(pick.dataset.pickPhoto), pick);
+
       const loc = e.target.closest("[data-loc]");
       if (loc) return pickChip("location", loc.dataset.loc);
 
@@ -609,6 +612,7 @@
     $("#singleNext").disabled = true;
     refreshPoolUi();
     show("single");
+    renderPickerGrid("single");
   }
 
   async function onSinglePhoto(e) {
@@ -756,6 +760,71 @@
         if (note) { note.hidden = !has; note.textContent = label; }
       }
     );
+    // A pool change while a photo screen is open (e.g. a folder pick from the
+    // single screen) should refresh that screen's tappable grid too.
+    const active = $(".screen.is-active");
+    if (active && PICKER_IDS[active.dataset.screen]) renderPickerGrid(active.dataset.screen);
+  }
+
+  /* ---------- STASH PICKER on the photo screens (audit #3) ---------- */
+  // The saved stash used to be browsable only in Settings — at the moment of
+  // actually choosing a photo you got a blind Shuffle or the OS picker. Each
+  // photo screen now shows the session pool as a tappable grid.
+  const PICKER_IDS = {
+    single: ["#singleStashPicker", "#singleStashGrid"],
+    collage: ["#collageStashPicker", "#collageStashGrid"],
+    carousel: ["#carouselStashPicker", "#carouselStashGrid"],
+  };
+  let pickerUrls = []; // object URLs for the open grid, revoked on re-render
+
+  function renderPickerGrid(screen) {
+    const ids = PICKER_IDS[screen];
+    if (!ids) return;
+    const wrap = $(ids[0]);
+    const grid = $(ids[1]);
+    if (!wrap || !grid) return;
+    pickerUrls.forEach((u) => URL.revokeObjectURL(u));
+    pickerUrls = [];
+    if (!photoPool.length) {
+      wrap.hidden = true;
+      grid.innerHTML = "";
+      return;
+    }
+    grid.innerHTML = photoPool
+      .map((blob, i) => {
+        const url = URL.createObjectURL(blob);
+        pickerUrls.push(url);
+        return `<button class="stash-thumb picker-thumb" data-pick-photo="${i}" aria-label="Use saved photo ${i + 1}"><img src="${url}" alt="" /></button>`;
+      })
+      .join("");
+    wrap.hidden = false;
+  }
+
+  async function pickFromStash(idx, el) {
+    const blob = photoPool[idx];
+    if (!blob) return;
+    const active = $(".screen.is-active");
+    const which = active && active.dataset.screen;
+    if (which === "single") {
+      await setSingleImageFromFile(blob);
+      $$("#singleStashGrid .picker-thumb").forEach((t) =>
+        t.classList.toggle("selected", t === el)
+      );
+      if (window.FX) FX.pop(el);
+    } else if (which === "collage") {
+      const slot = post.collageImages.findIndex((im) => !im);
+      if (slot < 0) { if (window.FX) FX.wiggle(el); return; } // all slots full — tap a slot to swap instead
+      try { post.collageImages[slot] = await Imaging.loadImageFromFile(blob); } catch (e) { return; }
+      renderCollageSlots();
+      drawCollagePreview();
+      updateCollageNext();
+      if (window.FX) FX.pop(el);
+    } else if (which === "carousel") {
+      if (post.carouselImages.length >= CAROUSEL_MAX) { if (window.FX) FX.wiggle(el); return; }
+      try { post.carouselImages.push(await Imaging.loadImageFromFile(blob)); } catch (e) { return; }
+      renderCarouselStrip();
+      if (window.FX) FX.pop(el);
+    }
   }
 
   /* ---------- SAVED PHOTO STASH (persistent chicken photos) ---------- */
@@ -932,6 +1001,7 @@
     applyTemplate();
     refreshPoolUi();
     show("collage");
+    renderPickerGrid("collage");
   }
 
   function applyTemplate() {
@@ -1014,6 +1084,7 @@
     post.carouselImages = [];
     renderCarouselStrip();
     show("carousel");
+    renderPickerGrid("carousel");
   }
 
   async function onCarouselPicked(e) {

@@ -84,7 +84,29 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-19 (latest): **Calendar day cells → earned circles (v0.75); caption
+- 2026-07-19 (latest): **Stash picker on the photo screens (v0.78)** — audit
+  item #10 (#3 in the audit artifact). The saved photo stash used to be
+  browsable only in Settings, so at the moment of actually choosing a photo you
+  got a blind 🔀 Shuffle or the OS picker — to use one *specific* saved photo you
+  shuffled and hoped.
+  - Each photo screen now renders `photoPool` as a tappable grid:
+    `PICKER_IDS` maps screen → `[wrapId, gridId]`, `renderPickerGrid(screen)`
+    builds it, `pickFromStash(idx, el)` handles the tap. Called from
+    `startSingle`/`startCollage`/`startCarousel`, plus `refreshPoolUi()` so a
+    folder pick made *while* a photo screen is open refreshes the grid.
+  - Per-screen behaviour differs: single sets the photo (and rings the tapped
+    thumb via `.picker-thumb.selected`); collage fills the next empty slot;
+    carousel appends. Collage-full and carousel-at-`CAROUSEL_MAX` `FX.wiggle`
+    rather than silently doing nothing.
+  - Object URLs are tracked in `pickerUrls` and revoked on every re-render —
+    same pattern as `stashUrls`/`queueUrls`. Empty pool hides the wrap entirely
+    rather than showing an empty box.
+  - Written 18 Jul against v0.70, parked in a git stash through the divergence,
+    then applied to v0.77 — **cleanly, no conflicts**, and every symbol it
+    referenced still existed. Verified for the first time on all three screens.
+  - Note the naming collision: "stash" here means the **app's saved photo
+    stash**, not `git stash`. It spent a day being both.
+- 2026-07-19: **Calendar day cells → earned circles (v0.75); caption
   details pre-selects today (v0.76).** Owner: the rounded squares were wrong and
   the green ✓ read "busy" and sharp-edged.
   - `--cal-cell-radius: 50%` is the one dial (20px = very-rounded squares; at

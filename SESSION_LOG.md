@@ -49,10 +49,17 @@
   already landed on 18 Jul, so only its cropped viewBox was still worth having →
   applied as v0.77.
 
+- **Stash picker shipped (v0.78)** — audit #10, the last parked stash. Ported
+  from `stash@{0}` rather than rebuilt: it applied to v0.77 **cleanly, with no
+  conflicts**, and every function it called still existed, so a rewrite would
+  have been wasted work. (My earlier "it conflicts" call came from a bad
+  `git stash apply --check` reading — the real apply was clean.) Verified for
+  the first time on all three photo screens: grid renders, single sets the
+  photo, collage fills the next slot, carousel appends, empty pool hides the
+  picker, 20 photos still scroll with every button reachable. No console errors.
+  Stash dropped; both stashes are now cleared.
+
 **Pending / next**
-- `stash@{0}` stash-picker (audit #10) — still parked, and now conflicts with
-  main (built against v0.70, main is v0.77). Agreed to rebuild it fresh against
-  current code rather than un-conflict a stale diff.
 - Untracked art at the repo root (`chicken-*.svg`, `stall.svg`, the PNGs,
   `Chicken-Duo.ai`) is the owner's source, deliberately not committed — it just
   makes `git status` noisy. A `.gitignore` entry would quieten it.

@@ -115,7 +115,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-queue">🗓 Post queue</button>
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
-          <p class="app-version" id="appVersion">v0.77</p>
+          <p class="app-version" id="appVersion">v0.78</p>
         </div>
       </section>
 
@@ -164,6 +164,12 @@
           </div>
           <input id="singleInput" type="file" accept="image/*" hidden />
           <input id="folderInput" type="file" accept="image/*" multiple webkitdirectory hidden />
+          <!-- The saved stash, tappable at the moment of choosing (audit #3) —
+               no more blind-shuffling to reach a specific saved photo. -->
+          <div id="singleStashPicker" class="stash-picker" hidden>
+            <p class="picker-label">Your stash — tap to use</p>
+            <div id="singleStashGrid" class="stash-grid"></div>
+          </div>
           <button class="btn btn-secondary" data-action="pick-single">📷 Choose photo</button>
           <div class="photo-tools">
             <button class="btn btn-secondary" data-action="pick-folder-single">📁 Folder</button>
@@ -264,6 +270,10 @@
           </div>
           <p class="hint">Tap a slot to add a photo. Empty slots are fine.</p>
           <div id="collageSlots" class="slots"></div>
+          <div id="collageStashPicker" class="stash-picker" hidden>
+            <p class="picker-label">Your stash — tap to fill the next empty slot</p>
+            <div id="collageStashGrid" class="stash-grid"></div>
+          </div>
           <input id="collageInput" type="file" accept="image/*" hidden />
           <div class="photo-tools">
             <button class="btn btn-secondary" data-action="pick-folder-collage">📁 Folder</button>
@@ -286,6 +296,10 @@
           <p class="hint">Pick 2–10 photos — they post as a swipeable Instagram carousel. First one is the cover.</p>
           <div id="carouselStrip" class="carousel-strip"></div>
           <input id="carouselInput" type="file" accept="image/*" multiple hidden />
+          <div id="carouselStashPicker" class="stash-picker" hidden>
+            <p class="picker-label">Your stash — tap to add</p>
+            <div id="carouselStashGrid" class="stash-grid"></div>
+          </div>
           <button class="btn btn-secondary" data-action="pick-carousel">📷 Choose photos</button>
           <p id="carouselNote" class="pool-note" hidden></p>
           <div class="actionbar">

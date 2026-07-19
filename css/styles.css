@@ -1177,6 +1177,15 @@ input[type="range"] { touch-action: none; }
 }
 .stash-empty { color: var(--muted); font-size: 0.9rem; margin: 6px 0; }
 
+/* Stash picker on the photo screens (audit #3): the saved pool as tappable
+   thumbs right where the choosing happens. Selected = blue ring (outline
+   paints above the img, unlike an inset box-shadow). */
+.stash-picker { margin: 14px 0 2px; }
+.picker-label { font-weight: 700; color: var(--blue); font-size: 0.92rem; margin: 0 0 6px; }
+.picker-thumb { padding: 0; cursor: pointer; }
+.picker-thumb:active { transform: scale(0.94); }
+.picker-thumb.selected { outline: 3px solid var(--blue); outline-offset: -3px; }
+
 /* Quick-remove list of the month's working days */
 .cal-workdays { margin: 14px 0 0; }
 .cal-workdays:empty { margin: 0; }
