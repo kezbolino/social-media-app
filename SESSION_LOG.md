@@ -39,11 +39,23 @@
   pick up a "Next" list from it. Push the log *with* the work it describes, or
   it advertises as pending things that are already built.
 
+**Tidy-up**
+- Pruned **14 fully-merged** `origin/claude/*` branches. **8 were kept** — they
+  hold commits not in main, notably `app-audit-ui-colors-erbail` (a "Posted!"
+  success screen with a weekly goal ring, v0.66, never merged), the ElevenLabs
+  and Fable sound packs, and the parked Lottie wave spec. Worth a proper triage
+  session; don't delete them blind.
+- `stash@{1}` (stall.svg, audit #16) **resolved and dropped**: the redraw had
+  already landed on 18 Jul, so only its cropped viewBox was still worth having →
+  applied as v0.77.
+
 **Pending / next**
-- `stash@{0}` stash-picker (audit #10), `stash@{1}` stall.svg rework from 17 Jul
-  (audit #16) — both still parked, both need a decision.
-- ~20 stale `origin/claude/*` branches from past cloud sessions clutter the
-  branch list; worth a prune.
+- `stash@{0}` stash-picker (audit #10) — still parked, and now conflicts with
+  main (built against v0.70, main is v0.77). Agreed to rebuild it fresh against
+  current code rather than un-conflict a stale diff.
+- Untracked art at the repo root (`chicken-*.svg`, `stall.svg`, the PNGs,
+  `Chicken-Duo.ai`) is the owner's source, deliberately not committed — it just
+  makes `git status` noisy. A `.gitignore` entry would quieten it.
 
 ## 2026-07-18 (pm) — New stall.svg (v0.67 → v0.68)
 **Done** — owner supplied a redrawn `stall.svg` (clean Illustrator vector export,
