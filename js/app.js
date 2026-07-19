@@ -232,6 +232,7 @@
     wireEvents();
     initFlowBars();
     applyFont(Store.getFont());
+    applyButtonStyle(Store.getButtonStyle());
     rollGreeting();
     adaptPhotoPickers();
     loadPhotoStash();
@@ -288,6 +289,9 @@
 
       const fontOpt = e.target.closest("[data-font-option]");
       if (fontOpt) return pickFont(fontOpt.dataset.fontOption);
+
+      const btnOpt = e.target.closest("[data-btn-option]");
+      if (btnOpt) return pickButtonStyle(btnOpt.dataset.btnOption);
 
       const qMake = e.target.closest("[data-q-make]");
       if (qMake) return makeFromQueue(Store.getQueue().find((x) => x.id === qMake.dataset.qMake));
@@ -1549,6 +1553,7 @@
     renderNotifySettings();
     renderMetaSettings();
     renderFontPicker();
+    renderButtonStylePicker();
     show("settings");
   }
 
@@ -2868,6 +2873,35 @@
     applyFont(id);
     renderFontPicker();
     if (window.FX) FX.pop($(`[data-font-option="${id}"]`));
+  }
+
+  /* ---------- BUTTON STYLE ---------- */
+  // Swaps the `data-btn` attribute on <html>, which flips the whole app's
+  // button look via the html[data-btn="ios"] override block in css/styles.css.
+  // "default" is the built-in chunky pill (no override), so clearing the
+  // attribute is enough.
+  function applyButtonStyle(id) {
+    if (id && id !== "default") document.documentElement.setAttribute("data-btn", id);
+    else document.documentElement.removeAttribute("data-btn");
+  }
+
+  function renderButtonStylePicker() {
+    const wrap = $("#btnStyleChips");
+    if (!wrap) return;
+    const current = Store.getButtonStyle();
+    wrap.innerHTML = (window.APP_CONFIG.BUTTON_STYLES || [])
+      .map(
+        (b) =>
+          `<button type="button" class="chip${b.id === current ? " selected" : ""}" data-btn-option="${b.id}" title="${b.blurb}">${b.label}</button>`
+      )
+      .join("");
+  }
+
+  function pickButtonStyle(id) {
+    Store.setButtonStyle(id);
+    applyButtonStyle(id);
+    renderButtonStylePicker();
+    if (window.FX) FX.pop($(`[data-btn-option="${id}"]`));
   }
 
   /* ---------- NOTIFY SETTINGS ---------- */

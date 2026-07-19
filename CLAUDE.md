@@ -84,7 +84,52 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-18 (latest): **Keeper tray "Customise" button → "Edit", v0.72.**
+- 2026-07-19 (latest): **App-wide iOS button-style toggle (Settings → 🎨
+  Appearance), v0.73.** Owner wasn't happy with the button shape, asked what
+  iOS uses and for a way to switch. (Mockup first — an Artifact comparing the
+  current chunky pill vs "iOS Classic" flat-rounded vs iOS 26 Liquid Glass;
+  owner picked Classic.) Built as a second picker in the existing Appearance
+  group, mirroring the **font picker pattern exactly** (attribute-swap on
+  `<html>` + FOUC inline script + Store getter/setter):
+  - **Mechanism**: `html[data-btn="ios"]` override block in css/styles.css
+    (right after the `.btn-xl` breathe block, with the button system). Additive
+    only — no attribute = the default chunky pill, untouched. Every selector is
+    one step more specific than the base `.btn` / `.home .btn` rules (the
+    `html[data-btn=…]` prefix adds an attribute + type selector, so
+    `html[data-btn="ios"] .btn` is 0,2,1 vs `.home .btn`'s 0,2,0), so the iOS
+    rules win **without `!important`** regardless of source order. Flattens the
+    `0 6px 0` 3D edge → soft `0 1px 2px` shadow, weight 700→600, pill 999px →
+    15px rounded rect, and swaps the translateY press-plunge for an iOS dim
+    (`brightness(0.94)`) + `scale(0.98)`.
+  - **Secondary buttons are background-dependent** — the one real subtlety of
+    going app-wide (the home mockup only had them on the blue hero). `.btn-
+    secondary` appears both on light surfaces (Settings/editor) and the blue
+    gradient hero, so two scoped rules: on light bg → clean white fill +
+    hairline `--line` border (iOS "bordered"); on `.home` → translucent
+    `rgba(255,255,255,0.16)` "glass" so the gradient shows through. **Accent
+    text left as `--ink-on-accent` (dark), NOT flipped to white** — white on the
+    light `--orange` fails contrast; dark-on-orange is the accessible choice
+    even if my mockup showed white.
+  - **Wiring** (all copied from the font picker): `APP_CONFIG.BUTTON_STYLES`
+    (js/config.js, `default`/`ios`) + `K.BTNSTYLE = "sfp.btnstyle"`;
+    `Store.getButtonStyle()/setButtonStyle()` (default `"default"`);
+    `applyButtonStyle()` sets/clears `data-btn`; `renderButtonStylePicker()`
+    into `#btnStyleChips`; `pickButtonStyle()` on the delegated
+    `[data-btn-option]` handler. Called from `boot()` (apply) and
+    `openSettings()` (render). FOUC: index.html head script also reads
+    `sfp.btnstyle` and sets `data-btn` before first paint (same as the font one)
+    so the choice doesn't flash on launch.
+  - Deliberately **not** in Backup & restore (device display preference, like
+    the font — same reasoning). Liquid Glass NOT built: leans on
+    `backdrop-filter` (heavier on old phones) and pulls toward a full iOS 26
+    redesign; Classic keeps the brand blue/orange and is a pure additive layer.
+  - Verified headless (Chromium, 390×844, localhost) driving the **real UI**
+    (bottom-nav → Settings → tap iOS chip → home): default reads 999px/700/
+    `0 6px 0` chunky edge; after the flip reads 15px/600/flat `0 1px 2px` with
+    the home secondary going translucent white; `data-btn="ios"` persists across
+    a full reload (FOUC script); picker chip reflects the selection; 0 console
+    errors. Both home screenshots eyeballed.
+- 2026-07-18: **Keeper tray "Customise" button → "Edit", v0.72.**
   Owner: the ✏️ Customise / 📤 Post pair looked unbalanced — two `flex: 1`
   equal-width buttons where one label is a 4-letter word and the other a
   9-letter word behind an emoji, so Post read sparse and Customise crammed.

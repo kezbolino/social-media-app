@@ -33,6 +33,7 @@ window.APP_CONFIG = {
     WEATHER: "sfp.weatherCache",
     ONBOARDED: "sfp.onboarded",
     FONT: "sfp.font",
+    BTNSTYLE: "sfp.btnstyle",
   },
 
   // App-wide UI font choices (Settings → 🔤 App font). `id` matches the
@@ -49,6 +50,15 @@ window.APP_CONFIG = {
     { id: "baloo2", label: "Baloo 2", blurb: "Bold & playful" },
     { id: "nunito", label: "Nunito", blurb: "Soft & friendly" },
     { id: "quicksand", label: "Quicksand", blurb: "Light & breezy" },
+  ],
+
+  // App-wide button look (Settings → 🎨 Appearance → Button style). `id`
+  // matches the `data-btn` attribute value on <html> (see the
+  // html[data-btn="ios"] override block in css/styles.css). "default" is the
+  // built-in chunky-pill look (no attribute set, no override needed).
+  BUTTON_STYLES: [
+    { id: "default", label: "Chunky", blurb: "Bold 3D pills (default)" },
+    { id: "ios", label: "iOS", blurb: "Flat, minimal & rounded" },
   ],
 
   // Locations pre-loaded the first time the app runs. The user can add/remove

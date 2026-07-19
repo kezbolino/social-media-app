@@ -1759,6 +1759,53 @@ input[type="range"] { touch-action: none; }
   50% { transform: scale(1.025); }
 }
 
+/* ---- iOS button style (Settings → 🎨 Appearance → Button style) ----------
+   Opt-in flat "iOS" look, toggled by the `data-btn="ios"` attribute on <html>
+   (applyButtonStyle in js/app.js; also set pre-paint by the FOUC script in
+   index.html). Additive only — with no attribute the chunky pill above is
+   untouched. Every selector here is one step more specific than the base
+   .btn / .home .btn rules (the `html[data-btn=…]` prefix adds an attribute +
+   type selector), so these win without !important whatever the source order.
+   Flattens the 3D edge, drops weight 700→600, squares the pill to a rounded
+   rect, and swaps the press-down plunge for an iOS dim + tiny scale. ---- */
+html[data-btn="ios"] .btn {
+  border-radius: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  box-shadow: 0 1px 2px rgba(10, 35, 49, 0.12);
+  transition: transform 0.16s ease, filter 0.16s ease, background 0.15s ease,
+    box-shadow 0.16s ease;
+}
+/* Kill the chunkier home edge too (its selector is 0,2,0; ours is 0,2,1). */
+html[data-btn="ios"] .home .btn { box-shadow: 0 1px 2px rgba(10, 35, 49, 0.12); }
+/* Press: quick dim + slight scale, not the slab plunge. */
+html[data-btn="ios"] .btn:active {
+  transform: scale(0.98);
+  filter: brightness(0.94);
+  box-shadow: 0 1px 2px rgba(10, 35, 49, 0.12);
+}
+html[data-btn="ios"] .btn-ghost { box-shadow: none; }
+html[data-btn="ios"] .btn-ghost:active { transform: scale(0.98); filter: none; box-shadow: none; }
+/* iOS "bordered" secondary on light surfaces: clean fill + hairline border
+   (the default white-on-blue-border look flattened). */
+html[data-btn="ios"] .btn-secondary {
+  background: var(--panel);
+  color: var(--blue);
+  border: 1px solid var(--line);
+}
+/* On the blue hero the secondary reads as clear "glass" — the gradient shows
+   through a translucent white fill (its base selector is 0,2,0; ours 0,3,1). */
+html[data-btn="ios"] .home .btn-secondary {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border: none;
+  box-shadow: 0 1px 2px rgba(10, 35, 49, 0.12),
+    0 0 0 0.5px rgba(255, 255, 255, 0.22) inset;
+}
+html[data-btn="ios"] .home .btn-secondary:active {
+  background: rgba(255, 255, 255, 0.26);
+}
+
 /* ---- Screen wipe: incoming screen slides in horizontally. Direction is set
    by #app.nav-back (a ‹ Back / home navigation wipes in from the left; going
    forward wipes in from the right). ---- */

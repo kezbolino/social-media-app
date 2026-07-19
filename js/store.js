@@ -239,6 +239,14 @@ const Store = (() => {
     write(K.FONT, id);
   }
 
+  /* ---- App-wide button style (Settings → 🎨 Appearance) ---- */
+  function getButtonStyle() {
+    return read(K.BTNSTYLE, "default");
+  }
+  function setButtonStyle(id) {
+    write(K.BTNSTYLE, id);
+  }
+
   /* ---- Saved posts: draft -> approved -> shared ---- */
   function getPosts() {
     return read(K.POSTS, []);
@@ -294,5 +302,7 @@ const Store = (() => {
     setOnboarded,
     getFont,
     setFont,
+    getButtonStyle,
+    setButtonStyle,
   };
 })();
