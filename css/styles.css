@@ -1078,12 +1078,20 @@ input[type="range"] { touch-action: none; }
 .cal-weekdays, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .cal-weekdays { margin-bottom: 6px; }
 .cal-weekdays span { text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--muted); }
+/* Day cells are circles. Flip this one token to 20px for very-rounded squares
+   instead — nothing else needs touching (the rings below are box-shadows, so
+   they follow whatever radius this is). */
+:root { --cal-cell-radius: 50%; }
+/* A plain day is just its number — no ring, no plate. The circle is EARNED:
+   it appears only when the day is working, posted, today, or selected. The
+   transparent border is kept (rather than `border: none`) so every cell keeps
+   the same box size and the grid never shifts as days gain/lose a state. */
 .cal-cell {
   position: relative;
   aspect-ratio: 1 / 1;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--cal-cell-radius);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1093,14 +1101,22 @@ input[type="range"] { touch-action: none; }
   padding: 0;
 }
 .cal-cell.blank { visibility: hidden; border: none; background: none; }
+/* One marker per fact, all of them round, and each on its OWN css channel so
+   they stack without special-case rules (a day can be all four at once):
+     working  = orange plate      → background + border
+     posted   = green ring        → outline
+     today    = blue ring         → box-shadow
+     selected = thick orange ring → box-shadow (later, so it wins over today)
+   Using outline for `posted` is what avoids a specificity fight: a combined
+   rule like `.working.posted` would outrank plain `.selected` and swallow the
+   selection ring. Outline follows border-radius in every modern browser and
+   costs no layout, so it rings the circle cleanly. The old ✓ glyph is gone —
+   it was the only sharp-cornered shape on the screen. */
+.cal-cell.posted { outline: 2px solid var(--success); outline-offset: -2px; }
 .cal-cell.working { background: var(--accent-soft); border-color: var(--orange); color: var(--orange-press); }
 .cal-cell.today { box-shadow: inset 0 0 0 2px var(--blue); }
 .cal-cell.selected { box-shadow: inset 0 0 0 3px var(--orange); }
 .cal-num { font-size: 0.95rem; }
-.cal-dot { position: absolute; bottom: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
-.cal-tick { position: absolute; bottom: 3px; font-size: 0.72rem; font-weight: 800; color: var(--success); line-height: 1; }
-.cal-cell.posted { box-shadow: inset 0 0 0 2px var(--success); }
-.cal-cell.posted.selected { box-shadow: inset 0 0 0 3px var(--orange), inset 0 0 0 5px var(--success); }
 .cal-legend {
   display: flex;
   gap: 18px;
@@ -1110,9 +1126,11 @@ input[type="range"] { touch-action: none; }
   color: var(--muted);
 }
 .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+/* Legend swatches mirror the grid exactly: working is a filled orange plate,
+   posted is a green ring (was a ✓ glyph, then a dot). */
 .lg-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-.lg-work { background: var(--orange); }
-.lg-tick { color: var(--success); font-weight: 800; font-style: normal; }
+.lg-work { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--orange); }
+.lg-posted { background: transparent; box-shadow: inset 0 0 0 2px var(--success); }
 .cal-day {
   margin-top: 16px;
   background: var(--panel);

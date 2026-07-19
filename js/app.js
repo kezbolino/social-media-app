@@ -1753,10 +1753,10 @@
       if (key === todayKey) cell.classList.add("today");
       if (key === selectedDate) cell.classList.add("selected");
       cell.dataset.date = key;
-      const marker = posted
-        ? `<span class="cal-tick" title="Posted">✓</span>`
-        : (schedule[key] ? `<span class="cal-dot"></span>` : "");
-      cell.innerHTML = `<span class="cal-num">${d}</span>` + marker;
+      // No marker elements any more — working/posted/today/selected are each
+      // drawn by the cell's own ring or fill (see .cal-cell in styles.css).
+      if (posted) cell.title = "Posted";
+      cell.innerHTML = `<span class="cal-num">${d}</span>`;
       cell.addEventListener("click", () => selectCalDay(key));
       grid.appendChild(cell);
     }
