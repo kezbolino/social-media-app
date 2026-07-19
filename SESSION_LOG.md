@@ -1,5 +1,50 @@
 # Session Log
 
+## 2026-07-19 — Calendar circles (v0.75) + untangling a diverged main (v0.76)
+
+**Done**
+- **Calendar day cells.** Owner disliked the rounded squares, and found the
+  green ✓ "busy" and sharp-edged against everything else. Cells are circles now
+  (one `--cal-cell-radius` token; flip to 20px for rounded squares — at 44px
+  they're near-identical, a circle *is* r21.9). A plain day is just its number:
+  the circle is earned by working / posted / today / selected. Dropped the ✓ and
+  the duplicate encodings (working said itself twice, as fill AND dot; posted
+  twice, as ring AND tick). Each state now owns its own css channel —
+  background+border / outline / box-shadow — so a day that's all four renders
+  right with no special-casing, retiring the `.posted.selected` hack. Gotcha:
+  `posted` must use `outline`, not `border`; a `.working.posted` rule outranks
+  plain `.selected` and swallows the selection ring.
+- **Fixed the diverged main.** Local sat 5 ahead / 11 behind, conflicting in
+  three files. Root cause: on 18 Jul this Mac committed v0.66–v0.70 and **never
+  pushed**, so a parallel cloud session started from the last *pushed* commit
+  (v0.65), read the same numbered plan out of this log, and rebuilt items 5–9 —
+  both sides even numbered from v0.66.
+- **Resolution: reset, don't merge.** A feature-by-feature check (not a line
+  diff — that misleads) showed 4 of the 5 local commits were already upstream,
+  several done better: confetti-once-per-batch as `keepersCelebrated`; ob-done
+  copy counting the real stash rather than the in-memory pool; `openCalendar`
+  landing on today with the panel open. So `main` was reset to `origin/main` and
+  the one genuinely local-only item — today pre-selected in the **caption
+  details** Day field (distinct from the brief, which already had it) — was
+  re-applied as v0.76. The five commits are preserved on
+  **`origin/archive/local-v0.66-v0.70`**, not deleted.
+
+**Prevention (the actual point)**
+- `.claude/hooks/check-repo-fresh.sh` now checks **ahead** as well as behind —
+  unpushed commits were its blind spot, and that is exactly what bit. It also
+  warns louder when both, since a divergence must be reconciled, not pulled.
+- Global `~/.claude/CLAUDE.md` end-of-session rule gained step 3: **push**, with
+  this incident recorded as the reason.
+- ⚠️ **This log is a shared work queue.** Any session — local or cloud — will
+  pick up a "Next" list from it. Push the log *with* the work it describes, or
+  it advertises as pending things that are already built.
+
+**Pending / next**
+- `stash@{0}` stash-picker (audit #10), `stash@{1}` stall.svg rework from 17 Jul
+  (audit #16) — both still parked, both need a decision.
+- ~20 stale `origin/claude/*` branches from past cloud sessions clutter the
+  branch list; worth a prune.
+
 ## 2026-07-18 (pm) — New stall.svg (v0.67 → v0.68)
 **Done** — owner supplied a redrawn `stall.svg` (clean Illustrator vector export,
 not a trace). Swapped it into `assets/mascot/stall.svg`: **76KB → 24KB**, crisp

@@ -84,7 +84,45 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-19 (latest): **iOS button style now covers the Generate screen's
+- 2026-07-19 (latest): **Calendar day cells → earned circles (v0.75); caption
+  details pre-selects today (v0.76).** Owner: the rounded squares were wrong and
+  the green ✓ read "busy" and sharp-edged.
+  - `--cal-cell-radius: 50%` is the one dial (20px = very-rounded squares; at
+    the 44px cell size these are near-indistinguishable — a circle *is* r21.9).
+  - **A plain day is bare** — no plate, no ring, transparent border kept only so
+    the box size never changes. The circle is EARNED: working / posted / today /
+    selected. Removed the ✓ (the only sharp-cornered shape in the app) and the
+    double-encodings — working used to say itself twice (fill AND dot), posted
+    twice (ring AND tick).
+  - ⚠️ **Each state owns a different css channel on purpose**: working =
+    background+border, posted = **outline**, today/selected = box-shadow. That's
+    what lets a day be all four at once with no combination rules (the old
+    `.posted.selected` double-inset hack is gone). Posted MUST stay on outline —
+    as a border it needs a `.working.posted` rule, which outranks plain
+    `.selected` and swallows the selection ring. `selected` deliberately beats
+    `today` (same specificity, declared later).
+  - v0.76: `renderDetailFields` pre-fills the Day field with today when blank.
+    Distinct from the Generate brief, which already did this.
+- 2026-07-19: **`main` had diverged; resolved by reset + salvage, not merge.**
+  Local was 5 ahead / 11 behind, conflicting in three files. Cause: v0.66–v0.70
+  were committed on the Mac on 18 Jul and **never pushed**, so a parallel cloud
+  session started from the last *pushed* commit (v0.65), read the numbered plan
+  out of `SESSION_LOG.md`, and rebuilt the same items 5–9.
+  - **Lesson for diagnosing this class of thing: a line-by-line diff lies.** It
+    flagged local work as "missing upstream" when it was the same feature under
+    another name (`trayCelebrated` vs upstream's `keepersCelebrated`). Only a
+    feature-by-feature check was trustworthy: 4 of 5 commits were already
+    upstream, several done better. `main` was reset to `origin/main` and the one
+    genuinely local-only item re-applied. Old commits are preserved on
+    `origin/archive/local-v0.66-v0.70`.
+  - **Prevention**: `.claude/hooks/check-repo-fresh.sh` now checks **ahead**
+    (unpushed) as well as behind — that was its blind spot — and flags a
+    both-ways divergence separately, since that needs reconciling rather than
+    pulling. The global end-of-session rule now says push, not just commit.
+  - ⚠️ **`SESSION_LOG.md`'s "Next" list behaves as a shared work queue**: any
+    session, local or cloud, may pick it up. Push the log *with* the work it
+    describes or it advertises finished work as pending.
+- 2026-07-19: **iOS button style now covers the Generate screen's
   non-`.btn` controls, v0.74.** Follow-up to v0.73 — owner noticed the flat iOS
   look "wasn't there on the Generate screen". Its standard `.btn`s (Cook 'em up,
   keeper Post/Edit) already flattened, but two Generate-only controls aren't
