@@ -1,5 +1,29 @@
 # Session Log
 
+## 2026-07-19 (later) — Parked Fable's Instagram content plan for v2
+
+**Done**
+- Copied Fable's `instagram_content_plan_handover.md` into
+  **`docs/V2_INSTAGRAM_CONTENT_PLAN.md`** — a July 2026 weekly-content plan for
+  the stall's Instagram (Reels/Stories/Carousel roles, caption template, tag
+  rules, batching). Put in `docs/` alongside AUDIT/META_SETUP so it doesn't read
+  as live project state. **No app code touched, no version bump** — this is
+  reference material only.
+
+**Explicitly not started.** Owner: "put this for planning for v2, don't work on
+it yet… I'll tell you when." Do not build from it unasked.
+
+**For whoever picks it up.** Its §9 tooling list overlaps what's already shipped,
+so it needs reconciling, not just implementing:
+- *Caption generator* — largely exists (hook library + Generate brief). The
+  plan's template is stricter: dish + market + area in the caption **body**.
+- *Tag pool* — **conflicts with shipped behaviour.** The app seeds 34 hashtags;
+  the plan caps posts at 5 and bans mega-tags (IG capped it at 5 in Dec 2025).
+  That's a product decision, not a merge.
+- *Weekly checklist / trading-day story beats* — new; the reminders module isn't
+  wired to a trading cadence.
+- *Insights logger* — new; Meta credentials are already stored.
+
 ## 2026-07-19 — Calendar circles, un-diverging main, stash picker (v0.75 → v0.78)
 
 **Done**
