@@ -1,6 +1,6 @@
 # Session Log
 
-## 2026-07-19 — Calendar circles (v0.75) + untangling a diverged main (v0.76)
+## 2026-07-19 — Calendar circles, un-diverging main, stash picker (v0.75 → v0.78)
 
 **Done**
 - **Calendar day cells.** Owner disliked the rounded squares, and found the
@@ -59,10 +59,29 @@
   picker, 20 photos still scroll with every button reachable. No console errors.
   Stash dropped; both stashes are now cleared.
 
+**Ended clean**: main = origin/main at v0.78, 0 stashes, both hooks silent.
+
 **Pending / next**
-- Untracked art at the repo root (`chicken-*.svg`, `stall.svg`, the PNGs,
-  `Chicken-Duo.ai`) is the owner's source, deliberately not committed — it just
-  makes `git status` noisy. A `.gitignore` entry would quieten it.
+1. **Triage the 8 kept `origin/claude/*` branches.** Top of the list:
+   `app-audit-ui-colors-erbail` holds a **"Posted!" success screen with a weekly
+   goal ring**, committed 17 Jul as v0.66 and never merged — v0.66 is exactly
+   where the divergence collided, so it may be collateral damage from it. Also
+   unmerged: the ElevenLabs + Fable sound packs and the parked Lottie wave spec.
+   Check each is genuinely wanted or genuinely dead before deleting.
+2. **Copy nit on the photo screens** — the pool note still says "N photos loaded
+   — tap shuffle for random picks", which now points at the weaker option since
+   the stash picker (v0.78) is the direct way to a specific photo. One line.
+3. Untracked art at the repo root (`chicken-*.svg`, `stall.svg`, the PNGs,
+   `Chicken-Duo.ai`) is the owner's source, deliberately not committed — it just
+   makes `git status` noisy. A `.gitignore` entry would quieten it.
+4. Remaining audit items from the 18 Jul plan: 11 keeper tray compact rows · 12
+   44px targets + undo snackbar · 13 finish SVG icon set · 14 type-scale +
+   colour-role rules · 15 "same as yesterday" brief shortcut · 17 dish tagging ·
+   18 Meta publishing: connect or delete.
+
+⚠️ **Read the prevention note above before starting work here.** If a parallel
+cloud session is running, pull first and push when you finish — that is what
+went wrong on 18 Jul.
 
 ## 2026-07-18 (pm) — New stall.svg (v0.67 → v0.68)
 **Done** — owner supplied a redrawn `stall.svg` (clean Illustrator vector export,
