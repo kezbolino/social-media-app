@@ -560,7 +560,7 @@
       case "brief-loc": briefSelectAndAdvance(el, () => { genBrief.location = el.dataset.val; }); break;
       case "brief-new-loc": $("#briefAddRow").hidden = false; $("#briefLocInput").focus(); break;
       case "brief-add-loc": briefAddLoc(); break;
-      case "brief-when": briefSelectAndAdvance(el, () => { genBrief.date = el.dataset.val; }); break;
+      case "brief-when": briefSelectAndAdvance(el, () => setBriefDate(el.dataset.val)); break;
       case "brief-pick-day": $("#briefDayRow").hidden = false; break;
       case "brief-day-next": briefDayNext(); break;
       case "brief-vibe": briefToggleVibe(el); break;
@@ -2009,7 +2009,7 @@
   };
   let genBriefStep = 0;
   let briefAdvancing = false; // a chip tap is mid auto-advance — ignore repeats
-  const GEN_BRIEF_STEPS = 3; // where / when / vibe; the bar's 4th stop = cooking
+  const GEN_BRIEF_STEPS = 3; // when / where / vibe; the bar's 4th stop = cooking
   // The vibe chips map straight onto the hook library's tags. `weather` is
   // deliberately not offered — weather-pinned hooks need a live condition the
   // Generate flow doesn't supply yet (see the roadmap note in CLAUDE.md).
@@ -2102,20 +2102,6 @@
     const el = $("#genBriefStep");
     let html = "";
     if (genBriefStep === 0) {
-      const locs = Store.getLocations();
-      html =
-        (window.Mascot ? Mascot.html("walk", { anim: "sway", size: "lg", className: "mascot-center" }) : "") +
-        `<h3 class="gen-q-title">Right — where are we at?</h3>` +
-        `<p class="hint">The captions will shout about this pitch.</p>` +
-        `<div class="brief-opts">` +
-        locs.map((l) => briefChip("brief-loc", l, l, l === genBrief.location)).join("") +
-        `<button class="brief-opt brief-opt-add" data-action="brief-new-loc">＋ Somewhere new</button>` +
-        `</div>` +
-        `<div class="row gen-brief-add" id="briefAddRow" ${locs.length ? "hidden" : ""}>` +
-        `<input id="briefLocInput" class="text-input" type="text" placeholder="e.g. Greenwich Market" />` +
-        `<button class="btn btn-secondary" data-action="brief-add-loc">Add</button>` +
-        `</div>`;
-    } else if (genBriefStep === 1) {
       const today = Notify.todayStr();
       const tomorrow = Notify.todayStr(new Date(Date.now() + 86400000));
       const chips = [
@@ -2138,6 +2124,20 @@
         `<div class="row gen-brief-add" id="briefDayRow" hidden>` +
         `<input id="briefDayInput" class="text-input" type="date" min="${today}" value="${escapeAttr(genBrief.date || today)}" aria-label="Post day" />` +
         `<button class="btn btn-secondary" data-action="brief-day-next">That day ›</button>` +
+        `</div>`;
+    } else if (genBriefStep === 1) {
+      const locs = Store.getLocations();
+      html =
+        (window.Mascot ? Mascot.html("walk", { anim: "sway", size: "lg", className: "mascot-center" }) : "") +
+        `<h3 class="gen-q-title">Where are we at?</h3>` +
+        `<p class="hint">The captions will shout about this pitch.</p>` +
+        `<div class="brief-opts">` +
+        locs.map((l) => briefChip("brief-loc", l, l, l === genBrief.location)).join("") +
+        `<button class="brief-opt brief-opt-add" data-action="brief-new-loc">＋ Somewhere new</button>` +
+        `</div>` +
+        `<div class="row gen-brief-add" id="briefAddRow" ${locs.length ? "hidden" : ""}>` +
+        `<input id="briefLocInput" class="text-input" type="text" placeholder="e.g. Greenwich Market" />` +
+        `<button class="btn btn-secondary" data-action="brief-add-loc">Add</button>` +
         `</div>` +
         `<button class="btn btn-ghost btn-sm gen-step-back" data-action="brief-back">‹ Back a step</button>`;
     } else {
@@ -2183,7 +2183,18 @@
       if (window.FX) FX.wiggle(input);
       return;
     }
-    briefSelectAndAdvance(null, () => { genBrief.date = val; });
+    briefSelectAndAdvance(null, () => setBriefDate(val));
+  }
+
+  // Set the brief's day and refresh the suggested pitch to follow it: now that
+  // When is asked before Where, picking a day should pre-select that day's
+  // planned workday location on the Where step. Mirrors openGenerate's
+  // precedence — a planned pitch wins; with none, the current answer stands
+  // (so a location the trader already picked isn't wiped by a pitch-less day).
+  function setBriefDate(val) {
+    genBrief.date = val;
+    const wd = Store.getWorkday(val);
+    if (wd && wd.location) genBrief.location = wd.location;
   }
 
   function briefToggleVibe(el) {

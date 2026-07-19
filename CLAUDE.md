@@ -97,7 +97,33 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-19 (latest): **Stash picker on the photo screens (v0.78)** — audit
+- 2026-07-19 (latest): **Generate brief reordered to When → Where → Vibe
+  (v0.80).** Owner wanted the questions in the order "When's it going out? /
+  Where are we at? / What's the vibe?" (was Where → When → Vibe).
+  - Swapped the `genBriefStep === 0` and `=== 1` branches in `renderBriefStep`:
+    step 0 is now the **When** content (date chips, `brief-when`), step 1 the
+    **Where** content (location chips, `brief-loc`). Vibe (step 2) unchanged.
+  - Back buttons follow position, not content: the new first step (When) drops
+    its "‹ Back a step" button; the new second step (Where) gains one. Vibe
+    keeps its back button. `brief-back` is `goBriefStep(genBriefStep - 1)` —
+    index-based, so it needed no change.
+  - Each mascot travels with its question (When = thinking, Where = walk, Vibe
+    = excited). Dropped the "Right —" opener from Where since it's no longer the
+    first question ("Right — where are we at?" → "Where are we at?").
+  - Follow-up in the same version: picking a day on the **When** step now
+    pre-selects that day's planned workday pitch on the **Where** step, via
+    `setBriefDate()` — mirrors `openGenerate`'s precedence, so a pitch-less day
+    leaves an already-picked location intact.
+  - Safe because both answers are seeded up front in `openGenerate`
+    (`genBrief.date` then `genBrief.location` from that day's workday), and every
+    advance (`briefSelectAndAdvance`, `briefAddLoc`, `briefDayNext`) is
+    `goBriefStep(genBriefStep + 1)` — position-based. The only literal step-index
+    checks in the code are the two render branches, both updated.
+  - Verified headless (Chromium, 390×844): step 0 = "When's it going out?"
+    (no back, 25%), step 1 = "Where are we at?" (back present, 50%), Back returns
+    to When, step 2 = "What's the vibe?" (cook + back), cooking still yields a
+    deck; 0 console errors.
+- 2026-07-19: **Stash picker on the photo screens (v0.78)** — audit
   item #10 (#3 in the audit artifact). The saved photo stash used to be
   browsable only in Settings, so at the moment of actually choosing a photo you
   got a blind 🔀 Shuffle or the OS picker — to use one *specific* saved photo you
