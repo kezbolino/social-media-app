@@ -1616,26 +1616,24 @@ input[type="range"] { touch-action: none; }
    sections (fixed to the viewport) and is only shown on the hub screens —
    the guided post-creation flow (photo/editor/quiz/caption/review) hides it
    so it doesn't fight with that flow's own sticky actionbar. */
-/* Floating "capsule" nav (à la Alan): detached from the screen edges, fully
-   rounded, soft all-round shadow — reads as a raised control, not a chrome bar
-   welded to the bottom. */
+/* Full-width nav bar welded to the bottom edge: opaque, edge-to-edge, so
+   nothing shows through behind it and it reads as solid chrome (not a floating
+   capsule). Spans the whole width and sits flush against the bottom. */
 .bottomnav {
   position: fixed;
-  left: 50%;
-  bottom: calc(10px + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  width: calc(100% - 24px);
-  max-width: 460px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
   display: none;
   justify-content: space-around;
   align-items: center;
   gap: 2px;
   background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 26px;
-  padding: 7px 8px;
+  border-top: 1px solid var(--line);
+  padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
   z-index: 50;
-  box-shadow: 0 10px 30px rgba(10, 35, 49, 0.16), 0 2px 8px rgba(10, 35, 49, 0.08);
+  box-shadow: 0 -2px 12px rgba(10, 35, 49, 0.1);
 }
 #app.has-bottomnav .bottomnav { display: flex; }
 .navbtn {
