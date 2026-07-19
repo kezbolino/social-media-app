@@ -594,11 +594,13 @@
       case "add-location": addLocationItem(); break;
       case "details-next": detailsNext(); break;
       case "shuffle": shuffleCaption(); break;
-      case "caption-next": buildReview(); break;
+      // Customising a Generate keeper ends here — the caption screen's CTA saves
+      // straight back to the tray (no separate preview step). Everything else
+      // goes on to the Review/share screen.
+      case "caption-next": if (post.fromGenerate) saveCustomiseFromCaption(); else buildReview(); break;
       case "share": doShare(); break;
       case "go-home": navDir = "back"; post = freshPost(); show("home"); break;
       case "back-to-keepers": returnToKeepers(); break;
-      case "save-customise": saveCustomiseToKeeper(); break;
       case "add-menu": addMenuItem(); break;
     }
   }
@@ -1306,6 +1308,11 @@
   // live preview on the caption screen.
   async function renderCaptionPreview() {
     const img = $("#captionPreview");
+    // Customising a keeper: this screen is the last stop, so the forward button
+    // saves and returns to the tray ("✓ Save") instead of opening the Review
+    // screen ("Review ›").
+    const cta = document.querySelector('[data-screen="caption"] [data-action="caption-next"]');
+    if (cta) cta.textContent = post.fromGenerate ? "✓ Save" : "Review ›";
     try {
       await Imaging.ensureFonts();
       const canvas = await composePostImage();
@@ -1495,14 +1502,12 @@
     $("#doneKeepers").hidden = true;
     const cm = $("#celebrateMascot");
     if (cm) cm.hidden = true; // reset the win mascot until this post is shared
-    // Customise-preview mode (a Generate keeper being edited): the endpoint is
-    // "save back to my posts", not share — sharing/scheduling happens from the
-    // keepers tray. Everything else keeps the normal share controls.
-    const customising = !!post.fromGenerate;
-    $("#reviewShareControls").hidden = customising;
-    $("#saveCustomise").hidden = !customising;
+    // Review is always the share endpoint now — customising a keeper saves
+    // straight from the caption screen (saveCustomiseFromCaption) and never
+    // reaches here, so there's no separate preview mode to toggle.
+    $("#reviewShareControls").hidden = false;
     const rvTitle = document.querySelector('[data-screen="review"] h2');
-    if (rvTitle) rvTitle.textContent = customising ? "Preview" : "Ready to share";
+    if (rvTitle) rvTitle.textContent = "Ready to share";
     renderPublishButtons();
     show("review");
   }
@@ -2609,9 +2614,21 @@
     Editor.open(g.rawImg, { overlays: [seed] }, { hookProvider: makeHookProvider(), selectFirst: true, startTab: "text" });
   }
 
-  // "✓ Save & back to my posts" on the customise-preview Review: write the
-  // customised image + caption (and the editor state, so a later re-customise
-  // resumes where you left off) back into the keeper, then return to the tray.
+  // "✓ Save" on the caption screen (customise flow): compose the finished image
+  // exactly as buildReview would, then hand off to saveCustomiseToKeeper. This
+  // replaces the old separate Review/preview step — the caption screen already
+  // shows a live preview, so there's nothing extra to look at.
+  async function saveCustomiseFromCaption() {
+    post.captionText = $("#captionText").value;
+    await Imaging.ensureFonts();
+    const canvas = await composePostImage();
+    if (canvas) post.finalDataUrl = Imaging.toDataURL(canvas);
+    saveCustomiseToKeeper();
+  }
+
+  // Write the customised image + caption (and the editor state, so a later
+  // re-customise resumes where you left off) back into the keeper, then return
+  // to the tray. post.finalDataUrl/baseImage are set by saveCustomiseFromCaption.
   function saveCustomiseToKeeper() {
     const g = post.keeperRef;
     if (g) {
