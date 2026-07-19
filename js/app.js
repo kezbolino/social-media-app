@@ -1140,6 +1140,12 @@
 
   function renderDetailFields() {
     const vars = Hooks.inputVarsForTag(post.tag);
+    // The app knows what day it is — pre-select today rather than making the
+    // trader tell it. Tapping another chip or typing still overrides, and this
+    // only fills a blank, so a day carried in from the brief/queue survives.
+    if (vars.includes("day") && !post.day) {
+      post.day = DAYS[(new Date().getDay() + 6) % 7]; // DAYS is Mon-first
+    }
     const wrap = $("#detailFields");
     wrap.innerHTML = "";
     const labels = {
