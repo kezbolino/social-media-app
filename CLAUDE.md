@@ -114,7 +114,21 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **Merged the auto-CLAUDE.md-upkeep SessionStart hook
+- 2026-07-20 (latest): **`claude/pwa-icon-mascot-hzt8j7` merged and deleted —
+  verified fully superseded, no app-facing change.** Owner asked to merge this
+  branch (the mascot-transparency PWA-icon fix) and shut it down. Checked
+  feature-by-feature before merging (the CLAUDE.md rule at the top of this
+  file, re-earned again): the branch forked off `a838829` (pre-v0.84) and its
+  only 3 commits' real payload — the `main.svg` underlay-path deletion and the
+  regenerated `icon-{180,192,512}.png` — were **byte-identical** to what main
+  already had (hashes matched exactly); `sw.js`'s cache bump target (`v9`) also
+  already matched main's. The only textual conflicts on merge were the
+  `#appVersion` line (branch carried a stale v0.85; kept main's v0.91 — no
+  bump, since nothing new landed) and a duplicate "Mascot underlay removed…"
+  CLAUDE.md entry (branch had it tagged `(latest)`; kept HEAD's copy and
+  header, dropped the duplicate). Net diff from this merge: zero functional
+  change. Branch deleted on origin after merging.
+- 2026-07-20: **Merged the auto-CLAUDE.md-upkeep SessionStart hook
   (dev tooling — no app version bump).** Salvaged from
   `claude/code-workflow-optimization-76srlc`. Adds a third `SessionStart` hook to
   `.claude/settings.json`: a pure `echo` that injects the "keep CLAUDE.md as
