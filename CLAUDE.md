@@ -114,7 +114,22 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **Full-app UI audit + two fixes it surfaced (v0.91).**
+- 2026-07-20 (latest): **Merged the auto-CLAUDE.md-upkeep SessionStart hook
+  (dev tooling — no app version bump).** Salvaged from
+  `claude/code-workflow-optimization-76srlc`. Adds a third `SessionStart` hook to
+  `.claude/settings.json`: a pure `echo` that injects the "keep CLAUDE.md as
+  living project memory / update it at session end" house rule as
+  `additionalContext`. Inert (no file writes, no auto-commit) — it just reminds
+  the agent. Hand-merged the settings.json add/add conflict to keep all four
+  hooks: main's `check-repo-fresh` + `check-unmerged-branches` (SessionStart) and
+  `warn-unpushed` (Stop), plus this reminder. Makes the CLAUDE.md-upkeep norm
+  travel with the repo (fires on any clone), where before it relied on a global/
+  managed hook. **No `#appVersion` bump** — `.claude/` tooling isn't a user-facing
+  app change (same as when main's other three hooks landed). The two superseded
+  branches found this session (`progress-bar-design`, `pwa-icon-mascot`) were
+  archived under `archive/*` and left for the owner to delete in the GitHub UI —
+  their work was already on main byte-for-byte.
+- 2026-07-20: **Full-app UI audit + two fixes it surfaced (v0.91).**
   Ran a whole-UI sweep — all 19 screens driven live in headless Chromium at
   390/375/320px (findings artifact rendered for the owner). Result: structurally
   healthy — **0 console errors, 0 horizontal overflow** at any width. Five

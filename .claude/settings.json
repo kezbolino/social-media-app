@@ -14,6 +14,10 @@
             "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/check-unmerged-branches.sh\"",
             "timeout": 20,
             "statusMessage": "Checking for unmerged branches…"
+          },
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"Standing house rule for every project: keep a CLAUDE.md at the repo root as living project memory. If the repo has no CLAUDE.md, create one once you understand the project — architecture, key files and directories, how to run and deploy, conventions, and gotchas (or run the /init command). As the session wraps up, after the users work is done, update ./CLAUDE.md to capture anything learned this session: new decisions, run and deploy steps, gotchas, and notable changes. Keep it concise and current, and commit it alongside your other changes.\"}}'"
           }
         ]
       }
