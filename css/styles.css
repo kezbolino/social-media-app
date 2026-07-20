@@ -1762,7 +1762,8 @@ input[type="range"] { touch-action: none; }
   transition: transform 0.32s var(--spring);
 }
 /* A soft feathered "seat" glow behind the mascot so the cluster still reads as
-   a tappable button — no hard circle/ring, just a gentle halo. */
+   a tappable button — no hard circle/ring, just a gentle blue halo that slowly
+   breathes in and out. */
 .navbtn-disc::before {
   content: "";
   position: absolute;
@@ -1773,9 +1774,14 @@ input[type="range"] { touch-action: none; }
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(circle,
-    color-mix(in srgb, var(--blue) 13%, var(--panel)) 0%,
-    transparent 68%);
+    color-mix(in srgb, var(--blue) 34%, transparent) 0%,
+    transparent 70%);
   z-index: 0;
+  animation: nav-glow-pulse 3.4s ease-in-out infinite;
+}
+@keyframes nav-glow-pulse {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
+  50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.1); }
 }
 .navbtn-mascot {
   position: relative;
@@ -2310,7 +2316,7 @@ html[data-btn="ios"] .swipe-btn:active {
   .carousel-thumb, .home .btn-accent::after,
   .mascot-bob, .mascot-float, .mascot-sway, .mascot-spin, .mascot-pop,
   .mascot-breathe, .mascot-wave, .mascot-jog, .mascot-win, .mascot-snooze,
-  .mascot-mope, .navbtn-star {
+  .mascot-mope, .navbtn-star, .navbtn-disc::before {
     animation: none !important;
   }
   .btn { transition: background 0.15s ease; }

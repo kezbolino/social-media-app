@@ -97,7 +97,17 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **Bottom nav centre — tightened the mascot cluster + soft
+- 2026-07-20 (latest): **Bottom nav centre — glow is now a slow blue pulse
+  (v0.89).** Owner liked the subtle motion but wanted the halo a more obvious
+  colour — blue at low opacity, glowing slowly. `.navbtn-disc::before` fill
+  changed from a near-invisible panel tint to `color-mix(var(--blue) 34%,
+  transparent)` (blue, translucent, reads on the white bar), and it now runs
+  `nav-glow-pulse` (3.4s ease-in-out): opacity 0.5→1 + scale 0.9→1.1, so it
+  breathes in/out. The pulse transform keeps the `translate(-50%,-50%)`
+  centring in every keyframe (drop it and the glow drifts). Added
+  `.navbtn-disc::before` to the reduced-motion disable list. Verified headless
+  (peak vs trough frames visibly differ; 0 console errors).
+- 2026-07-20: **Bottom nav centre — tightened the mascot cluster + soft
   button halo (v0.88).** Owner: bring the mascot closer to the "Generate" label,
   make it slightly bigger, pull the stars in so it feels contained, and still
   read as a button.
