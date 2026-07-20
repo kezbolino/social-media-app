@@ -13,7 +13,7 @@
  * controllerchange auto-reload in index.html, a new deploy now reaches the
  * device promptly instead of getting stuck on an old build.
  */
-const CACHE = "wingman-cache-v8";
+const CACHE = "wingman-cache-v9";
 
 self.addEventListener("install", () => self.skipWaiting());
 

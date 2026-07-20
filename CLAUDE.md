@@ -97,7 +97,27 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **Owner approved deleting 3 stale branches** (verified
+- 2026-07-20 (latest): **Mascot underlay removed → transparent between the legs
+  (v0.85), PWA icons regenerated.** Owner: the space between the mascot's legs
+  is white on the icon, should be transparent. Root cause: `main.svg`'s **first
+  drawn path** (`class="st0"`, cream `#FBF8F4`) is a solid full-silhouette
+  *underlay* of the whole chicken sitting behind every coloured layer. The
+  coloured parts cover it everywhere EXCEPT the gap between the legs (no shape
+  there), so the cream underlay peeked through — invisible on the app's light
+  backgrounds, a white blob on the blue icon. Deleted that one path (was lines
+  21–40 of main.svg); verified the coloured layers cover the whole chicken with
+  no holes and the eye-whites (also `st0`, but separate later paths) are intact.
+  Regenerated `icon-{180,192,512}.png` from the fixed SVG (same
+  headless-Chromium script as v0.84). The ground-shadow ellipse (`st5`, under
+  the feet) is a separate shape and was deliberately kept. SW cache `v8`→`v9`.
+  ⚠️ **Every pose SVG in `assets/mascot/` has the SAME underlay** (shape index
+  0, full-canvas cream) — on the blue onboarding gradient this shows as white
+  artifacts: confirmed the **wave** pose (welcome screen) renders a **white
+  raised hand** that should be orange, and the underlay would show between the
+  legs on any full-body pose. NOT fixed here (task was scoped to the icon) —
+  flagged to owner as a follow-up; the fix is the same one-path deletion per
+  file but needs per-pose verification before mass-editing.
+- 2026-07-20: **Owner approved deleting 3 stale branches** (verified
   superseded, safe to delete; session git policy blocks branch deletion, so
   the owner deletes them in the GitHub UI — if they still exist, that's why):
   `claude/bottom-nav-full-width-eo0vi0` (empty diff vs main — its commit IS
