@@ -97,7 +97,62 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **Bottom nav centre — glow is now a slow blue pulse
+- 2026-07-20 (latest): **New Post progress bar restyled Duolingo-lesson-style
+  (v0.90).** Owner shared a reference screenshot (X — glossy progress bar —
+  badge, from a Duolingo lesson header) and asked for that treatment on "the
+  progress bar," a light-line highlight on the orange fill, and a completion
+  icon (asked for 10 icon suggestions since they hadn't picked one — offered
+  🏁✅🎉🏆⭐📤🐔🔥🎯🍗 in chat, not yet chosen by the owner). Applied to the
+  **New Post flow bar** specifically (`FLOW_STEPS`/`.flow-bar`, the one that
+  actually advances 25/50/75/100% across single/collage/carousel → editor →
+  caption → review) — the onboarding (`.ob-progress`) and Generate-brief
+  (`.gen-brief-track`) bars were deliberately left untouched, since the ask
+  referenced one bar and touching those risks re-litigating settled decisions
+  (esp. the 2026-07-16 "no glossy gradient" call, see below).
+  - **⚠️ Judgement call made without owner confirmation** (the AskUserQuestion
+    tool errored out twice — "Tool permission stream closed" — before this
+    could be run past the owner first): the reference image's X is a
+    Duolingo-style **quit-the-lesson** button, semantically different from
+    this app's existing `‹` back arrow (steps back one screen via
+    `data-back`). Rather than guess which behaviour the owner wanted on a
+    single control, both now coexist: the header's `‹` is completely
+    untouched (still steps back), and a **new, additional** `✕` sits at the
+    start of the progress-bar row itself with `data-action="go-home"` (exits
+    the whole flow to Home, resetting the in-progress post via the existing
+    `freshPost()` call already wired to that action). If the owner actually
+    wanted the `‹` replaced rather than a second control added, that's a
+    one-line swap (drop the header back button, point `data-back` handling at
+    the new `.flow-x` instead) — flagged here rather than baked in silently.
+  - **Structure**: `.quiz-track` (type screen, static HTML) and `.flow-track`
+    (the other 8 flow screens, injected by `initFlowBars()`) are now flex rows
+    — `.flow-x` (✕) — `.flow-progress` (the actual track div, `role=
+    progressbar`, carries what `.quiz-track`/`.flow-track` used to hold
+    directly: height/bg/inset-shadow/overflow) — `.flow-done` (the completion
+    badge, placeholder ✅ since the owner hasn't picked from the 10 yet — it's
+    a single emoji in both index.html and `initFlowBars()`'s template string,
+    trivial to swap once they do). `updateFlowProgress()` now also toggles
+    `.is-complete` on the row (`bar.closest(".flow-track, .quiz-track")`) when
+    `step === FLOW_TOTAL` (Review); CSS dims the badge to 32% opacity +
+    grayscale until then, scales/colours in on completion. `setEditorChrome`'s
+    existing `track.hidden = backTo === "generate"` (hides the bar during a
+    Generate-keeper editor side-trip) needed no change — it still hides the
+    same `.flow-track` element, which is now the whole row incl. the ✕/badge,
+    which is correct (no orphaned controls with no bar).
+  - **Light line, not a gradient**: `.flow-bar::after` — a single inset
+    `rgba(255,255,255,0.55)` 3px stripe near the top of the fill, scoped to
+    `.flow-bar` only (not the shared `.ob-bar` base class other bars also use)
+    so onboarding/Generate-brief stay exactly as the owner left them on
+    2026-07-16 ("owner liked the fat bar + shaded track but NOT a glossy
+    gradient on the fill" — a thin single highlight is a different, more
+    restrained effect than the full top-to-bottom gradient that was rejected
+    then, but scoping it away from `.ob-bar` avoids the question entirely).
+  - Verified headless (Chromium, 390×844, localhost): row renders correctly on
+    both the hand-authored type screen and an injected screen (single); ✕
+    correctly navigates to home via the existing `go-home` action; the
+    highlight pseudo-element renders; forcing `.is-complete` confirmed the
+    badge transitions from 32%-opacity greyscale to full colour/scale after
+    the 0.3s transition settles; 0 console errors. Screenshot eyeballed.
+- 2026-07-20: **Bottom nav centre — glow is now a slow blue pulse
   (v0.89).** Owner liked the subtle motion but wanted the halo a more obvious
   colour — blue at low opacity, glowing slowly. `.navbtn-disc::before` fill
   changed from a near-invisible panel tint to `color-mix(var(--blue) 34%,
