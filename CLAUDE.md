@@ -97,7 +97,23 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-19 (latest): **Sounds switched back on, with a Settings toggle
+- 2026-07-20 (latest): **PWA icon remade with the brand mascot (v0.84).**
+  Owner: the home-screen icon should be the main SVG mascot. The old
+  `assets/icons/icon-{180,192,512}.png` were a *generic clipart chicken head*
+  (not the brand art) with rounded corners baked in — wrong for a maskable
+  icon, where the OS applies its own mask. Regenerated all three from
+  `assets/mascot/main.svg` rendered on the `--hero-bg` gradient (160deg,
+  `--blue`→`--blue-2`), full-bleed square, mascot centred at **65% of icon
+  height** so it stays inside the maskable safe zone (80%-diameter circle) —
+  `icon-512.png` serves BOTH `purpose: any` and `purpose: maskable` in the
+  manifest, so the one design must survive circular masking. Manifest and
+  `<link>` tags untouched (same filenames). Rendered via headless Chromium
+  (script in the session scratchpad, not the repo); main.svg's viewBox is
+  tight to the art (checked `getBBox()` — no crop needed, unlike camera/stall).
+  SW cache `v7`→`v8` so installed PWAs purge the old icons; re-add to the home
+  screen (or reopen once) to see the new icon. Verified headless: manifest +
+  all three PNGs 200 at correct dimensions, 0 console errors.
+- 2026-07-19: **Sounds switched back on, with a Settings toggle
   (v0.83).** The sound layer was unplugged on 2026-07-12 (module + assets left
   in the repo, just no `<script>` tag). Owner asked to bring it back with an
   on/off control.
