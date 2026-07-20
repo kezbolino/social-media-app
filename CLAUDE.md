@@ -97,7 +97,52 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-19 (latest): **Sounds switched back on, with a Settings toggle
+- 2026-07-20 (latest): **Mascot underlay removed → transparent between the legs
+  (v0.85), PWA icons regenerated.** Owner: the space between the mascot's legs
+  is white on the icon, should be transparent. Root cause: `main.svg`'s **first
+  drawn path** (`class="st0"`, cream `#FBF8F4`) is a solid full-silhouette
+  *underlay* of the whole chicken sitting behind every coloured layer. The
+  coloured parts cover it everywhere EXCEPT the gap between the legs (no shape
+  there), so the cream underlay peeked through — invisible on the app's light
+  backgrounds, a white blob on the blue icon. Deleted that one path (was lines
+  21–40 of main.svg); verified the coloured layers cover the whole chicken with
+  no holes and the eye-whites (also `st0`, but separate later paths) are intact.
+  Regenerated `icon-{180,192,512}.png` from the fixed SVG (same
+  headless-Chromium script as v0.84). The ground-shadow ellipse (`st5`, under
+  the feet) is a separate shape and was deliberately kept. SW cache `v8`→`v9`.
+  ⚠️ **Every pose SVG in `assets/mascot/` has the SAME underlay** (shape index
+  0, full-canvas cream) — on the blue onboarding gradient this shows as white
+  artifacts: confirmed the **wave** pose (welcome screen) renders a **white
+  raised hand** that should be orange, and the underlay would show between the
+  legs on any full-body pose. NOT fixed here (task was scoped to the icon) —
+  flagged to owner as a follow-up; the fix is the same one-path deletion per
+  file but needs per-pose verification before mass-editing.
+- 2026-07-20: **Owner approved deleting 3 stale branches** (verified
+  superseded, safe to delete; session git policy blocks branch deletion, so
+  the owner deletes them in the GitHub UI — if they still exist, that's why):
+  `claude/bottom-nav-full-width-eo0vi0` (empty diff vs main — its commit IS
+  PR #21), `claude/fable-sound-effects-8gyl6e` (the 5 playing softened WAVs
+  are hash-identical on main since v0.83; rest is an ancient fork),
+  `claude/image-text-overlay-move-79zmom` (movable sticker text shipped in
+  v0.19/v0.43). NOT approved for deletion: `claude/code-workflow-optimization-
+  76srlc` (owner hasn't ruled on it).
+- 2026-07-20: **PWA icon remade with the brand mascot (v0.84).**
+  Owner: the home-screen icon should be the main SVG mascot. The old
+  `assets/icons/icon-{180,192,512}.png` were a *generic clipart chicken head*
+  (not the brand art) with rounded corners baked in — wrong for a maskable
+  icon, where the OS applies its own mask. Regenerated all three from
+  `assets/mascot/main.svg` rendered on the `--hero-bg` gradient (160deg,
+  `--blue`→`--blue-2`), full-bleed square, mascot centred at **65% of icon
+  height** so it stays inside the maskable safe zone (80%-diameter circle) —
+  `icon-512.png` serves BOTH `purpose: any` and `purpose: maskable` in the
+  manifest, so the one design must survive circular masking. Manifest and
+  `<link>` tags untouched (same filenames). Rendered via headless Chromium
+  (script in the session scratchpad, not the repo); main.svg's viewBox is
+  tight to the art (checked `getBBox()` — no crop needed, unlike camera/stall).
+  SW cache `v7`→`v8` so installed PWAs purge the old icons; re-add to the home
+  screen (or reopen once) to see the new icon. Verified headless: manifest +
+  all three PNGs 200 at correct dimensions, 0 console errors.
+- 2026-07-19: **Sounds switched back on, with a Settings toggle
   (v0.83).** The sound layer was unplugged on 2026-07-12 (module + assets left
   in the repo, just no `<script>` tag). Owner asked to bring it back with an
   on/off control.
