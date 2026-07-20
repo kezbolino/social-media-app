@@ -97,7 +97,31 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **Mascot underlay removed → transparent between the legs
+- 2026-07-20 (latest): **Bottom nav — Generate is now a raised centre button
+  with the mascot embedded (v0.86).** Owner referenced the Ahead app's raised
+  centre mascot tab and wanted Generate in the middle with the mascot in it.
+  - **Reordered** the 5 tabs to Home / New / **Generate** / Calendar / Settings
+    so Generate is the middle slot (index.html). `data-nav`/`data-action`
+    unchanged, so `show()`'s active-tab marking still works untouched.
+  - The Generate button got a `navbtn-center` class: a `.navbtn-disc` circular
+    `--hero-bg` gradient disc (62px) that **lifts above the bar** (`margin-top:
+    -30px`) with a `--panel` cut-out ring + brand-blue drop shadow, and an
+    `<img class="navbtn-mascot" src="assets/mascot/happy.svg">` (46px) inside
+    it, gently breathing via `mascot-breathe`. It has **no `.navbtn-icon`**, so
+    the standard active-pill (`.navbtn-icon::before`) and svg rules don't touch
+    it — active/press states are handled on `.navbtn-disc` instead (is-active =
+    lift + stronger shadow; :active = scale 0.94). The label ("Generate") turns
+    blue when active like the others.
+  - `mascot-breathe` owns the img's `transform`, so DON'T also set a base
+    `transform` on `.navbtn-mascot` (it'd be clobbered mid-animation) — the disc
+    grid-centres it instead. Disc `overflow:hidden` clips the mascot to the
+    circle. All motion is already in the reduced-motion disable list
+    (`mascot-breathe` + the disc's transition).
+  - Verified headless (Chromium, 390×844, `file://`, onboarded): disc renders
+    dead-centre (x 164–226 of 390), raised above the bar, order reads
+    Home/New/Generate/Calendar/Settings, tapping it opens Generate and lights
+    the label blue; 0 console errors. Both states eyeballed.
+- 2026-07-20: **Mascot underlay removed → transparent between the legs
   (v0.85), PWA icons regenerated.** Owner: the space between the mascot's legs
   is white on the icon, should be transparent. Root cause: `main.svg`'s **first
   drawn path** (`class="st0"`, cream `#FBF8F4`) is a solid full-silhouette

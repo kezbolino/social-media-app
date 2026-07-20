@@ -1746,6 +1746,43 @@ input[type="range"] { touch-action: none; }
 .navbtn:active svg { transform: scale(0.78); }
 .navbtn:active { color: var(--blue); }
 
+/* --- Raised centre "Generate" button (mascot embedded) ---------------------
+   The middle tab is a hero: a circular brand-gradient disc that pops above the
+   bar with the mascot inside, echoing the raised centre action in apps like
+   Ahead. It's still a .navbtn, so is-active / show() marking works unchanged. */
+.navbtn-center { justify-content: flex-end; }
+.navbtn-disc {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin-top: -30px; /* lift the disc above the bar's top edge */
+  border-radius: 50%;
+  background: var(--hero-bg);
+  border: 4px solid var(--panel); /* cut-out ring against the bar */
+  box-shadow: 0 6px 16px rgba(10, 77, 161, 0.4);
+  overflow: hidden;
+  transition: transform 0.32s var(--spring), box-shadow 0.2s ease;
+}
+.navbtn-mascot {
+  width: 46px;
+  height: 46px;
+  display: block;
+  pointer-events: none;
+  transform-origin: 50% 94%;
+  animation: mascot-breathe 3.8s ease-in-out infinite;
+}
+.navbtn-center .navbtn-label { margin-top: 3px; }
+/* Active + press states re-use the disc, not the pill (it has no navbtn-icon). */
+.navbtn-center.is-active .navbtn-disc {
+  box-shadow: 0 8px 20px rgba(10, 77, 161, 0.5);
+  transform: translateY(-2px);
+}
+.navbtn-center:active .navbtn-disc { transform: scale(0.94); }
+.navbtn-center:active svg { transform: none; }
+
 /* Reserve room at the bottom of the hub screens so their content never
    sits behind the fixed nav bar. */
 #app.has-bottomnav [data-screen="type"] .pad,
