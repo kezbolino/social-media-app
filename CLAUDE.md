@@ -97,7 +97,16 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **PWA icon remade with the brand mascot (v0.84).**
+- 2026-07-20 (latest): **Owner approved deleting 3 stale branches** (verified
+  superseded, safe to delete; session git policy blocks branch deletion, so
+  the owner deletes them in the GitHub UI — if they still exist, that's why):
+  `claude/bottom-nav-full-width-eo0vi0` (empty diff vs main — its commit IS
+  PR #21), `claude/fable-sound-effects-8gyl6e` (the 5 playing softened WAVs
+  are hash-identical on main since v0.83; rest is an ancient fork),
+  `claude/image-text-overlay-move-79zmom` (movable sticker text shipped in
+  v0.19/v0.43). NOT approved for deletion: `claude/code-workflow-optimization-
+  76srlc` (owner hasn't ruled on it).
+- 2026-07-20: **PWA icon remade with the brand mascot (v0.84).**
   Owner: the home-screen icon should be the main SVG mascot. The old
   `assets/icons/icon-{180,192,512}.png` were a *generic clipart chicken head*
   (not the brand art) with rounded corners baked in — wrong for a maskable
