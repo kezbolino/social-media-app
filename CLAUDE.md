@@ -63,11 +63,28 @@ static server.
   `if (window.X)` guard needs the module to also do `window.X = X` (see the tail
   of `js/photos.js`, and `window.FX = …` in `js/fx.js`).
 - App version string lives in one place: `#appVersion` at the bottom of the home
-  screen in index.html (currently `v0.09`).
+  screen in index.html (currently `v0.91`).
   - ⭐ **RULE (do this automatically, never ask):** every shipped feature or
     enhancement MUST bump `#appVersion` in the *same* change, before committing.
     Increment the patch (v0.03 → v0.04) for a normal feature/enhancement. The owner
     should never have to ask for a version bump — it just happens.
+  - ⭐ **RULE — the branch's version number is PROVISIONAL; reconcile it at merge
+    time.** Multiple sessions/surfaces (web, mobile, desktop, the Mac) branch off
+    `main` in parallel, and each independently bumps to the same next number — so
+    two branches routinely both claim, say, v0.90. **This does NOT show up as a git
+    conflict**: both sides made the *identical* `v0.89 → v0.90` edit to the one
+    version line, so a merge silently keeps v0.90 and the second feature gets no
+    bump at all. So **whenever you merge a feature branch into `main`, re-check
+    `#appVersion` by hand**: if `main`'s current version is ≥ the branch's, set the
+    line to `main`'s current + 1 (e.g. main at v0.90 + your branch's fixes → bump
+    the merge result to v0.91). Never trust the number the branch carried in. Same
+    trap bites the CLAUDE.md "latest" Notable-changes entry — both branches prepend
+    at the same spot, so expect to hand-merge that entry and keep BOTH. (See the
+    2026-07-20 v0.91 audit-merge entry below for a worked example.)
+  - Corollaries that keep this rare: **push at the end of every session** before
+    switching devices (the Mac-vs-cloud "never pushed → rebuilt" divergence, see
+    2026-07-19), and **merge or bin branches promptly** — the more open branches
+    and the longer they sit past their base, the more often the collision fires.
 
 ## Roadmap ideas (from a competitor review, 2026-07-12)
 A pass benchmarking this app against Buffer/Later/Planoly/Meta Business Suite/
