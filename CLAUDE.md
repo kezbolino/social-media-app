@@ -97,7 +97,49 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **Bottom nav centre — glow is now a slow blue pulse
+- 2026-07-20 (latest): **Full-app UI audit + two fixes it surfaced (v0.90).**
+  Ran a whole-UI sweep — all 19 screens driven live in headless Chromium at
+  390/375/320px (findings artifact rendered for the owner). Result: structurally
+  healthy — **0 console errors, 0 horizontal overflow** at any width. Five
+  findings; the owner asked to fix the two "should-fix" ones:
+  - **Caption screen: helper text was trapped behind the sticky `.actionbar`.**
+    The bar is `position: sticky; bottom: 0` with `margin: 14px -16px -40px` —
+    the `-40px` eats `.pad`'s bottom padding, so there was **zero scroll runway**
+    below the pinned bar and the hint's last line ("…use the editor's Text tab.")
+    could never be scrolled clear (measured 22px permanent overlap on 390×844).
+    Fix: `[data-screen="caption"] .pad { padding-bottom: 130px; }` (styles.css,
+    right after `.actionbar`) — the `-40px` still cancels the original 40px,
+    leaving runway so a body-scroll lifts the hint above the bar. ⚠️ **This app
+    scrolls on `body`** (`body { overflow-y:auto }`, `documentElement` does NOT
+    scroll) — verify caption clearance with `document.body.scrollTop`, NOT
+    `window.scrollTo`/`documentElement` (a verify pass mis-read the fix as broken
+    because it scrolled the wrong element). Other `.actionbar` screens (review/
+    editor/…) share the -40px pattern but have enough slack not to trigger it;
+    left scoped to caption.
+  - **Queue "Caption or note" textarea rendered in monospace.** `textarea` was
+    missing from the `font-family: inherit` rule (styles.css:294 listed only
+    `button, input, select, optgroup`) and `.text-input` sets no font, so
+    `#queueNote` fell back to the UA mono. Same miss as the v0.42 input fix.
+    Fix: added `textarea` to that one selector — `#queueNote` now inherits
+    Visuelt Pro like every other field. (`.caption-box`/`.text-entry` were fine
+    already — they each set `inherit` themselves.)
+  - **Audit gotcha worth keeping:** the automated contrast check first reported
+    the home greeting/version at 2.17:1 / 1.12:1 — both **false**.
+    `getComputedStyle().backgroundColor` returns transparent for gradient
+    backgrounds, so it measured text against the light page colour behind the
+    **blue hero** instead of the hero. Re-sampled real pixels (hero blue =
+    `rgb(11,83,174)`): actual values are 3.00:1 / 3.02:1 (just under AA, brand-
+    driven, left as-is). Also **the CLAUDE.md "white raised hand" mascot artifact
+    does NOT reproduce** on ob-welcome — the wave pose renders correctly orange.
+    Both are the "don't let a cheap proxy stand in for the answer" rule biting.
+  - Not fixed (flagged to owner): sub-44px tap targets on Settings (hashtag/
+    location/stash remove ✕, picker chips), editor filter-label contrast 2.72:1.
+    Coverage gap: the `posted` success screen needs a real share to reach, so it
+    wasn't driven. ⚠️ **Version collision note:** unmerged branch
+    `claude/progress-bar-design-bt56dd` also claims v0.90 — reconcile if merging.
+  - Verified headless: caption hint clears the bar on body-scroll (helper bottom
+    662 ≤ bar top 676), `#queueNote` computes to "Visuelt Pro", 0 console errors.
+- 2026-07-20: **Bottom nav centre — glow is now a slow blue pulse
   (v0.89).** Owner liked the subtle motion but wanted the halo a more obvious
   colour — blue at low opacity, glowing slowly. `.navbtn-disc::before` fill
   changed from a near-invisible panel tint to `color-mix(var(--blue) 34%,

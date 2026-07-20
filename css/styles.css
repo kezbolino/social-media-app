@@ -291,7 +291,7 @@ html[data-theme="pastel"] {
 /* Form controls don't inherit font-family from the page by default (browser
    UA stylesheets give button/input/select their own system font) — without
    this, the font picker would restyle every screen except its own buttons. */
-button, input, select, optgroup { font-family: inherit; }
+button, input, select, optgroup, textarea { font-family: inherit; }
 
 /* The `hidden` attribute must always win, even over elements that set their
    own display (e.g. .filter-row/.preview-img use display:flex/block). */
@@ -637,6 +637,12 @@ input[type="range"] { touch-action: none; }
 }
 .actionbar .btn,
 .actionbar .row { margin: 0; }
+/* The caption screen's helper text is long enough that, without scroll runway
+   below the sticky .actionbar, its last line stays trapped behind the bar with
+   no way to scroll it clear — the bar's -40px bottom margin eats .pad's bottom
+   padding, leaving zero runway. Extra bottom padding here gives the content room
+   to scroll above the pinned bar (the -40px still cancels the original 40px). */
+[data-screen="caption"] .pad { padding-bottom: 130px; }
 
 /* ---- Tiles (type & quiz) ---- */
 /* Clean uniform-bordered box (Brilliant-style): no left accent stripe — the
