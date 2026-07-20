@@ -1756,16 +1756,32 @@ input[type="range"] { touch-action: none; }
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
-  margin-top: -26px; /* lift the mascot above the bar's top edge */
+  width: 52px;
+  height: 52px;
+  margin-top: -20px; /* lift above the bar, but sit closer to the label */
   transition: transform 0.32s var(--spring);
+}
+/* A soft feathered "seat" glow behind the mascot so the cluster still reads as
+   a tappable button — no hard circle/ring, just a gentle halo. */
+.navbtn-disc::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 58px;
+  height: 58px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--blue) 13%, var(--panel)) 0%,
+    transparent 68%);
+  z-index: 0;
 }
 .navbtn-mascot {
   position: relative;
-  z-index: 2; /* mascot sits above the sparkles */
-  width: 48px;
-  height: 48px;
+  z-index: 2; /* mascot sits above the sparkles + halo */
+  width: 52px;
+  height: 52px;
   display: block;
   pointer-events: none;
   transform-origin: 50% 94%;
@@ -1783,14 +1799,14 @@ input[type="range"] { touch-action: none; }
   filter: drop-shadow(0 1px 1px rgba(180, 120, 0, 0.35));
   animation: nav-star-twinkle 2.6s ease-in-out infinite;
 }
-.navbtn-center .star-a { width: 15px; height: 15px; top: -7px; right: -4px; }
-.navbtn-center .star-b { width: 11px; height: 11px; top: -2px; left: -6px; animation-delay: 0.8s; }
-.navbtn-center .star-c { width: 9px;  height: 9px;  bottom: 2px; right: -2px; animation-delay: 1.5s; }
+.navbtn-center .star-a { width: 14px; height: 14px; top: -2px; right: 2px; }
+.navbtn-center .star-b { width: 10px; height: 10px; top: 4px;  left: 1px; animation-delay: 0.8s; }
+.navbtn-center .star-c { width: 9px;  height: 9px;  bottom: 6px; right: 2px; animation-delay: 1.5s; }
 @keyframes nav-star-twinkle {
   0%, 100% { opacity: 1;    transform: scale(1)    rotate(0deg); }
   50%      { opacity: 0.55; transform: scale(0.72) rotate(-12deg); }
 }
-.navbtn-center .navbtn-label { margin-top: 3px; }
+.navbtn-center .navbtn-label { margin-top: 0; }
 /* Active + press states lift/scale the whole mascot cluster (no disc/pill). */
 .navbtn-center.is-active .navbtn-disc { transform: translateY(-2px); }
 .navbtn-center:active .navbtn-disc { transform: scale(0.94); }

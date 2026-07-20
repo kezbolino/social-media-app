@@ -97,7 +97,22 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **Bottom nav centre button — dropped the blue disc, added
+- 2026-07-20 (latest): **Bottom nav centre — tightened the mascot cluster + soft
+  button halo (v0.88).** Owner: bring the mascot closer to the "Generate" label,
+  make it slightly bigger, pull the stars in so it feels contained, and still
+  read as a button.
+  - Mascot 48→52px; disc box 54→52px, lift `margin-top:-26px`→`-20px` (sits
+    lower, closer to the label), label `margin-top:3px`→`0`.
+  - Stars pulled in tight against the mascot (offsets now small positive values
+    instead of negative — they hug rather than splay).
+  - **Button affordance without a hard circle**: a `.navbtn-disc::before`
+    feathered radial-gradient halo (`color-mix(var(--blue) 13%, --panel)` →
+    transparent at 68%), z-index 0 behind the sparkles/mascot. Soft glow, no
+    ring edge — reads as tappable without reintroducing the disc the owner
+    removed in v0.87.
+  - Verified headless (390×844×3): mascot centred & bigger, stars contained,
+    halo visible but soft, both states eyeballed, 0 console errors.
+- 2026-07-20: **Bottom nav centre button — dropped the blue disc, added
   yellow AI sparkles (v0.87).** Owner wanted the mascot to sit free (no blue
   background, no circle) with yellow "AI stars" around it like the old Generate
   sparkles icon.
