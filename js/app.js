@@ -152,7 +152,7 @@
       track.innerHTML =
         '<button class="flow-x" data-action="go-home" aria-label="Exit and go home">✕</button>' +
         '<div class="flow-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="New post progress"><span class="ob-bar flow-bar"></span></div>' +
-        '<span class="flow-done" aria-hidden="true">✅</span>';
+        '<span class="flow-done" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" class="flow-done-ring" /><path d="M7 12.5l3 3 7-7" class="flow-done-tick" /></svg></span>';
       pad.insertBefore(track, pad.firstChild);
     });
   }

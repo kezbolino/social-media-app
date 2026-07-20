@@ -742,18 +742,28 @@ input[type="range"] { touch-action: none; }
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.55);
 }
-/* Completion badge — muted until the flow's last step (Review), then pops
-   in full colour. Placeholder ✅; swap the glyph in index.html/initFlowBars
-   for any of the alternatives discussed with the owner (flag/trophy/mascot/
-   etc.) — it's a single emoji, no other code depends on which one. */
+/* Completion badge — a green tick (owner's pick, 2026-07-20), muted until the
+   flow's last step (Review) then pops in full colour. Built as an inline SVG
+   (not an emoji) so the green is the app's own --success token — the same
+   green already used for "posted"/"kept" everywhere else (calendar posted
+   ring, swipe-keep badge/heart) — instead of whatever a platform's emoji font
+   happens to render, and so it retints for free if a --success-changing theme
+   is ever switched on. */
 .flow-done {
   flex: 0 0 auto;
-  font-size: 1.15rem;
-  line-height: 1;
+  display: flex;
   opacity: 0.32;
   filter: grayscale(1);
   transform: scale(0.9);
   transition: opacity 0.3s var(--ease-premium), transform 0.3s var(--ease-premium), filter 0.3s var(--ease-premium);
+}
+.flow-done-ring { fill: var(--success); }
+.flow-done-tick {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .flow-track.is-complete .flow-done,
 .quiz-track.is-complete .flow-done {

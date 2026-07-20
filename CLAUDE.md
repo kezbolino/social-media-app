@@ -102,7 +102,7 @@ below). **Not yet built, roughly in priority order:**
   badge, from a Duolingo lesson header) and asked for that treatment on "the
   progress bar," a light-line highlight on the orange fill, and a completion
   icon (asked for 10 icon suggestions since they hadn't picked one — offered
-  🏁✅🎉🏆⭐📤🐔🔥🎯🍗 in chat, not yet chosen by the owner). Applied to the
+  🏁✅🎉🏆⭐📤🐔🔥🎯🍗 in chat; owner picked **a green tick**). Applied to the
   **New Post flow bar** specifically (`FLOW_STEPS`/`.flow-bar`, the one that
   actually advances 25/50/75/100% across single/collage/carousel → editor →
   caption → review) — the onboarding (`.ob-progress`) and Generate-brief
@@ -128,16 +128,25 @@ below). **Not yet built, roughly in priority order:**
     — `.flow-x` (✕) — `.flow-progress` (the actual track div, `role=
     progressbar`, carries what `.quiz-track`/`.flow-track` used to hold
     directly: height/bg/inset-shadow/overflow) — `.flow-done` (the completion
-    badge, placeholder ✅ since the owner hasn't picked from the 10 yet — it's
-    a single emoji in both index.html and `initFlowBars()`'s template string,
-    trivial to swap once they do). `updateFlowProgress()` now also toggles
-    `.is-complete` on the row (`bar.closest(".flow-track, .quiz-track")`) when
-    `step === FLOW_TOTAL` (Review); CSS dims the badge to 32% opacity +
-    grayscale until then, scales/colours in on completion. `setEditorChrome`'s
-    existing `track.hidden = backTo === "generate"` (hides the bar during a
+    badge). `updateFlowProgress()` now also toggles `.is-complete` on the row
+    (`bar.closest(".flow-track, .quiz-track")`) when `step === FLOW_TOTAL`
+    (Review); CSS dims the badge to 32% opacity + grayscale until then,
+    scales/colours in on completion. `setEditorChrome`'s existing
+    `track.hidden = backTo === "generate"` (hides the bar during a
     Generate-keeper editor side-trip) needed no change — it still hides the
     same `.flow-track` element, which is now the whole row incl. the ✕/badge,
     which is correct (no orphaned controls with no bar).
+  - **Completion badge is an inline SVG, not an emoji** — a circle + tick
+    path (`.flow-done-ring`/`.flow-done-tick`, both in index.html's static
+    markup and `initFlowBars()`'s template string). The ring fills with
+    `var(--success)`, the same green already used everywhere else for
+    "posted"/"kept" (calendar posted ring, swipe-keep badge/heart) — not an
+    emoji, so it doesn't depend on the platform's emoji font rendering a
+    convincing green tick, and it retints for free if a `--success`-changing
+    theme is ever switched on (the 5 candidate themes from 2026-07-16 each
+    already define their own `--success`). The existing dim/greyscale→full-
+    colour `.flow-done` transition needed no change — `filter: grayscale(1)`
+    works on the SVG exactly like it did on the emoji.
   - **Light line, not a gradient**: `.flow-bar::after` — a single inset
     `rgba(255,255,255,0.55)` 3px stripe near the top of the fill, scoped to
     `.flow-bar` only (not the shared `.ob-bar` base class other bars also use)
