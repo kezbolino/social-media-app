@@ -1746,40 +1746,53 @@ input[type="range"] { touch-action: none; }
 .navbtn:active svg { transform: scale(0.78); }
 .navbtn:active { color: var(--blue); }
 
-/* --- Raised centre "Generate" button (mascot embedded) ---------------------
-   The middle tab is a hero: a circular brand-gradient disc that pops above the
-   bar with the mascot inside, echoing the raised centre action in apps like
-   Ahead. It's still a .navbtn, so is-active / show() marking works unchanged. */
+/* --- Raised centre "Generate" button (mascot + AI sparkles) ----------------
+   The middle tab is a hero: the mascot lifts above the bar with yellow AI
+   "sparkle" stars twinkling around it — no disc/circle, the chicken sits free.
+   It's still a .navbtn, so is-active / show() marking works unchanged. */
 .navbtn-center { justify-content: flex-end; }
 .navbtn-disc {
   position: relative;
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 62px;
-  height: 62px;
-  margin-top: -30px; /* lift the disc above the bar's top edge */
-  border-radius: 50%;
-  background: var(--hero-bg);
-  border: 4px solid var(--panel); /* cut-out ring against the bar */
-  box-shadow: 0 6px 16px rgba(10, 77, 161, 0.4);
-  overflow: hidden;
-  transition: transform 0.32s var(--spring), box-shadow 0.2s ease;
+  width: 54px;
+  height: 54px;
+  margin-top: -26px; /* lift the mascot above the bar's top edge */
+  transition: transform 0.32s var(--spring);
 }
 .navbtn-mascot {
-  width: 46px;
-  height: 46px;
+  position: relative;
+  z-index: 2; /* mascot sits above the sparkles */
+  width: 48px;
+  height: 48px;
   display: block;
   pointer-events: none;
   transform-origin: 50% 94%;
   animation: mascot-breathe 3.8s ease-in-out infinite;
 }
-.navbtn-center .navbtn-label { margin-top: 3px; }
-/* Active + press states re-use the disc, not the pill (it has no navbtn-icon). */
-.navbtn-center.is-active .navbtn-disc {
-  box-shadow: 0 8px 20px rgba(10, 77, 161, 0.5);
-  transform: translateY(-2px);
+/* Yellow AI sparkles scattered around the mascot (brand yellow #FDCE0A).
+   Selectors are scoped under .navbtn-center so they out-specify the base
+   `.navbtn svg` rule (which otherwise forces position:relative + 24px and
+   would shove the mascot out of the disc). */
+.navbtn-center .navbtn-star {
+  position: absolute;
+  z-index: 1;
+  color: #fdce0a;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(180, 120, 0, 0.35));
+  animation: nav-star-twinkle 2.6s ease-in-out infinite;
 }
+.navbtn-center .star-a { width: 15px; height: 15px; top: -7px; right: -4px; }
+.navbtn-center .star-b { width: 11px; height: 11px; top: -2px; left: -6px; animation-delay: 0.8s; }
+.navbtn-center .star-c { width: 9px;  height: 9px;  bottom: 2px; right: -2px; animation-delay: 1.5s; }
+@keyframes nav-star-twinkle {
+  0%, 100% { opacity: 1;    transform: scale(1)    rotate(0deg); }
+  50%      { opacity: 0.55; transform: scale(0.72) rotate(-12deg); }
+}
+.navbtn-center .navbtn-label { margin-top: 3px; }
+/* Active + press states lift/scale the whole mascot cluster (no disc/pill). */
+.navbtn-center.is-active .navbtn-disc { transform: translateY(-2px); }
 .navbtn-center:active .navbtn-disc { transform: scale(0.94); }
 .navbtn-center:active svg { transform: none; }
 
@@ -2281,7 +2294,7 @@ html[data-btn="ios"] .swipe-btn:active {
   .carousel-thumb, .home .btn-accent::after,
   .mascot-bob, .mascot-float, .mascot-sway, .mascot-spin, .mascot-pop,
   .mascot-breathe, .mascot-wave, .mascot-jog, .mascot-win, .mascot-snooze,
-  .mascot-mope {
+  .mascot-mope, .navbtn-star {
     animation: none !important;
   }
   .btn { transition: background 0.15s ease; }

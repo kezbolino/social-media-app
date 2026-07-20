@@ -97,7 +97,33 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **Bottom nav — Generate is now a raised centre button
+- 2026-07-20 (latest): **Bottom nav centre button — dropped the blue disc, added
+  yellow AI sparkles (v0.87).** Owner wanted the mascot to sit free (no blue
+  background, no circle) with yellow "AI stars" around it like the old Generate
+  sparkles icon.
+  - `.navbtn-disc` stripped of its `--hero-bg` gradient, `--panel` ring border,
+    circular `border-radius`, box-shadow and `overflow:hidden` — it's now just a
+    54px positioning box that lifts the mascot above the bar (`margin-top:-26px`).
+    Mascot bumped 46→48px.
+  - Three yellow (`#fdce0a`) sparkle SVGs (the Heroicons single-sparkle path,
+    `viewBox="2 5 14 14"`) sit `position:absolute` around the mascot (top-right
+    15px, top-left 11px, bottom-right 9px), twinkling on `nav-star-twinkle`
+    (opacity+scale+rotate, staggered delays). Added to the reduced-motion
+    disable list.
+  - ⚠️ **Specificity gotcha (cost a debug pass):** the base `.navbtn svg` rule
+    (`position:relative; width/height:24px`, 0,1,1) out-specifies a bare
+    `.navbtn-star`/`.star-a` (0,1,0), so the stars rendered as 24px *relative*
+    boxes in the grid flow and shoved the mascot 70px down out of the disc. Fix:
+    scope every star selector under `.navbtn-center` (`.navbtn-center .star-a`,
+    0,2,0) so they win. Mascot got `position:relative; z-index:2` to sit above
+    the sparkles. **Any new decorative `<svg>` inside a `.navbtn` needs the same
+    scoping** or `.navbtn svg` will resize/reposition it.
+  - Active = mascot cluster lifts (`translateY(-2px)`) + label blue; press =
+    `scale(0.94)`. No disc shadow anymore.
+  - Verified headless (Chromium, 390×844×3, `file://`, onboarded): mascot centred
+    in the disc box (not escaping), 3 stars at 13/10/9px, both states eyeballed,
+    0 console errors.
+- 2026-07-20: **Bottom nav — Generate is now a raised centre button
   with the mascot embedded (v0.86).** Owner referenced the Ahead app's raised
   centre mascot tab and wanted Generate in the middle with the mascot in it.
   - **Reordered** the 5 tabs to Home / New / **Generate** / Calendar / Settings
