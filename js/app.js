@@ -133,6 +133,8 @@
     void bar.offsetWidth; // commit the parked width before re-enabling the sweep
     bar.style.transition = "";
     bar.style.width = pct + "%";
+    const track = bar.closest(".flow-track, .quiz-track");
+    if (track) track.classList.toggle("is-complete", step === FLOW_TOTAL);
     lastFlowPct = pct;
   }
 
@@ -147,9 +149,10 @@
       if (!pad || pad.querySelector(".flow-bar")) return;
       const track = document.createElement("div");
       track.className = "flow-track";
-      const bar = document.createElement("span");
-      bar.className = "ob-bar flow-bar";
-      track.appendChild(bar);
+      track.innerHTML =
+        '<button class="flow-x" data-action="go-home" aria-label="Exit and go home">✕</button>' +
+        '<div class="flow-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="New post progress"><span class="ob-bar flow-bar"></span></div>' +
+        '<span class="flow-done" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" class="flow-done-ring" /><path d="M7 12.5l3 3 7-7" class="flow-done-tick" /></svg></span>';
       pad.insertBefore(track, pad.firstChild);
     });
   }

@@ -684,18 +684,93 @@ input[type="range"] { touch-action: none; }
 
 /* ---- "What kind of post?" question header (Brilliant-style) ----
    Progress bar (reuses the .ob-bar fill on a light track like the Generate
-   brief) + the mascot asking the question in a speech bubble. */
+   brief) + the mascot asking the question in a speech bubble.
+   Duolingo-style row: X (exits the whole flow to home, data-action="go-home"
+   — distinct from the header's "‹" back arrow, which still steps back one
+   screen unchanged) — track — completion badge. Kept as one flex row so the
+   three pieces line up exactly like the reference; the track itself moved to
+   .flow-progress below (the old height/bg/shadow/overflow this selector used
+   to carry directly). */
 .quiz-track,
 .flow-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.quiz-track { margin: 4px 0 16px; }
+/* Standalone flow bar (injected at the top of every other New Post screen). */
+.flow-track { margin: 2px 0 16px; }
+.flow-x {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  min-width: 40px;
+  min-height: 40px;
+  margin-left: -8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+.flow-x:active { transform: scale(0.88); }
+.flow-progress {
+  flex: 1 1 auto;
   height: 14px;
   border-radius: 999px;
   background: rgba(10, 77, 161, 0.14);
   box-shadow: inset 0 1px 2px rgba(10, 77, 161, 0.2);
   overflow: hidden;
 }
-.quiz-track { margin: 4px 0 16px; }
-/* Standalone flow bar (injected at the top of every other New Post screen). */
-.flow-track { margin: 2px 0 16px; }
+/* A thin light sheen line inset into the top of the fill — NOT the full
+   glossy top-to-bottom gradient the owner rejected for .ob-bar on
+   2026-07-16 (see CLAUDE.md); this is a single subtle highlight stripe,
+   scoped to .flow-bar only so the onboarding/Generate-brief bars (plain
+   .ob-bar) are untouched. */
+.flow-bar { position: relative; overflow: hidden; }
+.flow-bar::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+}
+/* Completion badge — a green tick (owner's pick, 2026-07-20), muted until the
+   flow's last step (Review) then pops in full colour. Built as an inline SVG
+   (not an emoji) so the green is the app's own --success token — the same
+   green already used for "posted"/"kept" everywhere else (calendar posted
+   ring, swipe-keep badge/heart) — instead of whatever a platform's emoji font
+   happens to render, and so it retints for free if a --success-changing theme
+   is ever switched on. */
+.flow-done {
+  flex: 0 0 auto;
+  display: flex;
+  opacity: 0.32;
+  filter: grayscale(1);
+  transform: scale(0.9);
+  transition: opacity 0.3s var(--ease-premium), transform 0.3s var(--ease-premium), filter 0.3s var(--ease-premium);
+}
+.flow-done-ring { fill: var(--success); }
+.flow-done-tick {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.flow-track.is-complete .flow-done,
+.quiz-track.is-complete .flow-done {
+  opacity: 1;
+  filter: none;
+  transform: scale(1.15);
+}
 .quiz-ask {
   display: flex;
   align-items: center;
@@ -2320,7 +2395,7 @@ html[data-btn="ios"] .swipe-btn:active {
     animation: none !important;
   }
   .btn { transition: background 0.15s ease; }
-  .back, .tile-icon, .slot, .cal-cell, .etab { transition: none; }
+  .back, .tile-icon, .slot, .cal-cell, .etab, .flow-x, .flow-done { transition: none; }
   .swipe-card, .swipe-btn { transition: none !important; }
   /* Active-tab pill still appears — it just snaps in instead of springing. */
   .navbtn-icon::before { transition: background 0.15s ease, opacity 0.15s ease; }
