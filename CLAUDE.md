@@ -114,6 +114,33 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-21: **"Run it back" (history) now shows post thumbnails (v0.97).**
+  Owner: "why does it not show the pictures?" It never could — `markPostShared`
+  only saved the *text* (caption/location/day/tag), never the composed image
+  (the roadmap's "visual history" gap: the composite is a blob at share time but
+  was discarded). Now:
+  - **Save at share time**: `markPostShared` stashes `post.finalBlob` (the
+    composed image, already set by `buildReview` for single/collage/carousel-
+    cover) into the **Drafts** IndexedDB store (the same one the queue uses),
+    keyed `"hist-" + post.id`, and records that key as `imageId` on the
+    `Store.savePost` record. Guarded by `if (window.Drafts && post.finalBlob)`
+    so it degrades to text-only if IndexedDB/blob is unavailable.
+  - **Render**: `renderHistory` is now async and, per card, does
+    `Drafts.get(p.imageId)` → object URL → `<img>` (revoking the previous batch
+    via a `historyUrls` array, same pattern as `queueUrls`/`stashUrls`). The
+    `.gen-card img` 96×96 cover style already existed (Generate/keeper cards use
+    it), so no new CSS. `openHistory` calls it without await, same as
+    `openQueue`/`renderQueue`.
+  - **Graceful gaps**: posts shared *before* this change (no `imageId`), and any
+    post whose blob is missing after a **backup restore** (restore does
+    `Drafts.clear()` and only re-adds *queue* drafts — history images are NOT in
+    the backup, to keep backup files lean), simply render text-only. Verified:
+    seed-render test + a full New Post → Share → Run-it-back drive both show the
+    thumbnail with the blob actually persisted, 0 console errors.
+  - ⚠️ **Storage note (flagged to owner)**: there's no history pruning — one PNG
+    per shared post accumulates in IndexedDB (history shows the latest 40, but
+    blobs for all shared posts are kept). Fine for a single trader; add an
+    N-cap + `Drafts.remove` on eviction if it ever grows too big.
 - 2026-07-21: **Removed the New Post flow progress bar (v0.96).** Owner: the
   progress bar "pushes everything down so there's less space." Removed the whole
   Duolingo-style row (v0.90) from the New Post flow — the ✕ exit-to-home button,

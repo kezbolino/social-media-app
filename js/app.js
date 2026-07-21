@@ -1471,6 +1471,16 @@
     const cm = $("#celebrateMascot"); // the mascot joins the party
     if (cm) cm.hidden = false; // its own .mascot-win handles the pop+settle
     if (post.caption) Store.recordHookUse(post.caption.hook.id);
+    // Keep the finished image so "Run it back" can show a thumbnail. The
+    // composite blob only exists in memory at share time, so stash it in the
+    // Drafts IndexedDB store (same one the queue uses) keyed by the post id.
+    // History is text-only if this fails (no IndexedDB / no blob) — renderHistory
+    // falls back gracefully.
+    let imageId = null;
+    if (window.Drafts && post.finalBlob) {
+      imageId = "hist-" + post.id;
+      Drafts.save({ id: imageId, blob: post.finalBlob, type: "history" });
+    }
     Store.savePost({
       id: post.id,
       type: post.type,
@@ -1481,6 +1491,7 @@
       item: post.item,
       tag: post.tag, // remembered so "Run it back" can pick a fresh caption
       hookId: post.caption ? post.caption.hook.id : null,
+      imageId, // Drafts key for the composed image thumbnail (may be null)
       status: "shared",
       via: via || "share-sheet",
       created: post.created,
@@ -2764,7 +2775,9 @@
     show("history");
   }
 
-  function renderHistory() {
+  let historyUrls = []; // object URLs for history thumbnails, revoked on re-render
+
+  async function renderHistory() {
     // Most-recent first; only shared posts that carried a caption are reusable.
     const posts = Store.getPosts()
       .filter((p) => p.status === "shared" && p.caption)
@@ -2773,6 +2786,8 @@
       .slice(0, 40);
     const list = $("#historyList");
     const empty = $("#historyEmpty");
+    historyUrls.forEach((u) => URL.revokeObjectURL(u));
+    historyUrls = [];
     list.innerHTML = "";
     if (!posts.length) {
       mascotEmpty(empty, "sad", "No posts yet — once you share a few, they'll show up here to reuse.",
@@ -2780,19 +2795,31 @@
       return;
     }
     empty.hidden = true;
-    posts.forEach((p) => {
+    for (const p of posts) {
       const card = document.createElement("button");
       card.className = "gen-card";
       const when = p.created ? new Date(p.created) : null;
       const meta = [p.location, when && !isNaN(when) ? when.toLocaleDateString() : null]
         .filter(Boolean).join(" · ");
+      // The composed image (saved at share time). Older posts predate the save,
+      // and a restore can leave the reference dangling — either way, no thumb.
+      let thumb = "";
+      if (p.imageId && window.Drafts) {
+        const rec = await Drafts.get(p.imageId);
+        if (rec && rec.blob) {
+          const url = URL.createObjectURL(rec.blob);
+          historyUrls.push(url);
+          thumb = `<img src="${url}" alt="" />`;
+        }
+      }
       card.innerHTML =
+        thumb +
         `<span class="gen-caption">` +
         `<strong style="display:block;color:var(--muted);font-weight:600;font-size:.78rem;margin-bottom:3px;">${escapeAttr(meta || "Past post")}</strong>` +
         `${escapeAttr(p.caption)}</span>`;
       card.addEventListener("click", () => runItBack(p));
       list.appendChild(card);
-    });
+    }
   }
 
   // Start a fresh single post pre-seeded from a past post: same tag/location/day
