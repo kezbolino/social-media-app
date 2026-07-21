@@ -2009,13 +2009,13 @@ html[data-btn="ios"] .swipe-btn:active {
 /* ---- Lists pop in with a quick stagger (generate cards, history, queue,
    settings rows, day schedule). Rebuilt lists replay it — a fast, subtle
    rise so re-renders feel snappy, not laggy. ---- */
-.gen-card, .queue-item, .menu-item, .cal-sched-item {
+.gen-card, .queue-item, .menu-item, .cal-sched-item, .keeper {
   animation: fx-rise 0.32s var(--spring-smooth) backwards;
 }
-:is(.gen-card, .queue-item, .menu-item, .cal-sched-item):nth-child(2) { animation-delay: 0.05s; }
-:is(.gen-card, .queue-item, .menu-item, .cal-sched-item):nth-child(3) { animation-delay: 0.1s; }
-:is(.gen-card, .queue-item, .menu-item, .cal-sched-item):nth-child(4) { animation-delay: 0.15s; }
-:is(.gen-card, .queue-item, .menu-item, .cal-sched-item):nth-child(n + 5) { animation-delay: 0.19s; }
+:is(.gen-card, .queue-item, .menu-item, .cal-sched-item, .keeper):nth-child(2) { animation-delay: 0.05s; }
+:is(.gen-card, .queue-item, .menu-item, .cal-sched-item, .keeper):nth-child(3) { animation-delay: 0.1s; }
+:is(.gen-card, .queue-item, .menu-item, .cal-sched-item, .keeper):nth-child(4) { animation-delay: 0.15s; }
+:is(.gen-card, .queue-item, .menu-item, .cal-sched-item, .keeper):nth-child(n + 5) { animation-delay: 0.19s; }
 
 /* ---- Chips bounce in one after another (details day/location pickers,
    calendar day chips, working-days list). The spring easing overshoots, so
@@ -2064,6 +2064,66 @@ html[data-btn="ios"] .swipe-btn:active {
   from { transform: scale(0.6) rotate(-8deg); }
   to { transform: scale(1) rotate(0); }
 }
+
+/* ---- Swipe deck: the card promoted to the top after a decision "settles" with
+   a small overshoot so it lands rather than just appearing. Applied as a
+   one-shot class in advanceDeck() (removed on animationend). ---- */
+.swipe-card.fx-settle { animation: fx-deck-settle 0.4s var(--spring); }
+@keyframes fx-deck-settle {
+  0% { transform: translateY(10px) scale(0.955); }
+  70% { transform: translateY(-3px) scale(1.015); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* ---- Posted goal ring: when the weekly goal is hit, the ring turns celebratory
+   green and pops once (fired after the fill sweep lands). ---- */
+.posted-ring.is-smashed .ring-fg { stroke: var(--success); }
+.posted-ring.is-smashed { animation: fx-ring-pop 0.5s var(--spring); }
+@keyframes fx-ring-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Pending buttons: a spinning ring before the label while async work runs
+   (share, backup export/restore). Inherits the button's text colour. ---- */
+.btn.is-busy { pointer-events: none; opacity: 0.85; }
+.btn-spin {
+  display: inline-block; width: 1em; height: 1em; margin-right: 0.5em;
+  vertical-align: -0.12em; border: 2px solid currentColor; border-top-color: transparent;
+  border-radius: 50%; animation: fx-spin 0.6s linear infinite;
+}
+@keyframes fx-spin { to { transform: rotate(360deg); } }
+
+/* ---- Touch ripple (iOS/flat button mode only — see fx.js) ---- */
+html[data-btn="ios"] .btn { position: relative; overflow: hidden; }
+.btn-ripple {
+  position: absolute; border-radius: 50%; background: currentColor; opacity: 0.28;
+  transform: scale(0); pointer-events: none; animation: fx-ripple 0.5s ease-out forwards;
+}
+@keyframes fx-ripple { to { transform: scale(1); opacity: 0; } }
+
+/* ---- Thumbnails fade in once decoded, over a soft shimmer placeholder, so
+   history/keeper images don't pop in hard. `.img-in` is added on the <img>'s
+   load event (see markImagesIn in app.js). The shimmer shows only while a card
+   HAS an image that hasn't loaded yet — text-only cards never match, and once
+   the image lands the selector stops matching so the shimmer clears. Degrades
+   gracefully where :has() is unsupported (no shimmer; the fade-in still runs). */
+.gen-card:has(img):not(:has(img.img-in)),
+.keeper:has(img):not(:has(img.img-in)) {
+  background-image: linear-gradient(100deg, var(--panel-2) 30%, var(--panel) 50%, var(--panel-2) 70%);
+  background-size: 200% 100%;
+  animation: fx-shimmer 1.2s linear infinite;
+}
+.gen-card img, .keeper img { opacity: 0; transition: opacity 0.3s ease; }
+.gen-card img.img-in, .keeper img.img-in { opacity: 1; }
+@keyframes fx-shimmer { to { background-position: -200% 0; } }
+
+/* ---- Type tiles launch: on press the whole tile lifts slightly (its icon
+   already tilts) so tapping reads as launching the next screen, which then
+   wipes in (see the shared-axis screen transition). ---- */
+.tile { transition: transform 0.3s var(--spring), border-color 0.15s ease; }
+.tile:active { transform: scale(0.97); transition: transform 0.08s ease; }
 
 /* ---- Home hero CTA: a soft orange pulse-ring invites the first tap. The
    single orange hero is now Generate (btn-accent); New Post is demoted to a
@@ -2263,9 +2323,11 @@ html[data-btn="ios"] .swipe-btn:active {
   .home .greeting, .home .btn, .greeting.fx-pop, .chip.selected, .fx-pop,
   .fx-wiggle, .screen.is-active .tile, .chips .chip, .tag-cloud .tag-chip,
   .chips .chip.selected, .gen-card, .gen-q, .settings-group[open] .sg-body,
-  .queue-item, .menu-item, .cal-sched-item,
+  .queue-item, .menu-item, .cal-sched-item, .keeper,
   .cal-day, .cal-cell.selected, .navbtn.is-active svg, .slot.filled,
   .carousel-thumb, .home .btn-accent::after,
+  .swipe-card.fx-settle, .posted-ring.is-smashed, .btn-ripple,
+  .gen-card:has(img):not(:has(img.img-in)), .keeper:has(img):not(:has(img.img-in)),
   .mascot-bob, .mascot-float, .mascot-sway, .mascot-spin, .mascot-pop,
   .mascot-breathe, .mascot-wave, .mascot-jog, .mascot-win, .mascot-snooze,
   .mascot-mope {
@@ -2280,4 +2342,7 @@ html[data-btn="ios"] .swipe-btn:active {
   .ob-bar { transition: none; }
   /* Success-screen goal ring: shows its final fill immediately, no sweep. */
   .ring-fg { transition: none; }
+  /* Thumbnails: appear immediately, no fade — and never risk being stuck
+     invisible if the load handler is delayed. */
+  .gen-card img, .keeper img { opacity: 1 !important; transition: none; }
 }

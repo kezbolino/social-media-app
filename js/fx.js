@@ -282,6 +282,55 @@
     setTimeout(end, 300); // safety net
   }
 
+  /* ---- busy: put a button into a pending/loading state while async work runs
+     (share, export, restore). Injects a spinning ring before the label and
+     blocks re-taps; call busy(el, false) to restore. The spinner inherits the
+     button's text colour (white on filled, dark on bordered) via currentColor.
+     Safe to call repeatedly. ---- */
+  function busy(el, on) {
+    if (!el) return;
+    const existing = el.querySelector(":scope > .btn-spin");
+    if (on) {
+      el.classList.add("is-busy");
+      el.setAttribute("aria-busy", "true");
+      if (!existing) {
+        const s = document.createElement("span");
+        s.className = "btn-spin";
+        s.setAttribute("aria-hidden", "true");
+        el.insertBefore(s, el.firstChild);
+      }
+    } else {
+      el.classList.remove("is-busy");
+      el.removeAttribute("aria-busy");
+      if (existing) existing.remove();
+    }
+  }
+
+  /* ---- Material-style touch ripple, but only in the flat "iOS" button mode
+     (the default chunky buttons keep their 3D press-plunge, which already reads
+     as touch feedback — a ripple there would fight it). Emanates from the touch
+     point and cleans itself up. ---- */
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (reduceMotion) return;
+      if (document.documentElement.getAttribute("data-btn") !== "ios") return;
+      const btn = e.target.closest(".btn");
+      if (!btn || btn.disabled) return;
+      const r = btn.getBoundingClientRect();
+      const d = Math.max(r.width, r.height);
+      const rip = document.createElement("span");
+      rip.className = "btn-ripple";
+      rip.style.width = rip.style.height = d + "px";
+      rip.style.left = e.clientX - r.left - d / 2 + "px";
+      rip.style.top = e.clientY - r.top - d / 2 + "px";
+      btn.appendChild(rip);
+      rip.addEventListener("animationend", () => rip.remove());
+      setTimeout(() => rip.remove(), 700); // safety net
+    },
+    { passive: true }
+  );
+
   /* ---- wiggle: a cheeky one-shot shimmy (removals, "look here" nudges) ---- */
   function wiggle(el) {
     if (!el || reduceMotion) return;
@@ -300,5 +349,5 @@
     { passive: true }
   );
 
-  window.FX = { confetti, sparkle, pop, wiggle, buzz, heart, collapse, shrink };
+  window.FX = { confetti, sparkle, pop, wiggle, buzz, heart, collapse, shrink, busy };
 })();

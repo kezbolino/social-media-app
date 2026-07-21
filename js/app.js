@@ -140,6 +140,47 @@
     el.hidden = false;
   }
 
+  // Fade thumbnails in once decoded (over the CSS shimmer placeholder). Adds
+  // `.img-in` on load; images already complete (data URLs / cached) get it
+  // straight away so nothing is left invisible.
+  function markImagesIn(container) {
+    if (!container) return;
+    container.querySelectorAll("img").forEach((img) => {
+      if (img.complete && img.naturalWidth) img.classList.add("img-in");
+      else img.addEventListener("load", () => img.classList.add("img-in"), { once: true });
+    });
+  }
+
+  // Native <details> can animate its OPEN (via the sg-reveal keyframe) but snaps
+  // CLOSED. Intercept the summary click on a close and height-animate the body
+  // to 0 first, then commit open=false. Opening is left to the browser (+ CSS).
+  function wireSettingsCollapse() {
+    document.addEventListener("click", (e) => {
+      const head = e.target.closest(".settings-group > .sg-head");
+      if (!head) return;
+      const det = head.parentElement;
+      const body = det.querySelector(".sg-body");
+      if (!body || reduceMotion || !det.open) return; // opening/native path
+      e.preventDefault(); // stop the native instant close
+      const h = body.scrollHeight;
+      body.style.height = h + "px";
+      body.style.overflow = "hidden";
+      void body.offsetWidth;
+      body.style.transition = "height 0.24s var(--ease-premium), opacity 0.2s ease";
+      body.style.height = "0px";
+      body.style.opacity = "0";
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        det.open = false;
+        body.style.height = body.style.overflow = body.style.transition = body.style.opacity = "";
+      };
+      body.addEventListener("transitionend", (ev) => { if (ev.propertyName === "height") finish(); }, { once: true });
+      setTimeout(finish, 300);
+    });
+  }
+
   /* ---------- boot ---------- */
   async function boot() {
     // Tag the page's own initial history entry with whichever screen actually
@@ -300,6 +341,7 @@
     $("#genFolderInput").addEventListener("change", onGenFolderPicked);
     $("#stashInput").addEventListener("change", onStashPicked);
     $("#backupInput").addEventListener("change", onBackupPicked);
+    wireSettingsCollapse();
     $("#obPhotoInput").addEventListener("change", onObPhotosPicked);
     $("#obPlaceInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") { e.preventDefault(); addObPlace(); }
@@ -560,7 +602,7 @@
       // straight back to the tray (no separate preview step). Everything else
       // goes on to the Review/share screen.
       case "caption-next": if (post.fromGenerate) saveCustomiseFromCaption(); else buildReview(); break;
-      case "share": doShare(); break;
+      case "share": doShare(el); break;
       case "go-home": navDir = "back"; post = freshPost(); show("home"); break;
       case "back-to-keepers": returnToKeepers(); break;
       case "add-menu": addMenuItem(); break;
@@ -843,6 +885,7 @@
   async function exportBackup(btn) {
     const status = $("#backupStatus");
     status.textContent = "Building your backup…";
+    if (window.FX && btn) FX.busy(btn, true);
     try {
       const data = await Backup.exportFile();
       const n = data.photos.length + data.drafts.length;
@@ -853,6 +896,8 @@
     } catch (e) {
       status.textContent = "Couldn't build a backup — try again.";
       if (window.FX) FX.wiggle(status);
+    } finally {
+      if (window.FX && btn) FX.busy(btn, false);
     }
   }
 
@@ -1576,16 +1621,29 @@
     }
 
     const arc = $("#postedRingArc");
+    const ring = arc.closest(".posted-ring");
+    // Reset any prior celebration so re-entering the screen re-evaluates it.
+    if (ring) ring.classList.remove("is-smashed");
     const C = 2 * Math.PI * 52;
     arc.style.strokeDasharray = C;
     if (reduceMotion) {
       arc.style.strokeDashoffset = C * (1 - pct);
+      if (smashed && ring) ring.classList.add("is-smashed"); // green, no pop
     } else {
       arc.style.transition = "none";
       arc.style.strokeDashoffset = C; // park empty
       void arc.getBoundingClientRect(); // commit
       arc.style.transition = "";
       requestAnimationFrame(() => { arc.style.strokeDashoffset = C * (1 - pct); });
+      // When the goal's hit, let the fill sweep land (0.9s) then pop the ring
+      // green — a small reward for a full week.
+      if (smashed && ring) {
+        setTimeout(() => {
+          if ($(".screen.is-active")?.dataset.screen !== "posted") return;
+          ring.classList.add("is-smashed");
+          if (window.FX) FX.pop($("#postedCount"));
+        }, 950);
+      }
     }
 
     $("#postedQueued").textContent = Store.getQueue().length;
@@ -1604,10 +1662,16 @@
     show("posted");
   }
 
-  async function doShare() {
+  async function doShare(btn) {
     if (!post.finalBlob) return;
     const blobs = post.finalBlobs && post.finalBlobs.length ? post.finalBlobs : [post.finalBlob];
-    const result = await Sharing.share(blobs, post.captionText, "chuckling-wings-post.png");
+    if (window.FX && btn) FX.busy(btn, true);
+    let result;
+    try {
+      result = await Sharing.share(blobs, post.captionText, "chuckling-wings-post.png");
+    } finally {
+      if (window.FX && btn) FX.busy(btn, false);
+    }
     if (result.cancelled) return; // user backed out of the share sheet
 
     markPostShared("share-sheet");
@@ -2454,9 +2518,12 @@
     if (!d1) return renderDeck(); // fewer than 2 were showing — safe rebuild
     if (d2) d2.className = "swipe-card depth-1";
     d1.className = "swipe-card depth-0";
-    // Premium scale-up reveal (skipped under reduced motion — the class-driven
-    // transform change would otherwise use the bouncier default spring).
-    if (!reduceMotion) d1.style.transition = "transform 0.32s var(--ease-premium)";
+    // The new top card settles into place with a small overshoot so it lands
+    // rather than just appearing (skipped under reduced motion).
+    if (!reduceMotion) {
+      d1.classList.add("fx-settle");
+      d1.addEventListener("animationend", () => d1.classList.remove("fx-settle"), { once: true });
+    }
     attachDrag(d1);
     // Bring a fresh card in at the back (first child = furthest back) if any left.
     const backIndex = deckCursor + 2;
@@ -2600,6 +2667,7 @@
     });
     html += `</div>`;
     wrap.innerHTML = html;
+    markImagesIn(wrap);
     // The invisible native input supplies the picker + value; our own label is
     // what's actually read, so keep it in step with whatever day they pick.
     wrap.querySelectorAll(".keeper-date").forEach((inp) =>
@@ -2853,6 +2921,7 @@
       card.addEventListener("click", () => runItBack(p));
       list.appendChild(card);
     }
+    markImagesIn(list);
   }
 
   // Start a fresh single post pre-seeded from a past post: same tag/location/day

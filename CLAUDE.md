@@ -114,6 +114,66 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-21: **Motion polish pass 2 — the rest of the animation backlog (v0.99).**
+  Owner: "do all of them" (the outstanding items from the v0.98 survey). Built the
+  genuine gaps; several survey items turned out to be **already implemented** and
+  were left as-is (verified, not rebuilt). Same benchmarks (Apple HIG / Material
+  Motion / Duolingo).
+  - **Deck settle-bounce** — the card promoted to the top after a swipe now lands
+    with a small overshoot (`fx-deck-settle` keyframe, one-shot `.fx-settle` class
+    added in `advanceDeck`, removed on `animationend`). Replaced the old plain
+    `transform` transition on the promote. Reduced-motion skips it.
+  - **Goal-ring pop** — on the Posted screen, when the weekly goal is hit the ring
+    turns celebratory green (`--success`) and pops once (`fx-ring-pop`), fired
+    ~950ms after the fill sweep lands (guarded to only fire if still on the
+    `posted` screen); also pops `#postedCount`. `goPosted` clears/re-adds
+    `.is-smashed` each entry. Reduced-motion → green, no pop.
+  - **Keeper cards join the list stagger** — added `.keeper` to the `fx-rise`
+    stagger `:is(...)` group (history's `.gen-card` and the day panel's
+    `.cal-sched-item` were already covered).
+  - **Settings `<details>` close animation** — native `<details>` animates open
+    (`sg-reveal`) but snaps closed; new `wireSettingsCollapse()` intercepts the
+    summary click on a close, height-animates `.sg-body` to 0, then commits
+    `open=false` (`transitionend` on height + a setTimeout safety net). Opening is
+    still the native/CSS path. Skipped under reduced motion.
+  - **Pending button spinner** — `FX.busy(el, on)` injects a spinning ring
+    (`.btn-spin`, inherits the button's text colour via `currentColor`) before the
+    label and blocks re-taps (`.btn.is-busy`). Wired into **Share** (`doShare(btn)`
+    — now takes the button; the `case "share"` passes `el`) and **backup Export**
+    (try/finally). The spinner deliberately keeps spinning under reduced motion
+    (essential progress feedback).
+  - **Thumbnail shimmer + fade-in** — history & keeper images fade in on load
+    (`markImagesIn` adds `.img-in`; `img.complete` images get it immediately so
+    nothing is left invisible) over a CSS shimmer placeholder scoped to
+    `.gen-card:has(img):not(:has(img.img-in))` (and `.keeper`) — text-only cards
+    never match, and the shimmer clears once the image lands. `:has()` degrades
+    gracefully (no shimmer, fade-in still runs). **Safety**: a reduced-motion rule
+    forces `.gen-card img,.keeper img { opacity:1 !important }` so images can never
+    get stuck hidden if a load handler is delayed.
+  - **Touch ripple (iOS/flat button mode only)** — a Material ripple from the
+    touch point (`.btn-ripple`, `fx-ripple`), gated in fx.js to
+    `html[data-btn="ios"]` so the default chunky buttons keep their 3D
+    press-plunge (which already reads as feedback). `html[data-btn="ios"] .btn`
+    gets `position:relative; overflow:hidden`.
+  - **Type-tile launch press** — the whole tile now scales on `:active` (its icon
+    already tilted) so tapping reads as launching, which then wipes in via the
+    shared-axis transition.
+  - **Already done — left as-is (honest audit):** *in-place add animations*
+    (collage `.slot.filled { fx-pop }`, hashtag/day/location chips `fx-chip-in`,
+    carousel thumbs) already existed; *calendar grow-in* (`.cal-cell.selected {
+    fx-pop }` + chip bounce) already existed; *fade-through on tab switches* is
+    already provided by the incoming screen wipe (it fades opacity 0→1); *empty-
+    state mascot idle* already animates (`float`/`snooze`/`mope` by mood). A true
+    **container-transform** on the type tiles and a **dual-screen slide** are still
+    NOT done — both fight the one-screen `display`-toggle architecture (high
+    white-screen-bug risk); the tile press + shared-axis wipe is the safe ceiling.
+  - All new keyframes/classes added to the reduced-motion disable list. Verified
+    headless (Chromium 390×844, playwright-core): `FX.busy` injects/removes the
+    spinner; ripple fires only in iOS mode; details close animates then commits
+    `open=false`; a real swipe gives the new top card `fx-deck-settle`; keepers
+    render with `fx-rise` + `.img-in`; history image gets `.img-in`; the smashed
+    ring computes green (`#2b8a3e`) with `fx-ring-pop`; all 5 new keyframes
+    present; 0 console errors across every run. No new assets → no SW cache bump.
 - 2026-07-21: **Motion polish pass — top 3 from a UI-animation survey (v0.98).**
   Owner asked (after a survey of where animation could make the app "feel" nice,
   benchmarked to Apple HIG / Material Motion / Duolingo) to build the top three.
