@@ -114,7 +114,37 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **`claude/pwa-icon-mascot-hzt8j7` merged and deleted —
+- 2026-07-20 (latest): **Bottom nav centre reverted back to a plain icon
+  button (v0.92) — mascot-in-nav idea parked.** Owner: "I don't think the
+  mascot is quite right yet. I might need to park that idea." This undoes the
+  whole v0.86→v0.89 mascot-nav arc (raised disc → free-floating mascot + AI
+  sparkles → tightened cluster + halo → blue pulse glow), not just the latest
+  tweak — the owner wants the *idea* shelved, not the last iteration polished.
+  - index.html: the `.navbtn-center` Generate button (disc/mascot img/3 sparkle
+    SVGs) is gone; Generate is a normal `.navbtn` again with its original
+    `.navbtn-icon` sparkles-in-a-badge SVG (the same icon it had pre-v0.86,
+    restored verbatim from git history at `6c1b845^`). Tab order reverted too
+    — **Home / New / Calendar / Generate / Settings** (was Home / New /
+    **Generate** / Calendar / Settings once it became the raised centre tab).
+  - css/styles.css: deleted the whole "Raised centre Generate button" block —
+    `.navbtn-center`, `.navbtn-disc` (+ `::before` glow), `.navbtn-mascot`,
+    `.navbtn-star`/`.star-a/b/c`, and the `nav-glow-pulse`/`nav-star-twinkle`
+    keyframes — plus their entries in the `prefers-reduced-motion` disable
+    list. `mascot-breathe` itself was NOT touched — it's a shared keyframe
+    used by other mascot placements (e.g. the Review-screen celebrate mascot),
+    just no longer referenced from the nav.
+  - Nothing else changed: `assets/mascot/happy.svg` stays in the repo (still
+    used elsewhere — e.g. onboarding/empty-states), `#appVersion` alone is the
+    version source (bumped v0.91→v0.92, no SW cache bump needed — no cached
+    asset filenames changed). If the mascot-in-nav idea is revisited later,
+    the removed block is easy to find in git history (commits `6c1b845`,
+    `d09a505`, `112ce18`, `7ea052c`) — but per the owner, don't re-add it
+    without a fresh ask.
+  - Verified headless (Chromium, 390×844, localhost): all 5 tabs render as
+    plain `.navbtn-icon` buttons in the restored order, Generate's icon has no
+    mascot/disc/star elements, tapping it navigates to the Generate screen
+    with no console errors, version reads v0.92. Screenshot eyeballed.
+- 2026-07-20: **`claude/pwa-icon-mascot-hzt8j7` merged and deleted —
   verified fully superseded, no app-facing change.** Owner asked to merge this
   branch (the mascot-transparency PWA-icon fix) and shut it down. Checked
   feature-by-feature before merging (the CLAUDE.md rule at the top of this
