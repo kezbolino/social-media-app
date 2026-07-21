@@ -7,8 +7,8 @@ description: >-
   assets), even if the user just says "commit this", "ship it", "that works,
   save it", or "push it" without naming a checklist. It bumps #appVersion,
   decides whether the service-worker cache needs bumping, verifies the change by
-  driving the real app headless in Chromium (bundled verify.mjs), and records the
-  change in CLAUDE.md — the steps that are easy to half-do from memory and have silently
+  driving the real app headless in Chromium (bundled verify.mjs), and updates the
+  changelog — the steps that are easy to half-do from memory and have silently
   shipped an un-bumped version or a stale SW cache before. Also trigger it when
   asked to "verify", "check it works in the app", or "drive it headless".
 ---
@@ -86,12 +86,12 @@ Report the console-error count and what you asserted. If you eyeballed a
 screenshot, say what you saw.
 
 ## 5. Record the change
-Add an entry to the **top** of the `## Notable changes` list in `CLAUDE.md` (the
-list is reverse-chronological — newest first). Give the what/why/how, the
-verification notes (console-error count, what you asserted, any screenshot you
-eyeballed), and any follow-ups flagged to the owner. Keep it tight; that file
-loads every session. If you're merging a branch, expect the "latest" entry to
-collide the same way the version does — hand-merge and keep BOTH sides.
+- Add a terse one-liner under `## Recent changes` in `CLAUDE.md` (keep it lean —
+  it loads every session).
+- Add the fuller entry (what/why/how, verification notes, any follow-ups) to the
+  top of `CHANGELOG.md` under `## Version history`. If merging, expect the
+  "latest" entry to collide the same way the version does — hand-merge and keep
+  BOTH sides.
 
 ## 6. Commit (and push at end of session)
 Commit with the version bump included. Push before switching devices — unpushed
