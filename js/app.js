@@ -60,15 +60,6 @@
   // sticky actionbar.
   const HUB_SCREENS = new Set(["home", "type", "calendar", "generate", "queue", "history", "settings"]);
 
-  // New Post flow progress bar: the screens collapse into 4 milestones the bar
-  // fills through — Type (25%) → Photo/Edit (50%) → Caption (75%) → Review
-  // (100%). Every flow screen carries a .flow-bar (injected at boot by
-  // initFlowBars, except the type screen which already has one under its
-  // mascot); updateFlowProgress() drives them from show().
-  const FLOW_STEPS = { type: 1, single: 2, collage: 2, carousel: 2, editor: 2, quiz: 3, details: 3, caption: 3, review: 4 };
-  const FLOW_TOTAL = 4;
-  let lastFlowPct = 0; // width the bar animates FROM on the next flow screen
-
   // Direction of the next screen wipe: "back" slides in from the left, anything
   // else from the right. Set by handleBack / go-home just before they show().
   let navDir = "fwd";
@@ -98,7 +89,6 @@
     // hide the bottom nav altogether, so there's nowhere else a dot could show.
     const postBtn = $(".navbtn:not([data-nav])");
     if (postBtn) postBtn.classList.toggle("is-active", screen === "type");
-    updateFlowProgress(screen);
     if (screen === "home") rollGreeting();
     window.scrollTo(0, 0);
     updateGenScrollLock();
@@ -115,47 +105,6 @@
     suppressHistoryPush = false;
   });
 
-  // Advance the New Post progress bar as the user moves through the flow. Each
-  // flow screen has its own .flow-bar; we park the incoming screen's bar at the
-  // width we left the previous step on, force a reflow to commit it with no
-  // animation, then set the target so the fill sweeps (the same park-reflow
-  // trick obGo uses). Going back shrinks it; leaving the flow (any non-flow
-  // screen) resets to 0 so the next post starts empty.
-  function updateFlowProgress(screen) {
-    const step = FLOW_STEPS[screen];
-    if (!step) { lastFlowPct = 0; return; }
-    const pct = (step / FLOW_TOTAL) * 100;
-    const sec = document.querySelector('[data-screen="' + screen + '"]');
-    const bar = sec && sec.querySelector(".flow-bar");
-    if (!bar) { lastFlowPct = pct; return; }
-    bar.style.transition = "none";
-    bar.style.width = lastFlowPct + "%";
-    void bar.offsetWidth; // commit the parked width before re-enabling the sweep
-    bar.style.transition = "";
-    bar.style.width = pct + "%";
-    const track = bar.closest(".flow-track, .quiz-track");
-    if (track) track.classList.toggle("is-complete", step === FLOW_TOTAL);
-    lastFlowPct = pct;
-  }
-
-  // Give every New Post flow screen its own progress bar at boot (the type
-  // screen already has one under its mascot, so skip it). Kept in JS so the
-  // markup isn't duplicated across seven screens.
-  function initFlowBars() {
-    Object.keys(FLOW_STEPS).forEach((screen) => {
-      if (screen === "type") return;
-      const sec = document.querySelector('[data-screen="' + screen + '"]');
-      const pad = sec && sec.querySelector(".pad");
-      if (!pad || pad.querySelector(".flow-bar")) return;
-      const track = document.createElement("div");
-      track.className = "flow-track";
-      track.innerHTML =
-        '<button class="flow-x" data-action="go-home" aria-label="Exit and go home">✕</button>' +
-        '<div class="flow-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="New post progress"><span class="ob-bar flow-bar"></span></div>' +
-        '<span class="flow-done" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" class="flow-done-ring" /><path d="M7 12.5l3 3 7-7" class="flow-done-tick" /></svg></span>';
-      pad.insertBefore(track, pad.firstChild);
-    });
-  }
 
   // Drop a fresh random greeting onto the home screen.
   function rollGreeting() {
@@ -233,7 +182,6 @@
       return;
     }
     wireEvents();
-    initFlowBars();
     applyFont(Store.getFont());
     applyButtonStyle(Store.getButtonStyle());
     rollGreeting();
@@ -653,12 +601,6 @@
     if (back) back.dataset.back = backTo;
     const h2 = document.querySelector('[data-screen="editor"] h2');
     if (h2) h2.textContent = title;
-    // The New Post progress bar only belongs on the New Post flow. Editing a
-    // Generate keeper reaches the editor with back target "generate" — that's
-    // a side trip, not the flow — so hide the bar there; keep it for the
-    // normal single/collage flow.
-    const track = document.querySelector('[data-screen="editor"] .flow-track');
-    if (track) track.hidden = backTo === "generate";
   }
 
   // A cheeky-hook cycler for the editor's Text tool — behaves like the caption
@@ -1529,6 +1471,16 @@
     const cm = $("#celebrateMascot"); // the mascot joins the party
     if (cm) cm.hidden = false; // its own .mascot-win handles the pop+settle
     if (post.caption) Store.recordHookUse(post.caption.hook.id);
+    // Keep the finished image so "Run it back" can show a thumbnail. The
+    // composite blob only exists in memory at share time, so stash it in the
+    // Drafts IndexedDB store (same one the queue uses) keyed by the post id.
+    // History is text-only if this fails (no IndexedDB / no blob) — renderHistory
+    // falls back gracefully.
+    let imageId = null;
+    if (window.Drafts && post.finalBlob) {
+      imageId = "hist-" + post.id;
+      Drafts.save({ id: imageId, blob: post.finalBlob, type: "history" });
+    }
     Store.savePost({
       id: post.id,
       type: post.type,
@@ -1539,6 +1491,7 @@
       item: post.item,
       tag: post.tag, // remembered so "Run it back" can pick a fresh caption
       hookId: post.caption ? post.caption.hook.id : null,
+      imageId, // Drafts key for the composed image thumbnail (may be null)
       status: "shared",
       via: via || "share-sheet",
       created: post.created,
@@ -2822,7 +2775,9 @@
     show("history");
   }
 
-  function renderHistory() {
+  let historyUrls = []; // object URLs for history thumbnails, revoked on re-render
+
+  async function renderHistory() {
     // Most-recent first; only shared posts that carried a caption are reusable.
     const posts = Store.getPosts()
       .filter((p) => p.status === "shared" && p.caption)
@@ -2831,6 +2786,8 @@
       .slice(0, 40);
     const list = $("#historyList");
     const empty = $("#historyEmpty");
+    historyUrls.forEach((u) => URL.revokeObjectURL(u));
+    historyUrls = [];
     list.innerHTML = "";
     if (!posts.length) {
       mascotEmpty(empty, "sad", "No posts yet — once you share a few, they'll show up here to reuse.",
@@ -2838,19 +2795,31 @@
       return;
     }
     empty.hidden = true;
-    posts.forEach((p) => {
+    for (const p of posts) {
       const card = document.createElement("button");
       card.className = "gen-card";
       const when = p.created ? new Date(p.created) : null;
       const meta = [p.location, when && !isNaN(when) ? when.toLocaleDateString() : null]
         .filter(Boolean).join(" · ");
+      // The composed image (saved at share time). Older posts predate the save,
+      // and a restore can leave the reference dangling — either way, no thumb.
+      let thumb = "";
+      if (p.imageId && window.Drafts) {
+        const rec = await Drafts.get(p.imageId);
+        if (rec && rec.blob) {
+          const url = URL.createObjectURL(rec.blob);
+          historyUrls.push(url);
+          thumb = `<img src="${url}" alt="" />`;
+        }
+      }
       card.innerHTML =
+        thumb +
         `<span class="gen-caption">` +
         `<strong style="display:block;color:var(--muted);font-weight:600;font-size:.78rem;margin-bottom:3px;">${escapeAttr(meta || "Past post")}</strong>` +
         `${escapeAttr(p.caption)}</span>`;
       card.addEventListener("click", () => runItBack(p));
       list.appendChild(card);
-    });
+    }
   }
 
   // Start a fresh single post pre-seeded from a past post: same tag/location/day

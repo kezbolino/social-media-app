@@ -114,6 +114,109 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-21: **"Run it back" (history) now shows post thumbnails (v0.97).**
+  Owner: "why does it not show the pictures?" It never could — `markPostShared`
+  only saved the *text* (caption/location/day/tag), never the composed image
+  (the roadmap's "visual history" gap: the composite is a blob at share time but
+  was discarded). Now:
+  - **Save at share time**: `markPostShared` stashes `post.finalBlob` (the
+    composed image, already set by `buildReview` for single/collage/carousel-
+    cover) into the **Drafts** IndexedDB store (the same one the queue uses),
+    keyed `"hist-" + post.id`, and records that key as `imageId` on the
+    `Store.savePost` record. Guarded by `if (window.Drafts && post.finalBlob)`
+    so it degrades to text-only if IndexedDB/blob is unavailable.
+  - **Render**: `renderHistory` is now async and, per card, does
+    `Drafts.get(p.imageId)` → object URL → `<img>` (revoking the previous batch
+    via a `historyUrls` array, same pattern as `queueUrls`/`stashUrls`). The
+    `.gen-card img` 96×96 cover style already existed (Generate/keeper cards use
+    it), so no new CSS. `openHistory` calls it without await, same as
+    `openQueue`/`renderQueue`.
+  - **Graceful gaps**: posts shared *before* this change (no `imageId`), and any
+    post whose blob is missing after a **backup restore** (restore does
+    `Drafts.clear()` and only re-adds *queue* drafts — history images are NOT in
+    the backup, to keep backup files lean), simply render text-only. Verified:
+    seed-render test + a full New Post → Share → Run-it-back drive both show the
+    thumbnail with the blob actually persisted, 0 console errors.
+  - ⚠️ **Storage note (flagged to owner)**: there's no history pruning — one PNG
+    per shared post accumulates in IndexedDB (history shows the latest 40, but
+    blobs for all shared posts are kept). Fine for a single trader; add an
+    N-cap + `Drafts.remove` on eviction if it ever grows too big.
+- 2026-07-21: **Removed the New Post flow progress bar (v0.96).** Owner: the
+  progress bar "pushes everything down so there's less space." Removed the whole
+  Duolingo-style row (v0.90) from the New Post flow — the ✕ exit-to-home button,
+  the progress track, AND the green completion tick — since keeping just the row
+  wouldn't reclaim the vertical space that was the point. Exiting a post is still
+  possible via the header's `‹` back arrow (steps back through the flow); the
+  one-tap ✕-to-home is gone (flagged to owner — easy to re-add just the ✕ if
+  wanted).
+  - **index.html**: dropped the `.quiz-track` block from the type screen (kept
+    the `.quiz-ask` mascot + speech-bubble header).
+  - **js/app.js**: deleted `FLOW_STEPS`/`FLOW_TOTAL`/`lastFlowPct`,
+    `updateFlowProgress()` (+ its call in `show()`), `initFlowBars()` (+ its call
+    in `boot()`), and the now-dead `.flow-track` hide logic in
+    `setEditorChrome` (the Generate-keeper side-trip no longer needs to hide a
+    bar that isn't there).
+  - **css/styles.css**: removed all flow-bar rules — `.quiz-track`,
+    `.flow-track`, `.flow-x`, `.flow-progress`, `.flow-bar`(+`::after`),
+    `.flow-done`(+ring/tick + `.is-complete`) — and their `.flow-x`/`.flow-done`
+    entries from the reduced-motion list. `.ob-bar`/`.ob-progress`/
+    `.gen-brief-track` (onboarding + Generate-brief bars) are untouched — this
+    only removed the New Post flow bar, as asked.
+  - Verified headless: New Post lands on `type` with no `.flow-bar`/`.quiz-track`
+    present, no injected bars on single/editor/caption/review, mascot bubble
+    intact, 0 console errors; screenshot eyeballed (tiles sit higher, more room).
+- 2026-07-21: **Text-tool fonts re-matched to Instagram Story styles
+  (v0.95).** Owner asked to "add Instagram fonts." IG's real Story typefaces
+  are proprietary/undistributable, so — like the rest of the repo — we bundle
+  free **OFL** faces chosen to look *close* to each IG style, not IG's actual
+  files. Swapped all 5 `TEXT_STYLES` families (js/editor.js):
+  - Classic: Poppins → **Inter 600** (neutral humanist, IG Classic is a clean
+    neutral sans, not round-geometric).
+  - Modern: Oswald caps/condensed → **Jost 400** (thin elegant geometric; IG
+    Modern is light/wide, so dropped `upper` + eased `spacing` 0.06→0.04 — the
+    old condensed-CAPS was the worst mismatch).
+  - Neon: Pacifico → **Dancing Script 700** (flowing handwritten signature;
+    glow unchanged, still only shows when fill = none).
+  - Type: Space Mono → **Courier Prime 700** (true typewriter ≈ IG's American
+    Typewriter, vs the old techy geometric mono).
+  - Strong: Poppins 800 → **Archivo Black** (single weight 400 = black; heavy
+    neo-grotesque; still `highlightDefault: "solid"`).
+  - **Files**: `assets/fonts/{inter-600,jost-400,dancingscript-700,
+    courierprime-700,archivoblack-400}.woff2` — grabbed as the already-subset
+    **latin** woff2 straight off the Google Fonts css2 API (browser UA → take
+    the `/* latin */` block's URL), no fonttools needed. Added matching
+    `@font-face` blocks in styles.css and updated `ensureTextFonts()`'s
+    `document.fonts.load` preload list to the 5 new specs. Multi-word families
+    are quoted in the `family` string (`"'Dancing Script'"` etc.) so
+    `ctx.font`/the chip preview stay valid.
+  - **Removed** the now-unused Oswald/Pacifico/Space Mono `@font-face` blocks +
+    their 3 woff2 files (grepped: 0 remaining refs anywhere). SW cache
+    `v9`→`v10` so installs purge the old fonts and fetch the new ones.
+  - Verified headless: `document.fonts.check` true for all 5 new specs, every
+    style chip applies with no render error, 0 console errors, 0 failed
+    requests; rendered a 5-style sample PNG and eyeballed the glyphs (each
+    face distinct + on-look).
+- 2026-07-21: **Text tool: fill-by-default + removed the 🎯 eyedropper
+  (v0.94).** Owner: new text should come with a fill already on, and the
+  colour-picker bullseye "does nothing."
+  - **Default fill on new text**: `createOverlay` (js/editor.js) now seeds
+    `highlight: "solid"` instead of `"none"`, so `addOverlay`/the "add" text
+    action drops in a filled box straight away (white box + auto-contrast dark
+    text at the default white colour). The Fill button still cycles
+    none→solid→semi as before — this only changes the starting state. Verified
+    headless: adding text shows `#txtHighlight` = "▣ Colour fill".
+  - **Removed the eyedropper** (`data-eyedrop` 🎯 swatch): deleted the button
+    from `buildTextControls`, its branch in the `txtSwatches` click handler, the
+    `sampleMode` state var + its reset in `open()`, the sample-tap branch in
+    `onPointerDown`, the `sampleColourAt()` helper, and the dead
+    `#editorCanvas.sampling` CSS rule. The 🎨 custom-colour picker and the preset
+    swatches are untouched. Verified headless: no `[data-eyedrop]` in the DOM,
+    0 console errors.
+  - **Re: "where are the fonts classic/modern/neon from?"** — they're NOT
+    Instagram's actual fonts (those are proprietary). `TEXT_STYLES`
+    (js/editor.js) is *named* to mimic IG Stories' text styles and maps to
+    bundled free Google Fonts. (The specific faces were re-matched closer to IG
+    in v0.95 above — see that entry for the current mapping.)
 - 2026-07-21: **Branch cleanup — all stale branches deleted, only `main`
   remains.** After the v0.92/v0.93 work merged straight to `main`, the owner
   cleared out every leftover `claude/*` and `archive/*` branch in the GitHub

@@ -32,26 +32,41 @@
 }
 
 /* Text-tool style fonts (mimicking Instagram Stories text styles). */
+/* Text-tool "Instagram Story" style faces (js/editor.js TEXT_STYLES). All OFL. */
 @font-face {
-  font-family: "Oswald";
+  font-family: "Inter";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("../assets/fonts/oswald-600.woff2") format("woff2");
+  src: url("../assets/fonts/inter-600.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Pacifico";
+  font-family: "Jost";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("../assets/fonts/pacifico-400.woff2") format("woff2");
+  src: url("../assets/fonts/jost-400.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Space Mono";
+  font-family: "Dancing Script";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("../assets/fonts/spacemono-700.woff2") format("woff2");
+  src: url("../assets/fonts/dancingscript-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Courier Prime";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/courierprime-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Archivo Black";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/archivoblack-400.woff2") format("woff2");
 }
 
 /* App-wide font options (Settings → 🔤 App font) — bundled locally so they
@@ -689,94 +704,10 @@ input[type="range"] { touch-action: none; }
 .tile-text small { color: var(--muted); margin-top: 2px; }
 
 /* ---- "What kind of post?" question header (Brilliant-style) ----
-   Progress bar (reuses the .ob-bar fill on a light track like the Generate
-   brief) + the mascot asking the question in a speech bubble.
-   Duolingo-style row: X (exits the whole flow to home, data-action="go-home"
-   — distinct from the header's "‹" back arrow, which still steps back one
-   screen unchanged) — track — completion badge. Kept as one flex row so the
-   three pieces line up exactly like the reference; the track itself moved to
-   .flow-progress below (the old height/bg/shadow/overflow this selector used
-   to carry directly). */
-.quiz-track,
-.flow-track {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.quiz-track { margin: 4px 0 16px; }
-/* Standalone flow bar (injected at the top of every other New Post screen). */
-.flow-track { margin: 2px 0 16px; }
-.flow-x {
-  flex: 0 0 auto;
-  background: none;
-  border: none;
-  min-width: 40px;
-  min-height: 40px;
-  margin-left: -8px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  font-size: 1.05rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-}
-.flow-x:active { transform: scale(0.88); }
-.flow-progress {
-  flex: 1 1 auto;
-  height: 14px;
-  border-radius: 999px;
-  background: rgba(10, 77, 161, 0.14);
-  box-shadow: inset 0 1px 2px rgba(10, 77, 161, 0.2);
-  overflow: hidden;
-}
-/* A thin light sheen line inset into the top of the fill — NOT the full
-   glossy top-to-bottom gradient the owner rejected for .ob-bar on
-   2026-07-16 (see CLAUDE.md); this is a single subtle highlight stripe,
-   scoped to .flow-bar only so the onboarding/Generate-brief bars (plain
-   .ob-bar) are untouched. */
-.flow-bar { position: relative; overflow: hidden; }
-.flow-bar::after {
-  content: "";
-  position: absolute;
-  left: 6px;
-  right: 6px;
-  top: 3px;
-  height: 3px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.55);
-}
-/* Completion badge — a green tick (owner's pick, 2026-07-20), muted until the
-   flow's last step (Review) then pops in full colour. Built as an inline SVG
-   (not an emoji) so the green is the app's own --success token — the same
-   green already used for "posted"/"kept" everywhere else (calendar posted
-   ring, swipe-keep badge/heart) — instead of whatever a platform's emoji font
-   happens to render, and so it retints for free if a --success-changing theme
-   is ever switched on. */
-.flow-done {
-  flex: 0 0 auto;
-  display: flex;
-  opacity: 0.32;
-  filter: grayscale(1);
-  transform: scale(0.9);
-  transition: opacity 0.3s var(--ease-premium), transform 0.3s var(--ease-premium), filter 0.3s var(--ease-premium);
-}
-.flow-done-ring { fill: var(--success); }
-.flow-done-tick {
-  fill: none;
-  stroke: #fff;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.flow-track.is-complete .flow-done,
-.quiz-track.is-complete .flow-done {
-  opacity: 1;
-  filter: none;
-  transform: scale(1.15);
-}
+   The mascot asking the question in a speech bubble. (The Duolingo-style
+   progress-bar row that used to sit above this — X exit / track / green
+   completion tick — was removed on 2026-07-21 because it pushed the flow
+   content down; the header's "‹" back arrow still exits the flow.) */
 .quiz-ask {
   display: flex;
   align-items: center;
@@ -1094,7 +1025,6 @@ input[type="range"] { touch-action: none; }
 .text-panel.sticker-mode .sticker-target-row { display: flex; gap: 8px; margin-bottom: 10px; }
 .text-panel.sticker-mode .sticker-tip { display: block; }
 .sticker-target-row .chip { flex: 1; text-align: center; }
-#editorCanvas.sampling { cursor: crosshair; }
 
 /* Text-only editor mode (collage captions): hide crop + filter/adjust UI. */
 .mode-text #editorAspect,
@@ -2329,7 +2259,7 @@ html[data-btn="ios"] .swipe-btn:active {
     animation: none !important;
   }
   .btn { transition: background 0.15s ease; }
-  .back, .tile-icon, .slot, .cal-cell, .etab, .flow-x, .flow-done { transition: none; }
+  .back, .tile-icon, .slot, .cal-cell, .etab { transition: none; }
   .swipe-card, .swipe-btn { transition: none !important; }
   /* Active-tab pill still appears — it just snaps in instead of springing. */
   .navbtn-icon::before { transition: background 0.15s ease, opacity 0.15s ease; }
