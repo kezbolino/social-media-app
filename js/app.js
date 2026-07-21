@@ -60,15 +60,6 @@
   // sticky actionbar.
   const HUB_SCREENS = new Set(["home", "type", "calendar", "generate", "queue", "history", "settings"]);
 
-  // New Post flow progress bar: the screens collapse into 4 milestones the bar
-  // fills through — Type (25%) → Photo/Edit (50%) → Caption (75%) → Review
-  // (100%). Every flow screen carries a .flow-bar (injected at boot by
-  // initFlowBars, except the type screen which already has one under its
-  // mascot); updateFlowProgress() drives them from show().
-  const FLOW_STEPS = { type: 1, single: 2, collage: 2, carousel: 2, editor: 2, quiz: 3, details: 3, caption: 3, review: 4 };
-  const FLOW_TOTAL = 4;
-  let lastFlowPct = 0; // width the bar animates FROM on the next flow screen
-
   // Direction of the next screen wipe: "back" slides in from the left, anything
   // else from the right. Set by handleBack / go-home just before they show().
   let navDir = "fwd";
@@ -98,7 +89,6 @@
     // hide the bottom nav altogether, so there's nowhere else a dot could show.
     const postBtn = $(".navbtn:not([data-nav])");
     if (postBtn) postBtn.classList.toggle("is-active", screen === "type");
-    updateFlowProgress(screen);
     if (screen === "home") rollGreeting();
     window.scrollTo(0, 0);
     updateGenScrollLock();
@@ -115,47 +105,6 @@
     suppressHistoryPush = false;
   });
 
-  // Advance the New Post progress bar as the user moves through the flow. Each
-  // flow screen has its own .flow-bar; we park the incoming screen's bar at the
-  // width we left the previous step on, force a reflow to commit it with no
-  // animation, then set the target so the fill sweeps (the same park-reflow
-  // trick obGo uses). Going back shrinks it; leaving the flow (any non-flow
-  // screen) resets to 0 so the next post starts empty.
-  function updateFlowProgress(screen) {
-    const step = FLOW_STEPS[screen];
-    if (!step) { lastFlowPct = 0; return; }
-    const pct = (step / FLOW_TOTAL) * 100;
-    const sec = document.querySelector('[data-screen="' + screen + '"]');
-    const bar = sec && sec.querySelector(".flow-bar");
-    if (!bar) { lastFlowPct = pct; return; }
-    bar.style.transition = "none";
-    bar.style.width = lastFlowPct + "%";
-    void bar.offsetWidth; // commit the parked width before re-enabling the sweep
-    bar.style.transition = "";
-    bar.style.width = pct + "%";
-    const track = bar.closest(".flow-track, .quiz-track");
-    if (track) track.classList.toggle("is-complete", step === FLOW_TOTAL);
-    lastFlowPct = pct;
-  }
-
-  // Give every New Post flow screen its own progress bar at boot (the type
-  // screen already has one under its mascot, so skip it). Kept in JS so the
-  // markup isn't duplicated across seven screens.
-  function initFlowBars() {
-    Object.keys(FLOW_STEPS).forEach((screen) => {
-      if (screen === "type") return;
-      const sec = document.querySelector('[data-screen="' + screen + '"]');
-      const pad = sec && sec.querySelector(".pad");
-      if (!pad || pad.querySelector(".flow-bar")) return;
-      const track = document.createElement("div");
-      track.className = "flow-track";
-      track.innerHTML =
-        '<button class="flow-x" data-action="go-home" aria-label="Exit and go home">✕</button>' +
-        '<div class="flow-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="New post progress"><span class="ob-bar flow-bar"></span></div>' +
-        '<span class="flow-done" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" class="flow-done-ring" /><path d="M7 12.5l3 3 7-7" class="flow-done-tick" /></svg></span>';
-      pad.insertBefore(track, pad.firstChild);
-    });
-  }
 
   // Drop a fresh random greeting onto the home screen.
   function rollGreeting() {
@@ -233,7 +182,6 @@
       return;
     }
     wireEvents();
-    initFlowBars();
     applyFont(Store.getFont());
     applyButtonStyle(Store.getButtonStyle());
     rollGreeting();
@@ -653,12 +601,6 @@
     if (back) back.dataset.back = backTo;
     const h2 = document.querySelector('[data-screen="editor"] h2');
     if (h2) h2.textContent = title;
-    // The New Post progress bar only belongs on the New Post flow. Editing a
-    // Generate keeper reaches the editor with back target "generate" — that's
-    // a side trip, not the flow — so hide the bar there; keep it for the
-    // normal single/collage flow.
-    const track = document.querySelector('[data-screen="editor"] .flow-track');
-    if (track) track.hidden = backTo === "generate";
   }
 
   // A cheeky-hook cycler for the editor's Text tool — behaves like the caption

@@ -114,6 +114,30 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-21: **Removed the New Post flow progress bar (v0.96).** Owner: the
+  progress bar "pushes everything down so there's less space." Removed the whole
+  Duolingo-style row (v0.90) from the New Post flow — the ✕ exit-to-home button,
+  the progress track, AND the green completion tick — since keeping just the row
+  wouldn't reclaim the vertical space that was the point. Exiting a post is still
+  possible via the header's `‹` back arrow (steps back through the flow); the
+  one-tap ✕-to-home is gone (flagged to owner — easy to re-add just the ✕ if
+  wanted).
+  - **index.html**: dropped the `.quiz-track` block from the type screen (kept
+    the `.quiz-ask` mascot + speech-bubble header).
+  - **js/app.js**: deleted `FLOW_STEPS`/`FLOW_TOTAL`/`lastFlowPct`,
+    `updateFlowProgress()` (+ its call in `show()`), `initFlowBars()` (+ its call
+    in `boot()`), and the now-dead `.flow-track` hide logic in
+    `setEditorChrome` (the Generate-keeper side-trip no longer needs to hide a
+    bar that isn't there).
+  - **css/styles.css**: removed all flow-bar rules — `.quiz-track`,
+    `.flow-track`, `.flow-x`, `.flow-progress`, `.flow-bar`(+`::after`),
+    `.flow-done`(+ring/tick + `.is-complete`) — and their `.flow-x`/`.flow-done`
+    entries from the reduced-motion list. `.ob-bar`/`.ob-progress`/
+    `.gen-brief-track` (onboarding + Generate-brief bars) are untouched — this
+    only removed the New Post flow bar, as asked.
+  - Verified headless: New Post lands on `type` with no `.flow-bar`/`.quiz-track`
+    present, no injected bars on single/editor/caption/review, mascot bubble
+    intact, 0 console errors; screenshot eyeballed (tiles sit higher, more room).
 - 2026-07-21: **Text-tool fonts re-matched to Instagram Story styles
   (v0.95).** Owner asked to "add Instagram fonts." IG's real Story typefaces
   are proprietary/undistributable, so — like the rest of the repo — we bundle
