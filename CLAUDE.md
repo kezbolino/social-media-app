@@ -114,6 +114,28 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-21: **Text tool: fill-by-default + removed the 🎯 eyedropper
+  (v0.94).** Owner: new text should come with a fill already on, and the
+  colour-picker bullseye "does nothing."
+  - **Default fill on new text**: `createOverlay` (js/editor.js) now seeds
+    `highlight: "solid"` instead of `"none"`, so `addOverlay`/the "add" text
+    action drops in a filled box straight away (white box + auto-contrast dark
+    text at the default white colour). The Fill button still cycles
+    none→solid→semi as before — this only changes the starting state. Verified
+    headless: adding text shows `#txtHighlight` = "▣ Colour fill".
+  - **Removed the eyedropper** (`data-eyedrop` 🎯 swatch): deleted the button
+    from `buildTextControls`, its branch in the `txtSwatches` click handler, the
+    `sampleMode` state var + its reset in `open()`, the sample-tap branch in
+    `onPointerDown`, the `sampleColourAt()` helper, and the dead
+    `#editorCanvas.sampling` CSS rule. The 🎨 custom-colour picker and the preset
+    swatches are untouched. Verified headless: no `[data-eyedrop]` in the DOM,
+    0 console errors.
+  - **Re: "where are the fonts classic/modern/neon from?"** — they're NOT
+    Instagram's actual fonts. `TEXT_STYLES` (js/editor.js) is *named* to mimic
+    IG Stories' text styles but maps to the app's own bundled Google Fonts:
+    Classic=Poppins, Modern=Oswald (caps+tracking), Neon=Pacifico (script+glow),
+    Type=Space Mono, Strong=Poppins 800. All local woff2 (offline-first), no IG
+    licensing involved.
 - 2026-07-21: **Branch cleanup — all stale branches deleted, only `main`
   remains.** After the v0.92/v0.93 work merged straight to `main`, the owner
   cleared out every leftover `claude/*` and `archive/*` branch in the GitHub

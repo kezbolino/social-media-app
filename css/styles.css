@@ -1094,7 +1094,6 @@ input[type="range"] { touch-action: none; }
 .text-panel.sticker-mode .sticker-target-row { display: flex; gap: 8px; margin-bottom: 10px; }
 .text-panel.sticker-mode .sticker-tip { display: block; }
 .sticker-target-row .chip { flex: 1; text-align: center; }
-#editorCanvas.sampling { cursor: crosshair; }
 
 /* Text-only editor mode (collage captions): hide crop + filter/adjust UI. */
 .mode-text #editorAspect,

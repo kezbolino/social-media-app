@@ -55,7 +55,6 @@ const Editor = (() => {
   let uidCounter = 0;
   let modeText = false; // text-only mode (used for collages: no crop/filter)
   let bgRatio = 1; // background image aspect in text-only mode
-  let sampleMode = false; // eyedropper: next tap samples a colour from the photo
   let stickerFillMode = false; // sticker colour target: false = letters, true = box fill
   let hookProvider = null; // () => next hook text, supplied by the app
   let zoom = 1; // 1..3
@@ -125,11 +124,6 @@ const Editor = (() => {
       if (b) setOverlayProp("style", b.dataset.style);
     });
     els.txtSwatches.addEventListener("click", (e) => {
-      if (e.target.closest("[data-eyedrop]")) {
-        sampleMode = !sampleMode;
-        els.canvas.classList.toggle("sampling", sampleMode);
-        return;
-      }
       if (e.target.closest("[data-more]")) {
         const ov = selectedOverlay();
         if (ov && els.colorInput) { els.colorInput.value = toHex6(activeColorHex()); els.colorInput.click(); }
@@ -174,7 +168,6 @@ const Editor = (() => {
     src = image;
     bgRatio = src.width / src.height;
     els.screen.classList.toggle("mode-text", modeText);
-    sampleMode = false;
     stickerFillMode = false;
     if (state) {
       aspectKey = state.aspectKey || "1:1";
@@ -380,14 +373,6 @@ const Editor = (() => {
     const pt = localXY(e);
     pointers.set(e.pointerId, pt);
 
-    // Eyedropper: the next tap samples a colour from the photo.
-    if (sampleMode && pointers.size === 1) {
-      sampleColourAt(pt);
-      sampleMode = false;
-      els.canvas.classList.remove("sampling");
-      return;
-    }
-
     if (pointers.size === 2) {
       const sel = selectedOverlay();
       const [a, b] = [...pointers.values()];
@@ -443,16 +428,6 @@ const Editor = (() => {
   function clamp01(v) { return Math.min(1, Math.max(0, v)); }
   function angleOf(a, b) { return Math.atan2(b.y - a.y, b.x - a.x); }
 
-  function sampleColourAt(pt) {
-    try {
-      const dpr = window.devicePixelRatio || 1;
-      const d = els.canvas.getContext("2d").getImageData(
-        Math.round(pt.x * dpr), Math.round(pt.y * dpr), 1, 1
-      ).data;
-      const hex = "#" + [d[0], d[1], d[2]].map((n) => n.toString(16).padStart(2, "0")).join("");
-      applyChosenColor(hex);
-    } catch (e) { /* getImageData can fail on tainted canvases; ignore */ }
-  }
   function dist(a, b) {
     return Math.hypot(a.x - b.x, a.y - b.y);
   }
@@ -515,7 +490,6 @@ const Editor = (() => {
       SWATCHES.map((c) =>
         `<button class="swatch" data-swatch="${c}" style="background:${c}" aria-label="colour ${c}"></button>`
       ).join("") +
-      `<button class="swatch swatch-tool" data-eyedrop aria-label="Pick colour from photo">🎯</button>` +
       `<button class="swatch swatch-tool" data-more aria-label="More colours">🎨</button>`;
   }
 
@@ -577,7 +551,7 @@ const Editor = (() => {
   function createOverlay(text) {
     const ov = {
       id: "ov" + ++uidCounter, text: text || "", style: "classic",
-      color: "#ffffff", align: "center", highlight: "none",
+      color: "#ffffff", align: "center", highlight: "solid",
       cx: 0.5, cy: 0.5, size: 9, rot: 0,
     };
     overlays.push(ov);
