@@ -1448,6 +1448,22 @@ input[type="range"] { touch-action: none; }
    heart off-centre per device). SVGs are geometry-centred, identical everywhere. */
 .swipe-ico { display: block; }
 .gen-deck-hint { text-align: center; margin: 2px 0 8px; }
+/* Inline "start over" on the deck hint line — a link, not a chunky button, so
+   it adds no height to the scroll-locked deck panel. */
+.gen-startover-link {
+  background: none;
+  border: 0;
+  padding: 0 0 0 4px;
+  font: inherit;
+  color: inherit;
+  opacity: 0.85;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+/* Deliberate restart from the keepers tray — a full-width ghost sitting under
+   the kept list, clear of the per-keeper Post/Edit/Queue actions. */
+.gen-startover-btn { display: block; margin: 16px auto 0; }
 .gen-pool-note { text-align: center; margin: 8px 0 0; font-size: 0.82rem; }
 
 /* keepers tray */
