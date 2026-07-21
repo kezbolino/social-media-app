@@ -114,6 +114,22 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-21: **Swipe-deck ♥/✕ buttons → inline SVG icons (v1.00).** Owner: the
+  heart icon on the Generate swipe cards was misaligned. Root cause: the two
+  round action buttons (`.swipe-btn.like`/`.nope`, index.html) used the **text
+  glyphs** ♥ (U+2665) and ✕ (U+2715), but the bundled fonts are **Latin-subset
+  only** (see the v0.59/v0.95 font notes) — those code points aren't in the
+  font, so they fell back to a system/emoji font whose vertical metrics sit the
+  heart off-centre inside the circle, differently per device. Replaced both
+  glyphs with **inline `<svg>` icons** (a filled heart path + a 2-line X),
+  `fill/stroke: currentColor` so the existing `.like { color: --success }` /
+  `.nope { color: --error }` tinting is unchanged; new `.swipe-ico { display:
+  block }` rule. Icons are geometry-centred (24-viewBox, both centred on 12,12)
+  and render identically everywhere — no font dependency. Same class of fix the
+  app already uses for the nav/post-type icons. Verified headless: heart ink
+  centres at Y=121/X=119.5, ✕ at 119.5/119.5 (of a 240px box, i.e. dead centre),
+  tint computes to the success green / error red, 0 console errors. No SW cache
+  bump (no asset filenames changed — the SVGs are inline in index.html).
 - 2026-07-21: **Motion polish pass 2 — the rest of the animation backlog (v0.99).**
   Owner: "do all of them" (the outstanding items from the v0.98 survey). Built the
   genuine gaps; several survey items turned out to be **already implemented** and
