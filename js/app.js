@@ -227,10 +227,10 @@
       }
 
       const stashRemove = e.target.closest("[data-stash-remove]");
-      if (stashRemove) return removeStashPhoto(stashRemove.dataset.stashRemove);
+      if (stashRemove) return removeStashPhoto(stashRemove.dataset.stashRemove, stashRemove.closest(".stash-thumb"));
 
       const calRemove = e.target.closest("[data-cal-remove]");
-      if (calRemove) return removeWorkday(calRemove.dataset.calRemove);
+      if (calRemove) return removeWorkday(calRemove.dataset.calRemove, calRemove.closest(".chip"));
 
       const calJump = e.target.closest("[data-cal-day]");
       if (calJump) return selectCalDay(calJump.dataset.calDay);
@@ -249,10 +249,16 @@
 
       const qDel = e.target.closest("[data-q-del]");
       if (qDel) {
-        const it = Store.getQueue().find((x) => x.id === qDel.dataset.qDel);
-        if (it && it.draftId && window.Drafts) Drafts.remove(it.draftId);
-        Store.removeQueueItem(qDel.dataset.qDel);
-        return renderQueue();
+        const doRemove = () => {
+          const it = Store.getQueue().find((x) => x.id === qDel.dataset.qDel);
+          if (it && it.draftId && window.Drafts) Drafts.remove(it.draftId);
+          Store.removeQueueItem(qDel.dataset.qDel);
+          renderQueue();
+        };
+        // Collapse the row so the gap closes, then re-render (FLIP-lite).
+        const row = qDel.closest(".queue-item");
+        if (window.FX && row) return FX.collapse(row, doRemove);
+        return doRemove();
       }
 
       const pick = e.target.closest("[data-pick-photo]");
@@ -812,10 +818,16 @@
     if (window.FX && FX.sparkle && btn) FX.sparkle(btn);
   }
 
-  async function removeStashPhoto(id) {
-    await Photos.remove(id);
-    await loadPhotoStash();
-    await renderStash();
+  async function removeStashPhoto(id, el) {
+    const done = async () => {
+      await Photos.remove(id);
+      await loadPhotoStash();
+      await renderStash();
+    };
+    // Scale/fade the thumb out first (grid cell — height collapse wouldn't
+    // close the gap), then drop it and re-render.
+    if (window.FX && el) FX.shrink(el, done);
+    else await done();
   }
 
   async function clearStash() {
@@ -1926,10 +1938,15 @@
       `</div>`;
   }
 
-  function removeWorkday(key) {
-    Store.setWorkday(key, null);
-    if (selectedDate === key) { selectedDate = null; $("#calDay").hidden = true; }
-    renderCalendar();
+  function removeWorkday(key, el) {
+    const done = () => {
+      Store.setWorkday(key, null);
+      if (selectedDate === key) { selectedDate = null; $("#calDay").hidden = true; }
+      renderCalendar();
+    };
+    // Shrink the chip out (wrapping flex item), then commit + re-render.
+    if (window.FX && el) FX.shrink(el, done);
+    else done();
   }
 
   // Local-date keys (YYYY-MM-DD) that have at least one shared post.
@@ -2398,6 +2415,7 @@
     card.innerHTML =
       `<img src="${g.dataUrl}" alt="Generated post with caption" draggable="false" />` +
       `<div class="swipe-cap">${escapeAttr(g.filledText + " " + (g.hashtags || "").trim())}</div>` +
+      `<span class="swipe-wash"></span>` +
       `<span class="swipe-badge keep">KEEP</span>` +
       `<span class="swipe-badge nope">NOPE</span>`;
     return card;
@@ -2450,6 +2468,7 @@
     let startX = 0, startY = 0, dx = 0, dy = 0, dragging = false;
     const keepB = card.querySelector(".swipe-badge.keep");
     const nopeB = card.querySelector(".swipe-badge.nope");
+    const wash = card.querySelector(".swipe-wash");
     card.addEventListener("pointerdown", (e) => {
       dragging = true; startX = e.clientX; startY = e.clientY; dx = dy = 0;
       card.style.transition = "none";
@@ -2458,11 +2477,24 @@
     card.addEventListener("pointermove", (e) => {
       if (!dragging) return;
       dx = e.clientX - startX; dy = e.clientY - startY;
-      card.style.transform = `translate(${dx}px, ${dy * 0.4}px) rotate(${dx * 0.05}deg)`;
+      // Tilt tracks the drag; slightly stronger than before so the intent reads.
+      card.style.transform = `translate(${dx}px, ${dy * 0.4}px) rotate(${dx * 0.06}deg)`;
       const t = Math.min(1, Math.abs(dx) / 100);
       keepB.style.opacity = dx > 0 ? t : 0;
       nopeB.style.opacity = dx < 0 ? t : 0;
+      // Colour wash: green while heading to KEEP, red to NOPE, intensifying with
+      // the drag so the decision has a continuous, satisfying feel.
+      if (wash) {
+        wash.classList.toggle("keep", dx > 0);
+        wash.classList.toggle("nope", dx < 0);
+        wash.style.opacity = dx === 0 ? 0 : t * 0.45;
+      }
     });
+    const clearWash = () => {
+      if (!wash) return;
+      wash.style.opacity = 0;
+      wash.classList.remove("keep", "nope");
+    };
     const release = () => {
       if (!dragging) return;
       dragging = false;
@@ -2471,6 +2503,7 @@
       if (dx < -90) return flyOff("left");
       card.style.transform = "";
       keepB.style.opacity = 0; nopeB.style.opacity = 0;
+      clearWash();
     };
     card.addEventListener("pointerup", release);
     card.addEventListener("pointercancel", release);

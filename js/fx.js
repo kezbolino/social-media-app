@@ -238,6 +238,50 @@
     pop(el);
   }
 
+  /* ---- collapse: smoothly retire a vertical list row so the gap CLOSES rather
+     than snapping shut (FLIP-lite). The row shrinks its own height/margin to 0
+     while fading + sliding out, and because it's in normal flow the rows below
+     follow it up. For stacked lists (the queue). Calls done() on finish (and
+     immediately, unanimated, under reduced motion). ---- */
+  function collapse(el, done) {
+    const finish = () => { try { done && done(); } catch (_) {} };
+    if (!el || reduceMotion) return finish();
+    const h = el.offsetHeight;
+    el.style.height = h + "px";
+    el.style.overflow = "hidden";
+    void el.offsetWidth; // lock the start height before transitioning
+    el.style.transition =
+      "height .3s var(--ease-premium), opacity .22s ease, margin .3s var(--ease-premium), padding .3s var(--ease-premium), transform .3s var(--ease-premium)";
+    el.style.height = "0px";
+    el.style.opacity = "0";
+    el.style.marginTop = "0px";
+    el.style.marginBottom = "0px";
+    el.style.paddingTop = "0px";
+    el.style.paddingBottom = "0px";
+    el.style.transform = "translateX(-28px)";
+    let called = false;
+    const end = () => { if (!called) { called = true; finish(); } };
+    el.addEventListener("transitionend", (e) => { if (e.propertyName === "height") end(); });
+    setTimeout(end, 360); // safety net if transitionend never fires
+  }
+
+  /* ---- shrink: scale + fade an element out of existence, for GRID cells and
+     wrapping chips (stash thumbnails, calendar workday chips) where a height
+     collapse wouldn't close the horizontal gap the item leaves behind. ---- */
+  function shrink(el, done) {
+    const finish = () => { try { done && done(); } catch (_) {} };
+    if (!el || reduceMotion) return finish();
+    el.style.transformOrigin = "center";
+    el.style.transition = "transform .24s var(--ease-premium), opacity .24s ease";
+    void el.offsetWidth;
+    el.style.transform = "scale(0.4)";
+    el.style.opacity = "0";
+    let called = false;
+    const end = () => { if (!called) { called = true; finish(); } };
+    el.addEventListener("transitionend", end, { once: true });
+    setTimeout(end, 300); // safety net
+  }
+
   /* ---- wiggle: a cheeky one-shot shimmy (removals, "look here" nudges) ---- */
   function wiggle(el) {
     if (!el || reduceMotion) return;
@@ -256,5 +300,5 @@
     { passive: true }
   );
 
-  window.FX = { confetti, sparkle, pop, wiggle, buzz, heart };
+  window.FX = { confetti, sparkle, pop, wiggle, buzz, heart, collapse, shrink };
 })();

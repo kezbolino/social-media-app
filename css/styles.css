@@ -1417,6 +1417,16 @@ input[type="range"] { touch-action: none; }
 }
 .swipe-badge.keep { left: 16px; color: var(--success); transform: rotate(-12deg); }
 .swipe-badge.nope { right: 16px; color: var(--error); transform: rotate(12deg); }
+/* Colour wash tinting the whole card toward the pending decision as you drag.
+   Opacity is driven live from the drag distance in attachDrag; colour follows
+   the direction class. Sits above the image but below the KEEP/NOPE badges. */
+.swipe-wash {
+  position: absolute; inset: 0; border-radius: inherit;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.12s linear, background-color 0.12s linear;
+}
+.swipe-wash.keep { background: var(--success); }
+.swipe-wash.nope { background: var(--error); }
 
 .gen-swipe-actions { display: flex; align-items: center; justify-content: center; gap: 24px; margin: 2px 0 6px; }
 .gen-progress {
@@ -1902,15 +1912,18 @@ html[data-btn="ios"] .swipe-btn:active {
 /* ---- Screen wipe: incoming screen slides in horizontally. Direction is set
    by #app.nav-back (a ‹ Back / home navigation wipes in from the left; going
    forward wipes in from the right). ---- */
-.screen.is-active { animation: fx-wipe-fwd 0.46s var(--spring-smooth) both; }
+.screen.is-active { animation: fx-wipe-fwd 0.42s var(--spring-smooth) both; }
 #app.nav-back .screen.is-active { animation-name: fx-wipe-back; }
+/* Shared-axis-X: forward = the new screen slides in from the right; back = from
+   the left. A slight scale-up from 0.985 lets it read as a layer settling into
+   place (a touch of container depth) rather than a flat slate swap. */
 @keyframes fx-wipe-fwd {
-  from { opacity: 0; transform: translateX(38px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(46px) scale(0.985); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
 }
 @keyframes fx-wipe-back {
-  from { opacity: 0; transform: translateX(-38px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(-46px) scale(0.985); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 /* ---- Home: logo drops in, then each control rises in a stagger.

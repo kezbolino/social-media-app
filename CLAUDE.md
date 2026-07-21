@@ -114,6 +114,52 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-21: **Motion polish pass — top 3 from a UI-animation survey (v0.98).**
+  Owner asked (after a survey of where animation could make the app "feel" nice,
+  benchmarked to Apple HIG / Material Motion / Duolingo) to build the top three.
+  - **#1 Screen transitions strengthened (shared-axis X).** These already
+    existed as a one-sided "wipe" (`fx-wipe-fwd`/`fx-wipe-back`, incoming screen
+    only — the outgoing one just `display:none`s, since only one `.screen` is
+    ever `.is-active`; a true dual-screen slide would fight the display-toggle
+    architecture the repo warns against bypassing). Refined the keyframes:
+    travel 38→46px + a subtle `scale(0.985)→1` so the incoming screen reads as a
+    layer *settling in* (a touch of Material container-depth), duration 0.46→
+    0.42s. Direction still flips on `#app.nav-back`. `.screen.is-active` was
+    already in the reduced-motion disable list. **NB it's incoming-only by
+    design** — don't "fix" it into a two-screen slide without reworking
+    `show()`'s display toggling (high white-screen-bug risk).
+  - **#2 Swipe-deck colour wash + stronger tilt.** The Generate cards already
+    tracked the drag (translate + rotate) with KEEP/NOPE badges fading in; added
+    a `.swipe-wash` overlay (`buildSwipeCard`) that tints the whole card toward
+    the pending decision — green (`.keep`→`var(--success)`) dragging right, red
+    (`.nope`→`var(--error)`) left — opacity driven live from drag distance
+    (`t*0.45`) in `attachDrag`, cleared on release/flyOff. Rotation nudged
+    `dx*0.05`→`0.06` so intent reads sooner. Wash sits above the image, below the
+    badges (CSS after `.swipe-badge.nope`). Reduced-motion never attaches drag,
+    so the wash is inert there — no extra guard needed.
+  - **#3 Animated removal (FLIP-lite) — "the gap closes" instead of snapping.**
+    Two new FX helpers (js/fx.js, both reduced-motion-guarded → call `done()`
+    unanimated): `FX.collapse(el, done)` shrinks a vertical list row's height/
+    margin/padding to 0 while fading + sliding out, so rows below follow it up
+    (used for **queue** items — `.queue-item`); `FX.shrink(el, done)` scale+fades
+    an element out for **grid cells / wrapping chips** where a height collapse
+    wouldn't close the horizontal gap (used for **stash thumbnails**
+    `.stash-thumb` and **calendar workday chips** `.chip`). Wired at the three
+    delete sites in app.js: the `data-q-del` handler collapses then does the
+    Store removal + `renderQueue`; `removeStashPhoto(id, el)` and
+    `removeWorkday(key, el)` gained an element param and shrink-then-commit. The
+    animation runs *before* the existing re-render, so it's strictly additive
+    (the re-render already replayed entrance staggers; now the exit is smooth
+    too). `done()` fires on `transitionend` (height for collapse) with a
+    setTimeout safety net.
+  - Verified headless (Chromium 390×844, localhost, playwright-core): active
+    screen uses `fx-wipe-fwd`; a right-drag gives `.swipe-wash.keep` @0.315
+    opacity + `rotate(4.2deg)`; deleting 1 of 2 queue items collapses the row
+    (`height:0`, transition set) then re-renders to 1; 0 console errors across
+    all runs. **Verification note**: this env has no bundled Playwright — install
+    `playwright-core` transiently (`npm i --no-save`, it's gitignored) and launch
+    with `executablePath:/opt/pw-browsers/chromium-1194/chrome-linux/chrome`; run
+    the script with `NODE_PATH=<repo>/node_modules` if it lives in the scratchpad.
 - 2026-07-21: **"Run it back" (history) now shows post thumbnails (v0.97).**
   Owner: "why does it not show the pictures?" It never could — `markPostShared`
   only saved the *text* (caption/location/day/tag), never the composed image
