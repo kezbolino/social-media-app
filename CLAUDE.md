@@ -114,7 +114,20 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-21 (latest): **Generate moved to the middle nav slot (v0.93).**
+- 2026-07-21: **Branch cleanup — all stale branches deleted, only `main`
+  remains.** After the v0.92/v0.93 work merged straight to `main`, the owner
+  cleared out every leftover `claude/*` and `archive/*` branch in the GitHub
+  UI. Verified each against `main` first: 7 were fully merged (byte-identical),
+  and `archive/progress-bar-design-bt56dd` was the *superseded alternate* v0.90
+  progress-bar impl (main kept the chosen one) — deleted with the rest, nothing
+  lost. Context for future sessions: the owner works across Mac CLI (commits
+  straight to `main`) and Claude web/mobile (isolated containers that can only
+  push to a `claude/*` branch + hand back a PR). That surface split is why
+  branches accumulate and why versions collide — merge + delete promptly to
+  keep it tidy. ⚠️ This session confirmed **remote branch deletion is blocked
+  two ways**: `git push --delete` → 403 (proxy), and the GitHub MCP has no
+  delete-branch tool — so branch deletion is always the owner's job in the UI.
+- 2026-07-21: **Generate moved to the middle nav slot (v0.93).**
   Owner wanted Generate in the centre again — but as a *plain icon* this time,
   not the raised mascot button that was just parked (v0.92). Pure markup
   reorder in index.html: tab order is now **Home / New / Generate / Calendar /
