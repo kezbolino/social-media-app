@@ -114,6 +114,37 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-21: **Text-tool fonts re-matched to Instagram Story styles
+  (v0.95).** Owner asked to "add Instagram fonts." IG's real Story typefaces
+  are proprietary/undistributable, so — like the rest of the repo — we bundle
+  free **OFL** faces chosen to look *close* to each IG style, not IG's actual
+  files. Swapped all 5 `TEXT_STYLES` families (js/editor.js):
+  - Classic: Poppins → **Inter 600** (neutral humanist, IG Classic is a clean
+    neutral sans, not round-geometric).
+  - Modern: Oswald caps/condensed → **Jost 400** (thin elegant geometric; IG
+    Modern is light/wide, so dropped `upper` + eased `spacing` 0.06→0.04 — the
+    old condensed-CAPS was the worst mismatch).
+  - Neon: Pacifico → **Dancing Script 700** (flowing handwritten signature;
+    glow unchanged, still only shows when fill = none).
+  - Type: Space Mono → **Courier Prime 700** (true typewriter ≈ IG's American
+    Typewriter, vs the old techy geometric mono).
+  - Strong: Poppins 800 → **Archivo Black** (single weight 400 = black; heavy
+    neo-grotesque; still `highlightDefault: "solid"`).
+  - **Files**: `assets/fonts/{inter-600,jost-400,dancingscript-700,
+    courierprime-700,archivoblack-400}.woff2` — grabbed as the already-subset
+    **latin** woff2 straight off the Google Fonts css2 API (browser UA → take
+    the `/* latin */` block's URL), no fonttools needed. Added matching
+    `@font-face` blocks in styles.css and updated `ensureTextFonts()`'s
+    `document.fonts.load` preload list to the 5 new specs. Multi-word families
+    are quoted in the `family` string (`"'Dancing Script'"` etc.) so
+    `ctx.font`/the chip preview stay valid.
+  - **Removed** the now-unused Oswald/Pacifico/Space Mono `@font-face` blocks +
+    their 3 woff2 files (grepped: 0 remaining refs anywhere). SW cache
+    `v9`→`v10` so installs purge the old fonts and fetch the new ones.
+  - Verified headless: `document.fonts.check` true for all 5 new specs, every
+    style chip applies with no render error, 0 console errors, 0 failed
+    requests; rendered a 5-style sample PNG and eyeballed the glyphs (each
+    face distinct + on-look).
 - 2026-07-21: **Text tool: fill-by-default + removed the 🎯 eyedropper
   (v0.94).** Owner: new text should come with a fill already on, and the
   colour-picker bullseye "does nothing."
@@ -131,11 +162,10 @@ below). **Not yet built, roughly in priority order:**
     swatches are untouched. Verified headless: no `[data-eyedrop]` in the DOM,
     0 console errors.
   - **Re: "where are the fonts classic/modern/neon from?"** — they're NOT
-    Instagram's actual fonts. `TEXT_STYLES` (js/editor.js) is *named* to mimic
-    IG Stories' text styles but maps to the app's own bundled Google Fonts:
-    Classic=Poppins, Modern=Oswald (caps+tracking), Neon=Pacifico (script+glow),
-    Type=Space Mono, Strong=Poppins 800. All local woff2 (offline-first), no IG
-    licensing involved.
+    Instagram's actual fonts (those are proprietary). `TEXT_STYLES`
+    (js/editor.js) is *named* to mimic IG Stories' text styles and maps to
+    bundled free Google Fonts. (The specific faces were re-matched closer to IG
+    in v0.95 above — see that entry for the current mapping.)
 - 2026-07-21: **Branch cleanup — all stale branches deleted, only `main`
   remains.** After the v0.92/v0.93 work merged straight to `main`, the owner
   cleared out every leftover `claude/*` and `archive/*` branch in the GitHub

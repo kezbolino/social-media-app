@@ -33,11 +33,11 @@ const Editor = (() => {
 
   // Text-tool styles, mimicking Instagram Stories' named text styles.
   const TEXT_STYLES = {
-    classic: { name: "Classic", family: "Poppins", weight: 600, upper: false },
-    modern: { name: "Modern", family: "Oswald", weight: 600, upper: true, spacing: 0.06 },
-    neon: { name: "Neon", family: "Pacifico", weight: 400, upper: false, glow: true },
-    typewriter: { name: "Type", family: "'Space Mono'", weight: 700, upper: false },
-    strong: { name: "Strong", family: "Poppins", weight: 800, upper: false, highlightDefault: "solid" },
+    classic: { name: "Classic", family: "Inter", weight: 600, upper: false },
+    modern: { name: "Modern", family: "Jost", weight: 400, upper: false, spacing: 0.04 },
+    neon: { name: "Neon", family: "'Dancing Script'", weight: 700, upper: false, glow: true },
+    typewriter: { name: "Type", family: "'Courier Prime'", weight: 700, upper: false },
+    strong: { name: "Strong", family: "'Archivo Black'", weight: 400, upper: false, highlightDefault: "solid" },
   };
   const STYLE_ORDER = ["classic", "modern", "neon", "typewriter", "strong"];
   const SWATCHES = ["#ffffff", "#111111", "#0a4da1", "#f58b1f", "#e23b2e", "#2b8a3e", "#ffd21e", "#ff5fa2"];
@@ -473,11 +473,11 @@ const Editor = (() => {
       return textFontsReady;
     }
     textFontsReady = Promise.all([
-      document.fonts.load("600 40px Poppins"),
-      document.fonts.load("800 40px Poppins"),
-      document.fonts.load("600 40px Oswald"),
-      document.fonts.load("400 40px Pacifico"),
-      document.fonts.load('700 40px "Space Mono"'),
+      document.fonts.load("600 40px Inter"),
+      document.fonts.load("400 40px Jost"),
+      document.fonts.load('700 40px "Dancing Script"'),
+      document.fonts.load('700 40px "Courier Prime"'),
+      document.fonts.load('400 40px "Archivo Black"'),
     ]).then(() => document.fonts.ready).catch(() => {});
     return textFontsReady;
   }

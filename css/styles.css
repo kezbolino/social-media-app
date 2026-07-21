@@ -32,26 +32,41 @@
 }
 
 /* Text-tool style fonts (mimicking Instagram Stories text styles). */
+/* Text-tool "Instagram Story" style faces (js/editor.js TEXT_STYLES). All OFL. */
 @font-face {
-  font-family: "Oswald";
+  font-family: "Inter";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("../assets/fonts/oswald-600.woff2") format("woff2");
+  src: url("../assets/fonts/inter-600.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Pacifico";
+  font-family: "Jost";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("../assets/fonts/pacifico-400.woff2") format("woff2");
+  src: url("../assets/fonts/jost-400.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Space Mono";
+  font-family: "Dancing Script";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("../assets/fonts/spacemono-700.woff2") format("woff2");
+  src: url("../assets/fonts/dancingscript-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Courier Prime";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/courierprime-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Archivo Black";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/archivoblack-400.woff2") format("woff2");
 }
 
 /* App-wide font options (Settings → 🔤 App font) — bundled locally so they
