@@ -114,7 +114,18 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
-- 2026-07-20 (latest): **Bottom nav centre reverted back to a plain icon
+- 2026-07-21 (latest): **Generate moved to the middle nav slot (v0.93).**
+  Owner wanted Generate in the centre again — but as a *plain icon* this time,
+  not the raised mascot button that was just parked (v0.92). Pure markup
+  reorder in index.html: tab order is now **Home / New / Generate / Calendar /
+  Settings** (Generate is 3rd of 5 = dead centre). No CSS/JS change — the nav
+  has no position-dependent styling (the active pill is class-driven via
+  `show()` marking `.navbtn[data-nav]` against the current screen, order-
+  independent), so swapping the Generate and Calendar `<button>` blocks is the
+  whole change. No SW cache bump (no asset filenames changed). Verified
+  headless (Chromium, 390×844, file://): order correct, tapping the middle tab
+  opens Generate + lights the tab, 0 console errors.
+- 2026-07-20: **Bottom nav centre reverted back to a plain icon
   button (v0.92) — mascot-in-nav idea parked.** Owner: "I don't think the
   mascot is quite right yet. I might need to park that idea." This undoes the
   whole v0.86→v0.89 mascot-nav arc (raised disc → free-floating mascot + AI
