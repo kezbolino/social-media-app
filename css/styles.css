@@ -1443,6 +1443,10 @@ input[type="range"] { touch-action: none; }
 .swipe-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(10, 35, 49, 0.12); }
 .swipe-btn.like { color: var(--success); border-color: var(--success); }
 .swipe-btn.nope { color: var(--error); border-color: var(--error); }
+/* Inline SVG icons (not ♥/✕ glyphs — the bundled fonts are Latin-subset, so
+   those code points fell back to a system/emoji font whose metrics shifted the
+   heart off-centre per device). SVGs are geometry-centred, identical everywhere. */
+.swipe-ico { display: block; }
 .gen-deck-hint { text-align: center; margin: 2px 0 8px; }
 .gen-pool-note { text-align: center; margin: 8px 0 0; font-size: 0.82rem; }
 
