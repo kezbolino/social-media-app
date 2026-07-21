@@ -114,6 +114,22 @@ below). **Not yet built, roughly in priority order:**
   disproportionate to a single trader's app.
 
 ## Notable changes
+- 2026-07-21: **Installed the `ship-and-verify` project skill (dev tooling — no
+  app version bump).** Salvaged the two skill files from
+  `claude/skills-feature-usage-nhb5xo` (`.claude/skills/ship-and-verify/SKILL.md`
+  + `scripts/verify.mjs`) — the release ritual for this repo (bump `#appVersion`,
+  decide on the SW cache, add reduced-motion entries, drive the real app headless
+  via the bundled `verify.mjs`, record the change, commit). Now it auto-triggers
+  on "commit/ship/push this", "verify", "drive it headless". **Deliberately did
+  NOT take that branch's CLAUDE.md→CHANGELOG.md restructure** — it forked from a
+  pre-v0.98 main, so its slimmed CLAUDE.md predated v0.98/v0.99/v1.00 and merging
+  it as-is would have dropped those history entries; left as a future call if the
+  owner wants a leaner file (would need reconciling the recent entries by hand).
+  Adapted SKILL.md step 5 + its description to match main's actual structure (a
+  single `## Notable changes` list, no separate CHANGELOG). Verified: the skill's
+  own `verify.mjs` drives main to the Generate screen, 0 console errors, reads
+  v1.00. The superseded `claude/post-creation-defaults-ui-ehfn4k` branch (v0.94–
+  v0.97, all already on main) was NOT merged — left for the owner to delete.
 - 2026-07-21: **Swipe-deck ♥/✕ buttons → inline SVG icons (v1.00).** Owner: the
   heart icon on the Generate swipe cards was misaligned. Root cause: the two
   round action buttons (`.swipe-btn.like`/`.nope`, index.html) used the **text
