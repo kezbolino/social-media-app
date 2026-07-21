@@ -119,7 +119,10 @@ copy in `data/streetfood_hooks.json` (mirrored to `.js`) is written around that.
 ## Verification (headless Chromium)
 The house standard is to verify UI changes by driving the real app headless at
 390×844 (and 375/320 for layout), asserting DOM/computed state, and eyeballing a
-screenshot — reporting console-error count (target 0).
+screenshot — reporting console-error count (target 0). **A bundled driver now
+exists** — the `ship-and-verify` skill (`.claude/skills/ship-and-verify/`) carries
+`scripts/verify.mjs` (the tested drive) and the release checklist; prefer it over
+re-improvising, and let it fire when wrapping up a change.
 - This env has **no bundled Playwright**. Install transiently: `npm i --no-save
   playwright-core` (gitignored), launch with `executablePath:
   /opt/pw-browsers/chromium-1194/chrome-linux/chrome`, and run a scratchpad script
