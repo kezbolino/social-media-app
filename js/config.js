@@ -71,23 +71,40 @@ window.APP_CONFIG = {
   // (wings took too long to cook); editable in Settings.
   DEFAULT_MENU: ["nuggets", "chicken burgers", "home-made sauces"],
 
-  // Hashtags pre-loaded the first time the app runs (editable in Settings).
-  // Curated for a London gluten-free chicken (nuggets & burgers) street-food
-  // trader: a mix of street-food scene, London/local, chicken/gluten-free, and
-  // food-discovery tags that actually surface posts on Instagram. Keep a spread
-  // of big-reach and niche tags — niche ones are easier to rank in.
-  DEFAULT_HASHTAGS: [
-    // Street-food scene
-    "#streetfood", "#streetfoodlondon", "#londonstreetfood", "#streetfoodmarket",
-    "#streeteats", "#foodtruck", "#foodstall", "#streetfoodie", "#traderlife",
-    // London / local
-    "#london", "#londonfood", "#londoneats", "#londonfoodie", "#eatlondon",
-    "#timeoutlondon", "#secretlondon", "#londonlife",
-    // Chicken (nuggets & burgers) / gluten free
-    "#chickennuggets", "#chickenburger", "#friedchicken", "#chickenshop",
-    "#glutenfree", "#glutenfreelondon", "#loadedfries", "#comfortfood",
-    // Food discovery / engagement
-    "#foodie", "#instafood", "#foodstagram", "#foodphotography", "#eeeeeats",
-    "#forkyeah", "#feedfeed", "#hungry", "#supportsmallbusiness",
-  ],
+  // Hashtags, grouped into sets so a post can be tagged with a small, relevant
+  // spread rather than a generic dump. Curated for a London gluten-free chicken
+  // (nuggets & burgers) street-food trader.
+  //
+  // ⚠️ Instagram capped posts at 5 hashtags (Dec 2025) and now treats tags as a
+  // minor topic signal, not a reach lever — big generic "discovery" tags
+  // (#foodie / #instafood / #food …) read as spam and no longer help. So these
+  // sets deliberately hold only branded, dish, and local/scene tags; the app
+  // composes at most 5 per post (see buildHashtagBlock). The old flat pool's
+  // eight food-discovery mega-tags were dropped here on 2026-07-22.
+  HASHTAG_SETS: {
+    // Always leads a block.
+    brand: ["#chucklingwings"],
+    // Match the dish in the post (dish-aware selection is a follow-up).
+    dish: [
+      "#chickennuggets", "#chickenburger", "#friedchicken", "#chickenshop",
+      "#glutenfree", "#glutenfreelondon", "#loadedfries", "#comfortfood",
+    ],
+    // London / local — pairs with the pitch location tag.
+    local: [
+      "#london", "#londonfood", "#londoneats", "#londonfoodie", "#eatlondon",
+      "#timeoutlondon", "#secretlondon", "#londonlife",
+    ],
+    // Street-food scene.
+    scene: [
+      "#streetfood", "#streetfoodlondon", "#londonstreetfood", "#streetfoodmarket",
+      "#streeteats", "#foodtruck", "#foodstall", "#streetfoodie", "#traderlife",
+    ],
+  },
+
+  // Flattened seed for the editable Settings pool (Store/backup consume this).
+  // Built from HASHTAG_SETS below so the two never drift.
+  get DEFAULT_HASHTAGS() {
+    const s = this.HASHTAG_SETS;
+    return [...s.brand, ...s.dish, ...s.local, ...s.scene];
+  },
 };

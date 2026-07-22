@@ -5,6 +5,28 @@ auto-loaded project memory lean. This file is NOT auto-loaded into sessions —
 read it (or `git log`) when you need the detail behind a past change. Newest first.
 
 ## Version history
+- 2026-07-22: **v1.02 — Hashtags: max 5, curated sets, mega-tags dropped.**
+  First slice of the parked v2 Instagram content plan
+  (`docs/V2_INSTAGRAM_CONTENT_PLAN.md` §6/§9). Instagram capped posts at 5
+  hashtags (Dec 2025) and now treats them as a minor topic signal, so the old
+  behaviour — `buildHashtagBlock` appending **~14** tags (12 random of a flat
+  34-tag pool + brand + location) — actively read as spam. Now
+  `buildHashtagBlock` composes **at most 5** (`MAX_HASHTAGS`): brand
+  (`#chucklingwings`) always leads, the pitch location comes second, and the
+  remaining slots are a shuffled fill from the trader's pool. `DEFAULT_HASHTAGS`
+  in `js/config.js` was restructured from a flat array into named
+  `HASHTAG_SETS` (`brand` / `dish` / `local` / `scene`) with the eight generic
+  food-discovery mega-tags removed (`#foodie #instafood #foodstagram
+  #foodphotography #eeeeeats #forkyeah #feedfeed #hungry`) — 34 → 26 seed tags;
+  a `get DEFAULT_HASHTAGS()` getter flattens the sets so `Store`/backup/the
+  Settings editor are untouched. The 5-cap applies to **everyone immediately**
+  (it's enforced at compose time); the cleaner pool only reaches existing
+  installs if they reset (we don't silently wipe a trader's curated tags).
+  **Not done, deliberately:** true per-post *dish matching* (pick dish tags that
+  match what's actually in the photo) — the post doesn't know its dish yet; that
+  waits on the roadmap's "tag stash photos by dish". The `HASHTAG_SETS.dish`
+  group is the data model it'll hang off. Verified headless: config getter,
+  clean 26-tag seed, composed block = exactly 5 brand-led, 0 console errors.
 - 2026-07-21: **v1.01 — Generate resumes where you left off instead of
   restarting.** Symptom (owner): start Generate, tap over to Calendar (or any hub
   screen), tap Generate again → forced to redo the whole brief + swipe. Root

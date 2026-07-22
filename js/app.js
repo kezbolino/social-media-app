@@ -1406,15 +1406,22 @@
     if (btn) btn.textContent = post.hashtagBlock ? "🗑 Remove hashtags" : "#️⃣ Add hashtags";
   }
 
+  // Instagram caps posts at 5 hashtags (Dec 2025) and treats them as a minor
+  // topic signal — so we compose a small, relevant block, not a dump: brand
+  // first, then the pitch location, then a shuffled fill from the curated pool.
+  const MAX_HASHTAGS = 5;
   function buildHashtagBlock(loc = post.location) {
-    const chosen = shuffleArr(Store.getHashtags()).slice(0, 12);
-    // Auto-tag the pitch location, if we know it.
-    if (loc) {
-      const locTag = "#" + loc.toLowerCase().replace(/[^a-z0-9]/g, "");
-      if (locTag.length > 1 && !chosen.some((t) => t.toLowerCase() === locTag)) chosen.unshift(locTag);
-    }
-    const brand = "#chucklingwings";
-    if (!chosen.some((t) => t.toLowerCase() === brand)) chosen.unshift(brand);
+    const chosen = [];
+    const add = (tag) => {
+      const t = (tag || "").trim();
+      if (t.length < 2 || chosen.length >= MAX_HASHTAGS) return;
+      if (!chosen.some((x) => x.toLowerCase() === t.toLowerCase())) chosen.push(t);
+    };
+    add("#chucklingwings"); // brand always leads
+    if (loc) add("#" + loc.toLowerCase().replace(/[^a-z0-9]/g, "")); // pitch location
+    // Fill the remaining slots from the trader's curated pool (shuffled so
+    // posts vary). The pool no longer carries generic mega-tags (see config).
+    shuffleArr(Store.getHashtags()).forEach(add);
     return chosen.join(" ");
   }
 

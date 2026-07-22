@@ -183,6 +183,14 @@ Story export (9:16), Queue for later, backup/restore, visual history thumbnails.
 
 ## Recent changes
 Full history (v0.01 → present) is in **`CHANGELOG.md`**. Most recent:
+- **v1.02** — Hashtags now cap at **5 per post** (`MAX_HASHTAGS` in
+  `buildHashtagBlock`): brand + pitch location lead, rest a shuffled fill. Flat
+  34-tag `DEFAULT_HASHTAGS` → named `HASHTAG_SETS` (brand/dish/local/scene) with
+  8 generic mega-tags dropped (34→26); a getter flattens them so Store/backup/
+  Settings are untouched. First slice of the parked v2 IG plan; per-post *dish
+  matching* deliberately deferred (post doesn't know its dish — waits on "tag
+  stash photos by dish"). The 5-cap hits everyone; the cleaner pool only reaches
+  existing installs on reset (curated tags aren't silently wiped).
 - **v1.01** — Generate now *resumes* instead of restarting: the batch (deck +
   keepers) already survived a nav hop in memory; the bug was the nav button
   always calling `openBrief()`. `openGenerate(null)` now short-circuits to
