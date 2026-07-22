@@ -1,5 +1,49 @@
 # Session Log
 
+## 2026-07-22 — Built out the parked IG content plan (v1.02 → v1.05)
+
+Started 34 commits behind `origin/main`; pulled clean to v1.01, then shipped the
+whole parked Instagram plan (`docs/V2_INSTAGRAM_CONTENT_PLAN.md`) as four slices.
+All committed **and pushed** to `main`.
+
+**Done**
+- **v1.02 — Hashtags capped at 5.** Flat 34-tag `DEFAULT_HASHTAGS` → named
+  `HASHTAG_SETS` (brand/dish/local/scene), 8 generic mega-tags dropped (34→26);
+  `buildHashtagBlock` now composes ≤5 (brand + location lead). Getter flattens
+  sets so Store/backup/Settings untouched.
+- **v1.03 — 📍 caption line.** `locationLine()` adds `📍 Market · here till <day>`
+  to the caption BODY, only where a hook's `filledText` becomes the caption
+  (setCaption + Generate `out.push`) — never into `filledText` itself (reused as
+  sticker / Text-tool text).
+- **v1.04 — Story beats + Insights log.** notify.js: single nudge → 3 trading-day
+  beats (morning/midday/late), fires most-recent-passed and consumes skipped
+  ones. New Settings → 📊 Insights `<details>` group (not a routed screen, on
+  purpose) logging watch-through/shares/saves with 🏆 best-of; `sfp.insights`
+  key, in backup. Fixed a same-ms `Date.now()` id collision found in verify.
+- **v1.05 — Reels/video sharing.** New 🎬 Reel New-Post type; skips imaging,
+  reuses the quiz→caption flow, shares a raw `video/mp4` via the share sheet.
+  `share.js` gained a `type` param. Emoji tile icon = no SW bump.
+- Also committed a null re-export of `assets/mascot/surprised.svg` (was an
+  orphaned stash; path re-serialization, no visual change).
+
+**Decisions**
+- Per-post *dish matching* for hashtags deliberately deferred — the post doesn't
+  know its dish; waits on the roadmap's "tag stash photos by dish". `HASHTAG_
+  SETS.dish` is the data model it'll hang off.
+- Caption template kept **lightweight** (owner's call): 📍 market line, not the
+  fuller Market/Area/hours template (no area/hours data model exists).
+- Insights + Story beats built as Settings groups / notify extension, not new
+  routed screens, to dodge the show()/history white-screen risk.
+
+**Pending / not done (parked, owner said leave as-is)**
+- `git stash@{0}` still holds the (now-committed) surprised.svg — redundant,
+  safe to drop.
+- `MISC/` at repo root (7 stray art files owner moved there) is untracked;
+  artwork "might change" so left alone. No `.gitignore` entry added.
+- Known mascot cream-underlay artifact (st0/#FBF8F4) — explicitly skipped.
+- Remaining roadmap: recurring workdays, tag-stash-by-dish, weather-nudge
+  wiring, carousel per-frame parity.
+
 ## 2026-07-19 (later) — Parked Fable's Instagram content plan for v2
 
 **Done**
