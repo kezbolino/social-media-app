@@ -576,6 +576,7 @@
       case "notify-test": notifyTest(); break;
       case "hashtags": toggleHashtags(); break;
       case "add-hashtag": addHashtagItem(); break;
+      case "add-insight": addInsightItem(); break;
       case "add-userhook": addUserHookItem(); break;
       case "publish-ig": doPublish("ig"); break;
       case "publish-fb": doPublish("fb"); break;
@@ -1778,6 +1779,7 @@
     renderLocations();
     renderMenu();
     renderHashtags();
+    renderInsights();
     renderUserHooks();
     renderNotifySettings();
     renderMetaSettings();
@@ -3238,6 +3240,66 @@
   }
 
   /* ---------- NOTIFY SETTINGS ---------- */
+  /* ---------- INSIGHTS (manual weekly log) ---------- */
+  function addInsightItem() {
+    const label = $("#insightLabel").value.trim();
+    const err = $("#insightError");
+    if (!label) { err.textContent = "Give it a name so you can tell posts apart."; return; }
+    const num = (id) => {
+      const v = parseInt($(id).value, 10);
+      return Number.isFinite(v) && v >= 0 ? v : 0;
+    };
+    Store.addInsight({
+      label,
+      date: $("#insightDate").value || Notify.todayStr(),
+      watch: Math.min(num("#insightWatch"), 100),
+      shares: num("#insightShares"),
+      saves: num("#insightSaves"),
+    });
+    // Reset the form for the next entry.
+    ["#insightLabel", "#insightWatch", "#insightShares", "#insightSaves"].forEach((id) => ($(id).value = ""));
+    $("#insightDate").value = Notify.todayStr();
+    err.textContent = "";
+    renderInsights();
+    if (window.FX) FX.pop($("#insightList").firstElementChild);
+  }
+
+  function renderInsights() {
+    const list = $("#insightList");
+    if (!list) return;
+    const items = Store.getInsights();
+    // Prefill the date field with today for the next entry.
+    const dateEl = $("#insightDate");
+    if (dateEl && !dateEl.value) dateEl.value = Notify.todayStr();
+    list.innerHTML = "";
+    if (!items.length) {
+      list.innerHTML = '<p class="menu-empty">No entries yet — log a post after it\'s had a few days to breathe.</p>';
+      return;
+    }
+    // Which entries win on the two metrics that matter (§8: watch-through, and
+    // shares+saves). Ties: the first (most recent) wins the badge.
+    const bestWatch = items.reduce((a, b) => (b.watch > a.watch ? b : a));
+    const bestEngage = items.reduce((a, b) => ((b.shares + b.saves) > (a.shares + a.saves) ? b : a));
+    items.forEach((e) => {
+      const badges =
+        (e.id === bestWatch.id && e.watch > 0 ? '<span class="ins-badge">🏆 watch-through</span>' : "") +
+        (e.id === bestEngage.id && (e.shares + e.saves) > 0 ? '<span class="ins-badge">🏆 shares+saves</span>' : "");
+      const row = document.createElement("div");
+      row.className = "insight-row";
+      row.innerHTML =
+        `<div class="ins-main"><span class="ins-label">${escapeAttr(e.label)}</span>` +
+        `<span class="ins-date">${escapeAttr(e.date || "")}</span></div>` +
+        `<div class="ins-stats"><span>▶ ${e.watch}%</span><span>↗ ${e.shares}</span><span>🔖 ${e.saves}</span></div>` +
+        (badges ? `<div class="ins-badges">${badges}</div>` : "") +
+        `<button class="ins-del" aria-label="Delete entry">✕</button>`;
+      row.querySelector(".ins-del").addEventListener("click", () => {
+        Store.deleteInsight(e.id);
+        renderInsights();
+      });
+      list.appendChild(row);
+    });
+  }
+
   function renderNotifySettings() {
     const n = Store.getNotify();
     $("#notifyEnabled").checked = n.enabled;
@@ -3246,7 +3308,7 @@
     if (!Notify.supported()) {
       status.textContent = "This browser doesn't support notifications. On the phone app they'll work fully.";
     } else if (n.enabled && Notify.permission() === "granted") {
-      status.textContent = `On — you'll get a nudge at ${n.time} on your working days (while the app's open).`;
+      status.textContent = `On — 3 story nudges on trading days (while the app's open): morning ${n.time}, midday ${n.midday}, last-chance ${n.late}.`;
     } else if (Notify.permission() === "denied") {
       status.textContent = "Notifications are blocked in your browser settings — allow them to use reminders.";
     } else {

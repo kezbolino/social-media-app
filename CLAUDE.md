@@ -183,6 +183,15 @@ Story export (9:16), Queue for later, backup/restore, visual history thumbnails.
 
 ## Recent changes
 Full history (v0.01 → present) is in **`CHANGELOG.md`**. Most recent:
+- **v1.04** — Two v2-plan slices. (1) **Story beats** (`js/notify.js`): the daily
+  nudge became the plan's 3 trading-day beats (morning/midday/late); fires the
+  most recent *passed, unfired* beat and consumes skipped ones (no stale 4pm
+  morning), once/day via `beatsDate`/`beatsFired`; non-trading days keep the
+  queue nudge. `getNotify()` merges defaults so old configs upgrade. (2)
+  **Insights log** (Settings → 📊, a `<details>` group not a routed screen, on
+  purpose): weekly per-post watch-through/shares/saves with a 🏆 best-of badge;
+  `sfp.insights` key, in backup. Gotcha fixed: insight id was `Date.now()` alone
+  → same-ms collisions broke badges + delete; now has a random suffix.
 - **v1.03** — Captions now carry a **📍 location line** in the body (`📍 Market
   · here till <day>`), via `locationLine()`, injected only where a hook's
   `filledText` becomes the caption body (`setCaption` + Generate's `out.push`) —

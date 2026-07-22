@@ -5,6 +5,29 @@ auto-loaded project memory lean. This file is NOT auto-loaded into sessions —
 read it (or `git log`) when you need the detail behind a past change. Newest first.
 
 ## Version history
+- 2026-07-22: **v1.04 — Trading-day Story beats + a manual Insights log.** Third
+  and fourth slices of the parked v2 Instagram plan
+  (`docs/V2_INSTAGRAM_CONTENT_PLAN.md` §3 and §8/§9).
+  - **Story beats (`js/notify.js`).** The single daily "you haven't posted"
+    nudge becomes the plan's three trading-day Story beats — morning ("we're
+    on"), midday (proof of life), late ("last chance"). On a trading day
+    `maybeRemind` fires the most recent *passed, unfired* beat and consumes any
+    earlier one it skipped, so a missed morning beat can't pop at 4pm; each
+    beat fires at most once/day, tracked by `beatsDate`/`beatsFired`. Non-trading
+    days keep the single queue-due nudge. Times: morning = the existing picker
+    (relabelled "Morning nudge"), midday 13:00 / late 16:00 default in the
+    notify config. `Store.getNotify()` now merges defaults over stored so
+    pre-beats configs upgrade cleanly. Still open-only until the Capacitor wrap
+    (unchanged honesty from the file header).
+  - **Insights log (Settings → 📊 Insights).** New collapsible group (chosen
+    over a routed screen to avoid the show()/history white-screen risk) to jot
+    weekly per-post numbers — watch-through %, shares, saves — with a 🏆 badge on
+    the current best watch-through and best shares+saves (§8's two metrics that
+    matter). `Store.get/set/add/deleteInsight` on a new `sfp.insights` key;
+    included in backup/restore. **Bug caught in verify:** entry id was
+    `"ins-"+Date.now()`, which collides for two entries logged in the same
+    millisecond — that shared id double-rendered the 🏆 badges and would delete
+    both rows at once; fixed with a random suffix.
 - 2026-07-22: **v1.03 — Captions get a 📍 location line in the body.** Second
   slice of the parked v2 Instagram plan (`docs/V2_INSTAGRAM_CONTENT_PLAN.md`
   §5): Instagram reads captions as search text, so the market name belongs in

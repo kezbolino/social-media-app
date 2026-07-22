@@ -50,6 +50,7 @@ const Backup = (() => {
         userHooks: Store.getUserHooks(),
         schedule: Store.getSchedule(),
         notify: Store.getNotify(),
+        insights: Store.getInsights(),
         queue,
         posts: Store.getPosts(),
       },
@@ -97,6 +98,7 @@ const Backup = (() => {
     if (s.userHooks) Store.setUserHooks(s.userHooks);
     if (s.schedule) Store.setSchedule(s.schedule);
     if (s.notify) Store.setNotify(s.notify);
+    if (s.insights) Store.setInsights(s.insights);
     if (s.queue) Store.setQueue(s.queue);
     if (s.posts) Store.setPosts(s.posts);
 

@@ -34,6 +34,7 @@ window.APP_CONFIG = {
     ONBOARDED: "sfp.onboarded",
     FONT: "sfp.font",
     BTNSTYLE: "sfp.btnstyle",
+    INSIGHTS: "sfp.insights",
   },
 
   // App-wide UI font choices (Settings → 🔤 App font). `id` matches the

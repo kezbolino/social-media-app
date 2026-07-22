@@ -1120,6 +1120,33 @@ input[type="range"] { touch-action: none; }
 .tag-chip:active { background: var(--panel-2); }
 .section-title { font-weight: 700; color: var(--blue); margin: 22px 0 4px; font-size: 1.05rem; }
 
+/* ---- Insights log (Settings) ---- */
+/* Stacked label+input so two number fields sit side-by-side in a .row.
+   min-width:0 is the flexbox trap fix — without it the row overflows. */
+.stacked { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; font-size: 0.85rem; color: var(--muted); }
+.stacked .text-input { width: 100%; }
+.insight-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.insight-row {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 34px 10px 12px;
+}
+.insight-row .ins-main { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.insight-row .ins-label { font-weight: 700; color: var(--blue); }
+.insight-row .ins-date { font-size: 0.78rem; color: var(--muted); flex: none; }
+.insight-row .ins-stats { display: flex; gap: 14px; margin-top: 4px; font-size: 0.9rem; color: var(--text); }
+.insight-row .ins-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ins-badge { font-size: 0.72rem; font-weight: 700; color: var(--orange); background: var(--panel-2); border-radius: 999px; padding: 2px 8px; }
+.ins-del {
+  position: absolute; top: 8px; right: 8px;
+  width: 22px; height: 22px; line-height: 1;
+  border: none; background: transparent; color: var(--muted);
+  font-size: 0.9rem; cursor: pointer; border-radius: 6px;
+}
+.ins-del:active { background: var(--panel-2); }
+
 /* ---- Work calendar ---- */
 .cal-head { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 10px; }
 .cal-title { font-weight: 700; color: var(--blue); font-size: 1.1rem; }

@@ -115,7 +115,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-queue">🗓 Post queue</button>
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
-          <p class="app-version" id="appVersion">v1.03</p>
+          <p class="app-version" id="appVersion">v1.04</p>
         </div>
       </section>
 
@@ -669,11 +669,37 @@
                 <input type="checkbox" id="notifyEnabled" />
               </label>
               <label class="switch-row">
-                <span>Reminder time</span>
+                <span>Morning nudge</span>
                 <input type="time" id="notifyTime" class="time-input" value="09:00" />
               </label>
               <button class="btn btn-ghost btn-sm" data-action="notify-test">Send a test reminder</button>
               <p id="notifyStatus" class="hint"></p>
+            </div>
+          </details>
+
+          <details class="settings-group">
+            <summary class="sg-head">
+              <span class="sg-heading">
+                <span class="sg-title">📊 Insights</span>
+                <span class="sg-sub">Jot down how a post did, spot what works</span>
+              </span>
+              <svg class="sg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <div class="sg-body">
+              <p class="hint">Once a week, copy the numbers from Instagram Insights for a post or two. Chase watch-through and shares/saves — ignore likes. The 🏆 marks your best so far.</p>
+              <label>What was it? <small>e.g. "Sat hero reel" or "Greenwich queue"</small></label>
+              <input type="text" id="insightLabel" class="text-input" placeholder="Sat hero reel" />
+              <div class="row">
+                <label class="stacked">Date <input type="date" id="insightDate" class="text-input" /></label>
+                <label class="stacked">Watch-through % <input type="number" id="insightWatch" class="text-input" min="0" max="100" placeholder="0" inputmode="numeric" /></label>
+              </div>
+              <div class="row">
+                <label class="stacked">Shares <input type="number" id="insightShares" class="text-input" min="0" placeholder="0" inputmode="numeric" /></label>
+                <label class="stacked">Saves <input type="number" id="insightSaves" class="text-input" min="0" placeholder="0" inputmode="numeric" /></label>
+              </div>
+              <button class="btn btn-secondary" data-action="add-insight">Log it</button>
+              <p id="insightError" class="hint"></p>
+              <div id="insightList" class="insight-list"></div>
             </div>
           </details>
 

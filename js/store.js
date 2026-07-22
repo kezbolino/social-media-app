@@ -173,8 +173,37 @@ const Store = (() => {
   }
 
   /* ---- Notification settings ---- */
+  /* ---- Post insights (manual weekly log: watch-through / shares / saves) ---- */
+  function getInsights() {
+    return read(K.INSIGHTS, []);
+  }
+  function setInsights(list) {
+    write(K.INSIGHTS, list);
+  }
+  function addInsight(entry) {
+    const list = getInsights();
+    // Random suffix so two entries logged in the same millisecond don't collide
+    // (a shared id breaks per-entry delete and the 🏆 best-of badges).
+    const id = "ins-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    list.unshift(Object.assign({ id }, entry));
+    setInsights(list);
+    return list;
+  }
+  function deleteInsight(id) {
+    setInsights(getInsights().filter((e) => e.id !== id));
+    return getInsights();
+  }
+
   function getNotify() {
-    return read(K.NOTIFY, { enabled: false, time: "09:00", lastNotified: null });
+    // `time` is the morning beat; midday/late are the other two story beats.
+    // beatsDate/beatsFired track which of today's beats have already fired.
+    // Merge over stored so pre-beats configs ({enabled,time,lastNotified}) gain
+    // the new fields with sane defaults.
+    return Object.assign(
+      { enabled: false, time: "09:00", midday: "13:00", late: "16:00",
+        lastNotified: null, beatsDate: null, beatsFired: [] },
+      read(K.NOTIFY, {})
+    );
   }
   function setNotify(n) {
     write(K.NOTIFY, n);
@@ -278,6 +307,10 @@ const Store = (() => {
     setWorkday,
     getNotify,
     setNotify,
+    getInsights,
+    setInsights,
+    addInsight,
+    deleteInsight,
     getMeta,
     setMeta,
     getRecencyLog,
