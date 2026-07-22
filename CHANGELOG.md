@@ -5,6 +5,29 @@ auto-loaded project memory lean. This file is NOT auto-loaded into sessions —
 read it (or `git log`) when you need the detail behind a past change. Newest first.
 
 ## Version history
+- 2026-07-21: **v1.01 — Generate resumes where you left off instead of
+  restarting.** Symptom (owner): start Generate, tap over to Calendar (or any hub
+  screen), tap Generate again → forced to redo the whole brief + swipe. Root
+  cause: the batch was never actually lost — `genDeck`, `deckCursor`, `keepers`
+  are module-level state that survives a nav hop untouched (nothing clears them
+  outside `runGenerate`), and the panels keep their `.hidden` state too. The only
+  bug was the bottom-nav Generate button always calling `openGenerate(null)` →
+  `openBrief()`, which force-reset the visible panel back to the brief. Fix: added
+  `genBatchLive()` (true while cooking, cards left to swipe, or keepers sat in the
+  tray) and made `openGenerate(null)` short-circuit to a bare `show("generate")`
+  when a batch is live — so returning from anywhere resumes the exact panel. Once
+  the batch is fully dealt with (all swiped AND every keeper posted/queued/binned)
+  it briefs fresh again; mid-brief (not yet cooked) still restarts at question 1,
+  per owner. Added `genStartOver()` — the deliberate re-brief escape hatch — wired
+  to a subtle inline "↺ Start over" on the deck hint line (kept inline so it adds
+  no height to the scroll-locked deck) and a ghost "↺ Start over" button under the
+  keepers tray; it wipes the batch and reopens the brief at step 1 (brief answers
+  persist by design). Calendar's dated `openGenerate(date)` deliberately still
+  briefs fresh — it's an explicit "plan THIS day" action. No SW cache bump (no
+  asset filenames changed); no reduced-motion entry (no new animation). Verified
+  headless at 390: 0 console errors, generate screen + all panels present, the
+  inline start-over renders on a single 17px hint line (deck bottoms at 603px,
+  fits the locked viewport) with no sideways scroll.
 - 2026-07-21: **Split the history out of CLAUDE.md → this CHANGELOG.md (dev
   tooling — no app version bump).** Adopted the lean-project-memory restructure
   from `claude/skills-feature-usage-nhb5xo`: `CLAUDE.md` dropped from ~2330 lines

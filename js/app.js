@@ -561,6 +561,7 @@
       case "backup-import": obRestoring = false; $("#backupInput").click(); break;
       case "gen-regenerate": runGenerate(); break;
       case "gen-brief": openBrief(); break;
+      case "gen-startover": genStartOver(); break;
       case "brief-loc": briefSelectAndAdvance(el, () => { genBrief.location = el.dataset.val; }); break;
       case "brief-new-loc": $("#briefAddRow").hidden = false; $("#briefLocInput").focus(); break;
       case "brief-add-loc": briefAddLoc(); break;
@@ -2157,12 +2158,32 @@
     { tag: "events", label: "🎉 Events & catering" },
   ];
 
+  // A generate batch is "in flight" while it's still cooking, has cards left to
+  // swipe, or has keepers sat in the tray waiting to be posted/queued/binned.
+  // While a batch is live, reopening Generate resumes it (see openGenerate)
+  // instead of wiping it for a fresh brief.
+  function genBatchLive() {
+    return genBusy || deckCursor < genDeck.length || keepers.length > 0;
+  }
+
   function openGenerate(dateStr) {
     // No photos = nothing to brief about; runGenerate shows the add-photos
     // empty state without touching the brief's answers.
     if (!photoPool.length) {
       show("generate");
       runGenerate();
+      return;
+    }
+    // Resume, don't restart. A bare "open Generate" (bottom nav or home tile,
+    // no date) while a batch is still in flight drops you back exactly where you
+    // left off — the panels keep their state across a nav hop, so just showing
+    // the screen is enough. Only once the batch is fully dealt with (all swiped
+    // AND every keeper posted/queued/binned) does Generate brief from scratch.
+    // "Start over" (genStartOver) is the deliberate escape hatch to re-brief
+    // mid-batch. Picking a specific day from the Calendar (dateStr set) is an
+    // explicit "plan THIS day" action, so it always briefs fresh.
+    if (dateStr == null && genBatchLive()) {
+      show("generate");
       return;
     }
     genBrief.date = dateStr || Notify.todayStr();
@@ -2202,6 +2223,20 @@
 
   function briefPct(i) {
     return ((i + 1) / (GEN_BRIEF_STEPS + 1)) * 100;
+  }
+
+  // Deliberate bail: wipe the whole batch and return to question 1 of the
+  // brief. Reopening Generate from the nav RESUMES a live batch; this is the one
+  // affordance that actually throws it away and starts the journey over. The
+  // brief's own answers persist by design (see genBrief), so you re-brief from
+  // step 1 with last time's choices pre-selected rather than a blank slate.
+  function genStartOver() {
+    genDeck = [];
+    deckCursor = 0;
+    keepers = [];
+    keptTotal = 0;
+    keepersCelebrated = false;
+    openBrief();
   }
 
   function openBrief() {
@@ -2666,6 +2701,8 @@
         `</div></div></div>`;
     });
     html += `</div>`;
+    // Deliberate restart from the tray — separate from posting the keepers out.
+    html += `<button class="btn btn-ghost btn-sm gen-startover-btn" data-action="gen-startover">↺ Start over</button>`;
     wrap.innerHTML = html;
     markImagesIn(wrap);
     // The invisible native input supplies the picker + value; our own label is

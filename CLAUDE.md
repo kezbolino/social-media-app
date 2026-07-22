@@ -183,6 +183,14 @@ Story export (9:16), Queue for later, backup/restore, visual history thumbnails.
 
 ## Recent changes
 Full history (v0.01 → present) is in **`CHANGELOG.md`**. Most recent:
+- **v1.01** — Generate now *resumes* instead of restarting: the batch (deck +
+  keepers) already survived a nav hop in memory; the bug was the nav button
+  always calling `openBrief()`. `openGenerate(null)` now short-circuits to
+  `show("generate")` while a batch is live (`genBatchLive()` = cooking / cards
+  left / keepers in tray), so hopping to Calendar/Settings/etc. and back drops
+  you where you left off. New `genStartOver()` (↺ on the deck hint + keepers
+  tray) is the explicit re-brief. Calendar's dated `openGenerate(date)` still
+  briefs fresh (deliberate "plan this day").
 - **v1.00** — Swipe-deck ♥/✕ buttons → inline SVG icons (the ♥/✕ text glyphs
   aren't in the Latin-subset fonts, so they fell back per-device and sat the heart
   off-centre; SVGs are geometry-centred, `currentColor` keeps the tinting).
