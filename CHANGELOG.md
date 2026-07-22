@@ -5,6 +5,20 @@ auto-loaded project memory lean. This file is NOT auto-loaded into sessions —
 read it (or `git log`) when you need the detail behind a past change. Newest first.
 
 ## Version history
+- 2026-07-22: **v1.03 — Captions get a 📍 location line in the body.** Second
+  slice of the parked v2 Instagram plan (`docs/V2_INSTAGRAM_CONTENT_PLAN.md`
+  §5): Instagram reads captions as search text, so the market name belongs in
+  the body, not only the tags. New `locationLine(loc, day)` helper composes a
+  `\n\n📍 <Market> · here till <day>` block (location-only if no day, nothing if
+  no location). Injected at the two spots where a hook's `filledText` becomes
+  the **caption body** — `setCaption` (New Post) and the Generate card build
+  (`out.push`) — so a post reads: hook line / 📍 line / ≤5 tags. Deliberately
+  NOT folded into `filledText` itself: that string is reused as the burnt-on
+  sticker and the editor Text-tool line, which must stay pure (verified the
+  sticker path still carries no 📍). Lightweight by design — the owner chose
+  this over adding area/hours fields to the location model; the fuller
+  `📍 Market, Area — hours` template waits on that data. Verified headless: real
+  hook engine + line = template shape, sticker stays pure, 0 console errors.
 - 2026-07-22: **v1.02 — Hashtags: max 5, curated sets, mega-tags dropped.**
   First slice of the parked v2 Instagram content plan
   (`docs/V2_INSTAGRAM_CONTENT_PLAN.md` §6/§9). Instagram capped posts at 5

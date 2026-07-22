@@ -1366,7 +1366,7 @@
   function setCaption(result) {
     post.caption = result;
     post.item = result.item;
-    post.captionText = result.filledText;
+    post.captionText = result.filledText + locationLine(); // hook + 📍 body line
     post.hashtagBlock = ""; // a new line drops any appended hashtags
     applyHashtags(); // hashtags are added automatically on every fresh line
     $("#captionText").value = post.captionText;
@@ -1404,6 +1404,19 @@
   function updateHashtagBtnLabel() {
     const btn = $('[data-action="hashtags"]');
     if (btn) btn.textContent = post.hashtagBlock ? "🗑 Remove hashtags" : "#️⃣ Add hashtags";
+  }
+
+  // A "📍 Market · here till <day>" line, dropped into the caption BODY so the
+  // market name is plain search text (Instagram reads captions like search).
+  // Body-only — never fold this into filledText where it'd leak onto stickers /
+  // the Text tool. Returns "" (no location) or a leading "\n\n" block.
+  function locationLine(loc = post.location, day = post.day) {
+    const place = (loc || "").trim();
+    if (!place) return "";
+    let line = "📍 " + place;
+    const d = (day || "").trim();
+    if (d) line += " · here till " + d;
+    return "\n\n" + line;
   }
 
   // Instagram caps posts at 5 hashtags (Dec 2025) and treats them as a minor
@@ -2506,7 +2519,9 @@
         style,       // the per-card jittered sticker style (to re-seed the overlay)
         dataUrl,
         overlayText,
-        filledText: picked.filledText,
+        // Caption body = hook + 📍 line. (overlayText above stays pure — the
+        // sticker must never carry the location line.)
+        filledText: picked.filledText + locationLine(genLocation, genDay),
         hook: picked.hook,
         hashtags: "\n\n" + buildHashtagBlock(genLocation),
       });

@@ -183,6 +183,11 @@ Story export (9:16), Queue for later, backup/restore, visual history thumbnails.
 
 ## Recent changes
 Full history (v0.01 → present) is in **`CHANGELOG.md`**. Most recent:
+- **v1.03** — Captions now carry a **📍 location line** in the body (`📍 Market
+  · here till <day>`), via `locationLine()`, injected only where a hook's
+  `filledText` becomes the caption body (`setCaption` + Generate's `out.push`) —
+  NOT into `filledText` itself, which is reused as the sticker / Text-tool line
+  and must stay pure. Owner chose lightweight over adding area/hours fields.
 - **v1.02** — Hashtags now cap at **5 per post** (`MAX_HASHTAGS` in
   `buildHashtagBlock`): brand + pitch location lead, rest a shuffled fill. Flat
   34-tag `DEFAULT_HASHTAGS` → named `HASHTAG_SETS` (brand/dish/local/scene) with
