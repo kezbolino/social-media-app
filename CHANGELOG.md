@@ -5,6 +5,26 @@ auto-loaded project memory lean. This file is NOT auto-loaded into sessions —
 read it (or `git log`) when you need the detail behind a past change. Newest first.
 
 ## Version history
+- 2026-07-22: **v1.05 — Reels / video sharing.** New fourth New-Post type
+  (🎬 Reel / Video) that shares a clip through the system share sheet — the
+  roadmap's "basic video/Reels sharing (pick clip → caption → share sheet)".
+  Deliberately skips the whole imaging pipeline: a reel has no editor and no
+  canvas render. `startReel`/`onReelPicked` hold the picked clip
+  (`post.videoBlob` + an object-URL `post.videoUrl` for the `<video>` preview),
+  then `reelNext` drops into the SHARED quiz → details → caption flow, so reels
+  get the same plan-compliant caption (≤5 hashtags, 📍 line when a location is
+  set). Branches at three shared points: `buildReview` shows `<video>` instead
+  of `<img>` and uses the raw clip as `finalBlob` (no imaging); `renderPublish
+  Buttons` hides direct Meta publish (video can't go through the image publish
+  path — share sheet only, like carousels); `markPostShared` does NOT stash the
+  video as a history thumbnail (Run it back renders those as `<img>`; it falls
+  back to text-only, already handled). `js/share.js` gained a `type` param so
+  the share File carries the real MIME (was hardcoded `image/png`); reels share
+  as `chuckling-wings-reel.<ext>` with the clip's own type. Tile uses an emoji
+  icon (no new asset → no `sw.js` cache bump). Verified headless end-to-end:
+  tile → clip → quiz/details → 5-tag caption → `<video>` review with publish
+  hidden → share sheet receives a `video/mp4` file; post recorded
+  share-sheet/shared with `imageId:null`; 0 console errors.
 - 2026-07-22: **v1.04 — Trading-day Story beats + a manual Insights log.** Third
   and fourth slices of the parked v2 Instagram plan
   (`docs/V2_INSTAGRAM_CONTENT_PLAN.md` §3 and §8/§9).

@@ -115,7 +115,7 @@
             <button class="btn btn-secondary btn-sm" data-action="open-queue">🗓 Post queue</button>
             <button class="btn btn-secondary btn-sm" data-action="open-history">🔁 Run it back</button>
           </div>
-          <p class="app-version" id="appVersion">v1.04</p>
+          <p class="app-version" id="appVersion">v1.05</p>
         </div>
       </section>
 
@@ -145,6 +145,30 @@
             <span class="tile-icon"><img src="assets/icons/carousel.svg" alt="" width="32" height="32" draggable="false" /></span>
             <span class="tile-text"><strong>Carousel</strong><small>2–10 swipeable photos in one post</small></span>
           </button>
+          <button class="tile" data-action="choose-reel">
+            <span class="tile-icon tile-icon-emoji">🎬</span>
+            <span class="tile-text"><strong>Reel / Video</strong><small>Share a clip via the share sheet</small></span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== REEL / VIDEO ===== -->
+      <section class="screen" data-screen="reel">
+        <header class="bar">
+          <button class="back" aria-label="Back" data-back="type">‹</button>
+          <h2>Add your clip</h2>
+        </header>
+        <div class="pad">
+          <div class="preview-wrap">
+            <video id="reelPreview" class="preview-img" playsinline controls hidden></video>
+            <div id="reelEmpty" class="preview-empty">No clip yet</div>
+          </div>
+          <input id="reelInput" type="file" accept="video/*" hidden />
+          <button class="btn btn-secondary" data-action="pick-reel">🎬 Choose clip</button>
+          <p class="hint">Keep it short — the first second decides a Reel. You'll write the caption next, then post through the share sheet (pick Instagram → it lands as a Reel).</p>
+          <div class="actionbar">
+            <button class="btn btn-primary" id="reelNext" data-action="reel-next" disabled>Next ›</button>
+          </div>
         </div>
       </section>
 
@@ -383,6 +407,7 @@
         <div class="pad">
           <div class="preview-wrap">
             <img id="reviewImage" class="preview-img" alt="Final post preview" />
+            <video id="reviewVideo" class="preview-img" playsinline controls hidden></video>
             <span id="reviewBadge" class="img-badge" hidden></span>
           </div>
           <p id="reviewCaption" class="review-caption"></p>

@@ -183,6 +183,14 @@ Story export (9:16), Queue for later, backup/restore, visual history thumbnails.
 
 ## Recent changes
 Full history (v0.01 → present) is in **`CHANGELOG.md`**. Most recent:
+- **v1.05** — **Reels/video sharing**: new 🎬 Reel New-Post type that shares a
+  clip via the share sheet. Skips the imaging pipeline entirely (no editor/
+  canvas) — holds `post.videoBlob`/`videoUrl`, then reuses the shared quiz →
+  details → caption flow (so reels get the ≤5-tag + 📍 caption). Branches in
+  `buildReview` (shows `<video>`, raw clip = finalBlob), `renderPublishButtons`
+  (hides direct Meta publish — share-sheet only), and `markPostShared` (no
+  video-as-history-thumbnail). `share.js` now takes a `type` param (was
+  hardcoded PNG). Emoji tile icon = no new asset, no SW bump.
 - **v1.04** — Two v2-plan slices. (1) **Story beats** (`js/notify.js`): the daily
   nudge became the plan's 3 trading-day beats (morning/midday/late); fires the
   most recent *passed, unfired* beat and consumes skipped ones (no stale 4pm

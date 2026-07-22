@@ -11,14 +11,15 @@
  */
 const Sharing = (() => {
   // `blobOrBlobs` may be a single Blob or an array (a carousel of images). One
-  // caption applies to the whole set.
-  async function share(blobOrBlobs, caption, filename = "post.png") {
+  // caption applies to the whole set. `type` is the file MIME type — defaults to
+  // PNG for image posts; a Reel passes its own video type (e.g. "video/mp4").
+  async function share(blobOrBlobs, caption, filename = "post.png", type = "image/png") {
     const blobs = Array.isArray(blobOrBlobs) ? blobOrBlobs : [blobOrBlobs];
     const files = blobs.map((b, i) => {
       const name = blobs.length > 1
         ? filename.replace(/(\.\w+)?$/, `-${i + 1}$1`)
         : filename;
-      return new File([b], name, { type: "image/png" });
+      return new File([b], name, { type: b.type || type });
     });
 
     // Preferred path: native share sheet with the image(s) attached.

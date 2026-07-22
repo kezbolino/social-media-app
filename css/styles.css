@@ -699,6 +699,7 @@ input[type="range"] { touch-action: none; }
   border-radius: 14px;
 }
 .tile-icon img { width: 32px; height: 32px; display: block; }
+.tile-icon-emoji { font-size: 30px; line-height: 1; }
 .tile-text { display: flex; flex-direction: column; }
 .tile-text strong { font-size: 1.1rem; color: var(--blue); }
 .tile-text small { color: var(--muted); margin-top: 2px; }

@@ -21,10 +21,12 @@
   function freshPost() {
     return {
       id: "p_" + Date.now(),
-      type: null, // 'single' | 'collage'
+      type: null, // 'single' | 'collage' | 'carousel' | 'reel'
       templateId: null,
       templateIndex: 0,
       singleImage: null, // HTMLImageElement (raw pick)
+      videoBlob: null, // reel: the picked video File/Blob (no imaging pipeline)
+      videoUrl: null, // reel: object URL for the preview <video>
       baseImage: null, // HTMLImageElement (cropped + filtered by the editor)
       exportSize: null, // { width, height } chosen in the editor
       editState: null, // saved editor settings, so Back re-opens where you left
@@ -321,6 +323,7 @@
     $("#singleInput").addEventListener("change", onSinglePhoto);
     $("#collageInput").addEventListener("change", onCollagePhoto);
     $("#carouselInput").addEventListener("change", onCarouselPicked);
+    $("#reelInput").addEventListener("change", onReelPicked);
     $("#folderInput").addEventListener("change", onFolderPicked);
     $("#captionText").addEventListener("input", (e) => {
       post.captionText = e.target.value;
@@ -584,6 +587,9 @@
       case "choose-single": startSingle(); break;
       case "choose-collage": startCollage(); break;
       case "choose-carousel": startCarousel(); break;
+      case "choose-reel": startReel(); break;
+      case "pick-reel": $("#reelInput").click(); break;
+      case "reel-next": reelNext(); break;
       case "pick-carousel": $("#carouselInput").click(); break;
       case "carousel-next": carouselNext(); break;
       case "copy-caption": copyCaption(); break;
@@ -643,6 +649,43 @@
     } catch (err) {
       alert(err.message);
     }
+  }
+
+  /* ---------- REEL / VIDEO ---------- */
+  // Reels skip the whole imaging pipeline: there's no editor, no canvas render.
+  // We just hold the picked clip and carry it through the shared caption/review
+  // flow, then hand the raw video file to the share sheet.
+  function startReel() {
+    post.type = "reel";
+    if (post.videoUrl) { URL.revokeObjectURL(post.videoUrl); }
+    post.videoBlob = null;
+    post.videoUrl = null;
+    const vid = $("#reelPreview");
+    vid.hidden = true;
+    vid.removeAttribute("src");
+    $("#reelEmpty").hidden = false;
+    $("#reelNext").disabled = true;
+    show("reel");
+  }
+
+  function onReelPicked(e) {
+    const file = e.target.files[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    if (post.videoUrl) URL.revokeObjectURL(post.videoUrl);
+    post.videoBlob = file;
+    post.videoUrl = URL.createObjectURL(file);
+    const vid = $("#reelPreview");
+    vid.src = post.videoUrl;
+    vid.hidden = false;
+    $("#reelEmpty").hidden = true;
+    $("#reelNext").disabled = false;
+  }
+
+  function reelNext() {
+    if (!post.videoBlob) return;
+    lastQuizBack = "reel"; // the quiz's Back returns to the clip picker (no editor)
+    show("quiz");
   }
 
   /* ---------- PHOTO EDITOR ---------- */
@@ -1496,7 +1539,20 @@
     await Imaging.ensureFonts();
 
     const badge = $("#reviewBadge");
-    if (post.type === "carousel") {
+    const reviewVideo = $("#reviewVideo");
+    const reviewImage = $("#reviewImage");
+    if (post.type === "reel") {
+      // No imaging — the clip itself is the post. Preview the video, share the
+      // raw file. Direct Meta publish is hidden (video goes via the share sheet).
+      post.finalBlob = post.videoBlob;
+      post.finalBlobs = [post.videoBlob];
+      reviewVideo.src = post.videoUrl;
+      reviewVideo.hidden = false;
+      reviewImage.hidden = true;
+      badge.hidden = true;
+    } else if (post.type === "carousel") {
+      reviewVideo.hidden = true;
+      reviewImage.hidden = false;
       // Export every frame; the cover drives the preview.
       post.finalBlobs = [];
       let coverCanvas = null;
@@ -1513,6 +1569,8 @@
       badge.hidden = false;
       badge.textContent = `1 / ${post.finalBlobs.length}`;
     } else {
+      reviewVideo.hidden = true;
+      reviewImage.hidden = false;
       const canvas = await composePostImage();
       post.finalBlob = await Imaging.toBlob(canvas);
       post.finalBlobs = [post.finalBlob];
@@ -1555,8 +1613,11 @@
     // Drafts IndexedDB store (same one the queue uses) keyed by the post id.
     // History is text-only if this fails (no IndexedDB / no blob) — renderHistory
     // falls back gracefully.
+    // Reels store a video blob as finalBlob — don't stash it as a history
+    // "thumbnail" (Run it back renders these as <img>); it falls back to
+    // text-only for reels, which renderHistory already handles.
     let imageId = null;
-    if (window.Drafts && post.finalBlob) {
+    if (window.Drafts && post.finalBlob && post.type !== "reel") {
       imageId = "hist-" + post.id;
       Drafts.save({ id: imageId, blob: post.finalBlob, type: "history" });
     }
@@ -1690,7 +1751,12 @@
     if (window.FX && btn) FX.busy(btn, true);
     let result;
     try {
-      result = await Sharing.share(blobs, post.captionText, "chuckling-wings-post.png");
+      if (post.type === "reel") {
+        const ext = (post.videoBlob.type.split("/")[1] || "mp4").replace("quicktime", "mov");
+        result = await Sharing.share(blobs, post.captionText, "chuckling-wings-reel." + ext, post.videoBlob.type || "video/mp4");
+      } else {
+        result = await Sharing.share(blobs, post.captionText, "chuckling-wings-post.png");
+      }
     } finally {
       if (window.FX && btn) FX.busy(btn, false);
     }
@@ -1710,11 +1776,12 @@
   /* ---------- DIRECT PUBLISH (Meta) ---------- */
   // Show/hide the direct-post buttons based on what's configured.
   function renderPublishButtons() {
-    // Direct Meta publishing posts a single image; carousels go via the share
-    // sheet only (Instagram builds the carousel from the multiple files).
-    const carousel = post.type === "carousel";
-    const fb = !carousel && Publish.isConfiguredFB();
-    const ig = !carousel && Publish.isConfiguredIG();
+    // Direct Meta publishing posts a single image; carousels and reels go via
+    // the share sheet only (carousel = multiple files IG assembles; reel = a
+    // video, which the image publish path can't take).
+    const noDirect = post.type === "carousel" || post.type === "reel";
+    const fb = !noDirect && Publish.isConfiguredFB();
+    const ig = !noDirect && Publish.isConfiguredIG();
     $("#pubIG").hidden = !ig;
     $("#pubFB").hidden = !fb;
     $("#publishRow").hidden = !(fb || ig);
